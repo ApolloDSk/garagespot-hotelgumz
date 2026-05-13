@@ -171,6 +171,30 @@ html,body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;bac
   .id-lbl{font-size:1.2vw}
 }
 
+/* ── TOOLBAR FERRAMENTAS ── */
+.toolbar-tools{background:#fff;border:1px solid #ddd;border-radius:7px;padding:3px 10px;display:flex;align-items:center;gap:8px;flex-shrink:0;position:relative}
+.tb-tools-btn{background:none;border:1px solid #e0ddd8;border-radius:5px;padding:3px 10px;font-size:11px;color:#555;cursor:pointer;font-family:inherit;font-weight:600;line-height:1.6}
+.tb-tools-btn:active{background:#f5f4f0}
+.tb-dropdown{position:absolute;top:calc(100% + 3px);left:0;background:#fff;border:1px solid #ddd;border-radius:7px;box-shadow:0 4px 16px rgba(0,0,0,.13);z-index:300;min-width:190px;padding:4px 0}
+.tb-dd-item{display:block;width:100%;padding:9px 14px;font-size:12px;color:#333;cursor:pointer;text-align:left;border:none;background:none;font-family:inherit;white-space:nowrap}
+.tb-dd-item:hover,.tb-dd-item:active{background:#f5f4f0}
+
+/* ── HISTÓRICO CARDS ── */
+.hist-card{border-radius:7px;padding:9px 12px;margin:5px 0;color:#fff}
+.hist-tipo{font-size:12px;font-weight:700}
+.hist-info{font-size:11px;opacity:.88;margin-top:2px}
+
+/* ── USUÁRIOS ── */
+.usr-item{display:flex;align-items:center;justify-content:space-between;padding:8px 10px;border:1px solid #eee;border-radius:7px;margin-bottom:5px;cursor:pointer;background:#fafafa}
+.usr-item:active{background:#f0efea}
+.usr-nome{font-size:13px;font-weight:700;color:#111}
+.usr-cargo-lbl{font-size:11px;color:#888;margin-top:1px}
+.usr-badge-out{display:inline-block;background:#FCEBEB;color:#A32D2D;font-size:9px;font-weight:600;padding:1px 5px;border-radius:4px;margin-left:5px;vertical-align:middle}
+.usr-list{display:flex;flex-direction:column;max-height:250px;overflow-y:auto;margin:6px 0}
+
+/* ── TOAST ── */
+.gs-toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:rgba(15,110,86,.95);color:#fff;padding:10px 20px;border-radius:8px;font-size:13px;font-weight:700;z-index:1000;box-shadow:0 4px 16px rgba(0,0,0,.25);white-space:nowrap;pointer-events:none;transition:opacity .3s}
+
 /* modal */
 .ovbg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:500;align-items:center;justify-content:center}
 .ovbg.on{display:flex}
@@ -230,6 +254,14 @@ html,body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;bac
     </div>
   </div>
 
+  <!-- TOOLBAR FERRAMENTAS -->
+  <div class="toolbar-tools" id="toolbar-ferramentas">
+    <button class="tb-tools-btn" onclick="toggleToolsDropdown()">⚙ Ferramentas</button>
+    <div class="tb-dropdown" id="tools-dropdown" style="display:none">
+      <button class="tb-dd-item" onclick="showModalUsuarios()">👥 Cadastro de usuários</button>
+    </div>
+  </div>
+
   <!-- PAINEL PASSEIO (retrátil) -->
   <div class="panel-body open" id="panel-body">
     <div class="ocard">
@@ -278,7 +310,8 @@ html,body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;bac
 <div class="ovbg" id="ov"><div class="modal" id="mc"></div></div>
 
 <script>
-const S={}, PASSEIO={};
+const S={}, PASSEIO={}, HOSPEDAGENS={};
+let USUARIOS=[];
 let cur=null, ssz='small';
 // Overbooking VERMELHO: corredores + 6D-9D
 const OB=new Set(['CORREDOR 01','CORREDOR 02','CORREDOR 03','6D','7D','8D','9D']);
@@ -317,7 +350,7 @@ function initState(){
     if(!cell||!cell[0]||'sbh'.includes(cell[1]))return;
     S[cell[0]]={status:'free',apt:'',model:'',color:'',plate:'',guest:'',obs:'',size:'small',
                 overbook:OB.has(cell[0]),mergedMaster:false,mergedSlave:false,
-                hmergeWith:null}; // merge horizontal: id da vaga coberta
+                hmergeWith:null,hospedagem:''}; // merge horizontal: id da vaga coberta
     TOTAL++;
     if(!OB.has(cell[0])) totalNormal++;
   }));
@@ -1027,17 +1060,17 @@ function showOcc(id){
           <button class="bcx" onclick="closeOv()">Cancelar</button>
         </div>`;
       document.getElementById('f-sim').onclick=function(){
-        const dd=PASSEIO[apt];
-        delete PASSEIO[apt];
-        // Transfere anexos do passeio de volta para a vaga
-        const keyP='p_'+apt, keyV='v_'+cur;
-        if(ANEXOS[keyP]&&ANEXOS[keyP].length){
-          ANEXOS[keyV]=[...ANEXOS[keyP]];
-          delete ANEXOS[keyP];
-          saveAnexos();
-        }
-        // false = retorno de passeio (não é check-in novo)
-        saveV(cur,apt,dd.model,dd.color,dd.plate,dd.guest,dd.obs||'',false);
+        confirmarUsuario('registrando retorno do passeio',function(usuario){
+          const dd=PASSEIO[apt];
+          delete PASSEIO[apt];
+          const keyP='p_'+apt, keyV='v_'+cur;
+          if(ANEXOS[keyP]&&ANEXOS[keyP].length){
+            ANEXOS[keyV]=[...ANEXOS[keyP]];
+            delete ANEXOS[keyP];
+            saveAnexos();
+          }
+          saveV(cur,apt,dd.model,dd.color,dd.plate,dd.guest,dd.obs||'',false,usuario);
+        });
       };
       document.getElementById('f-nao').onclick=function(){
         showOcc(cur);
@@ -1096,7 +1129,9 @@ function perguntarCheckin(vagaId, apt, model, color, plate, guest, obs){
       <button class="bcx" onclick="closeOv()" style="margin-top:4px">Cancelar</button>
     </div>`;
   document.getElementById('ci-sim').onclick=function(){
-    saveV(vagaId,apt,model,color,plate,guest,obs,true); // true = check-in
+    confirmarUsuario('fazendo o check-in',function(usuario){
+      saveV(vagaId,apt,model,color,plate,guest,obs,true,usuario);
+    });
   };
   document.getElementById('ci-nao').onclick=function(){
     showOcc(vagaId);
@@ -1104,7 +1139,7 @@ function perguntarCheckin(vagaId, apt, model, color, plate, guest, obs){
   };
 }
 
-function saveV(id,apt,model,color,plate,guest,obs,isCheckin){
+function saveV(id,apt,model,color,plate,guest,obs,isCheckin,usuario){
   const d=S[id];
   d.apt=String(apt||'');d.model=String(model||'');d.color=String(color||'');
   d.plate=String(plate||'');d.guest=String(guest||'');d.obs=String(obs||'');d.status='occupied';
@@ -1121,20 +1156,31 @@ function saveV(id,apt,model,color,plate,guest,obs,isCheckin){
       d.mergedSlave=true;
     } else { d.mergedSlave=false;d.mergedMaster=false; }
   }
-  // Registra check-in no histórico
+  const usuarioStr=usuario?(usuario.nome+' · '+usuario.cargo):'';
   if(isCheckin){
-    iniciarHistorico(apt, id);
+    const numH=nextNumHospedagem();
+    d.hospedagem=numH;
+    HOSPEDAGENS[numH]={numero:numH,apt,checkin_ts:Date.now(),checkout_ts:null,
+      vaga_inicial:id,model,color,plate,guest,obs,size:ssz,
+      usuario_checkin:usuarioStr,usuario_checkout:''};
+    saveHospedagens();
+    iniciarHistorico(apt,id,numH,usuarioStr);
+    ref(id);refByApt(d.apt);
+    if(HMERGE_OPTS[id]){ upd(); perguntarHMerge(id,d.apt,d.model,d.color,d.plate,d.guest,d.obs); return; }
+    upd();closeOv();
+    showToast('✅ Check-in registrado — Hospedagem '+numH);
   } else if(isCheckin===false){
-    addHistorico(apt,'retorno_passeio',id,'');
+    const hospNum=(PASSEIO[apt]?.hospedagem)||d.hospedagem||'';
+    if(hospNum) d.hospedagem=hospNum;
+    addHistorico(apt,'retorno_passeio',id,'',usuarioStr,hospNum);
+    ref(id);refByApt(d.apt);
+    if(HMERGE_OPTS[id]){ upd(); perguntarHMerge(id,d.apt,d.model,d.color,d.plate,d.guest,d.obs); return; }
+    upd();closeOv();
+  } else {
+    ref(id);refByApt(d.apt);
+    if(HMERGE_OPTS[id]){ upd(); perguntarHMerge(id,d.apt,d.model,d.color,d.plate,d.guest,d.obs); return; }
+    upd();closeOv();
   }
-  ref(id);refByApt(d.apt);
-  // Para vagas com opção de merge horizontal, pergunta após salvar
-  if(HMERGE_OPTS[id]){
-    upd(); // atualiza stats antes de mostrar pergunta
-    perguntarHMerge(id,d.apt,d.model,d.color,d.plate,d.guest,d.obs);
-    return; // closeOv chamado dentro de perguntarHMerge
-  }
-  upd();closeOv();
 }
 
 function showMenu(id){
@@ -1274,31 +1320,33 @@ window.trocarParaGrande = function(id){
 function doOut(id){
   const d=S[id];
   const aptKey=d.apt;
-  PASSEIO[aptKey]={model:d.model,color:d.color,plate:d.plate,guest:d.guest,obs:d.obs||'',lastVaga:id,size:d.size||'small'};
-  addHistorico(aptKey,'saida_passeio',id,'');
-  // Copia anexos da vaga para o passeio (ficam acessíveis enquanto em passeio)
-  const keyV='v_'+id, keyP='p_'+aptKey;
-  if(ANEXOS[keyV]&&ANEXOS[keyV].length){
-    ANEXOS[keyP]=[...ANEXOS[keyV]];
-    saveAnexos();
-  }
-  // Desfaz merge horizontal se houver
-  if(d.hmergeWith) desfazHMerge(id);
-  if(id.endsWith('B')&&d.mergedMaster){
-    const aId=id.slice(0,-1)+'A';
-    const tdB=getTd(id);if(tdB)tdB.rowSpan=1;
-    d.mergedMaster=false;
-    if(S[aId]){S[aId].mergedSlave=false;S[aId].status='free';S[aId].apt='';ref(aId);}
-  }
-  if(id.endsWith('A')&&d.mergedSlave){
-    const bId=id.slice(0,-1)+'B';
-    const tdB=getTd(bId);if(tdB)tdB.rowSpan=1;
-    if(S[bId]){S[bId].mergedMaster=false;S[bId].status='free';S[bId].apt='';ref(bId);}
-    d.mergedSlave=false;
-  }
-  d.status='free';d.apt='';d.model='';d.color='';d.plate='';d.guest='';
-  d.mergedMaster=false;d.mergedSlave=false;
-  ref(id);refByApt(aptKey);upd();closeOv();
+  confirmarUsuario('liberando para passeio',function(usuario){
+    const usuarioStr=usuario?(usuario.nome+' · '+usuario.cargo):'';
+    const hospNum=d.hospedagem||'';
+    PASSEIO[aptKey]={model:d.model,color:d.color,plate:d.plate,guest:d.guest,obs:d.obs||'',lastVaga:id,size:d.size||'small',hospedagem:hospNum};
+    addHistorico(aptKey,'saida_passeio',id,'',usuarioStr,hospNum);
+    const keyV='v_'+id, keyP='p_'+aptKey;
+    if(ANEXOS[keyV]&&ANEXOS[keyV].length){
+      ANEXOS[keyP]=[...ANEXOS[keyV]];
+      saveAnexos();
+    }
+    if(d.hmergeWith) desfazHMerge(id);
+    if(id.endsWith('B')&&d.mergedMaster){
+      const aId=id.slice(0,-1)+'A';
+      const tdB=getTd(id);if(tdB)tdB.rowSpan=1;
+      d.mergedMaster=false;
+      if(S[aId]){S[aId].mergedSlave=false;S[aId].status='free';S[aId].apt='';ref(aId);}
+    }
+    if(id.endsWith('A')&&d.mergedSlave){
+      const bId=id.slice(0,-1)+'B';
+      const tdB=getTd(bId);if(tdB)tdB.rowSpan=1;
+      if(S[bId]){S[bId].mergedMaster=false;S[bId].status='free';S[bId].apt='';ref(bId);}
+      d.mergedSlave=false;
+    }
+    d.status='free';d.apt='';d.model='';d.color='';d.plate='';d.guest='';d.hospedagem='';
+    d.mergedMaster=false;d.mergedSlave=false;
+    ref(id);refByApt(aptKey);upd();closeOv();
+  });
 }
 
 function doChk(id){
@@ -1322,35 +1370,37 @@ function doChk(id){
   document.getElementById('ov').classList.add('on');
 
   document.getElementById('chk-sim').onclick=function(){
-    addHistorico(aptKey,'checkout',id,'');
-
-    // Limpa vaga
-    if(aptKey&&PASSEIO[aptKey])delete PASSEIO[aptKey];
-    // Desfaz merge horizontal se houver
-    if(d.hmergeWith) desfazHMerge(id);
-    if(id.endsWith('B')&&d.mergedMaster){
-      const aId=id.slice(0,-1)+'A';
-      const tdB=getTd(id);if(tdB)tdB.rowSpan=1;
-      d.mergedMaster=false;
-      if(S[aId]){S[aId].mergedSlave=false;S[aId].status='free';S[aId].apt='';ref(aId);}
-    }
-    if(id.endsWith('A')&&d.mergedSlave){
-      const bId=id.slice(0,-1)+'B';
-      const tdB=getTd(bId);if(tdB)tdB.rowSpan=1;
-      if(S[bId]){S[bId].mergedMaster=false;S[bId].status='free';S[bId].apt='';ref(bId);}
-      d.mergedSlave=false;
-    }
-    d.status='free';d.apt='';d.model='';d.color='';d.plate='';d.guest='';d.obs='';
-    d.mergedMaster=false;d.mergedSlave=false;
-    ref(id);refByApt(aptKey);upd();saveData();
-
-    // Limpa anexos da vaga e do passeio (já foram para o PDF)
-    const keyV='v_'+id, keyP='p_'+aptKey;
-    if(ANEXOS[keyV]){delete ANEXOS[keyV];saveAnexos();}
-    if(ANEXOS[keyP]){delete ANEXOS[keyP];saveAnexos();}
-
-    // Fecha overlay
-    closeOv();
+    confirmarUsuario('realizando o check-out',function(usuario){
+      const usuarioStr=usuario?(usuario.nome+' · '+usuario.cargo):'';
+      const hospNum=d.hospedagem||'';
+      addHistorico(aptKey,'checkout',id,'',usuarioStr,hospNum);
+      if(hospNum&&HOSPEDAGENS[hospNum]){
+        HOSPEDAGENS[hospNum].checkout_ts=Date.now();
+        HOSPEDAGENS[hospNum].usuario_checkout=usuarioStr;
+        saveHospedagens();
+      }
+      if(aptKey&&PASSEIO[aptKey])delete PASSEIO[aptKey];
+      if(d.hmergeWith) desfazHMerge(id);
+      if(id.endsWith('B')&&d.mergedMaster){
+        const aId=id.slice(0,-1)+'A';
+        const tdB=getTd(id);if(tdB)tdB.rowSpan=1;
+        d.mergedMaster=false;
+        if(S[aId]){S[aId].mergedSlave=false;S[aId].status='free';S[aId].apt='';ref(aId);}
+      }
+      if(id.endsWith('A')&&d.mergedSlave){
+        const bId=id.slice(0,-1)+'B';
+        const tdB=getTd(bId);if(tdB)tdB.rowSpan=1;
+        if(S[bId]){S[bId].mergedMaster=false;S[bId].status='free';S[bId].apt='';ref(bId);}
+        d.mergedSlave=false;
+      }
+      d.status='free';d.apt='';d.model='';d.color='';d.plate='';d.guest='';d.obs='';d.hospedagem='';
+      d.mergedMaster=false;d.mergedSlave=false;
+      ref(id);refByApt(aptKey);upd();saveData();
+      const keyV='v_'+id, keyP='p_'+aptKey;
+      if(ANEXOS[keyV]){delete ANEXOS[keyV];saveAnexos();}
+      if(ANEXOS[keyP]){delete ANEXOS[keyP];saveAnexos();}
+      closeOv();
+    });
   };
 }
 
@@ -1369,7 +1419,7 @@ window.doShare = function(id, fp){
   const apt=fromPasseio?id:d.apt;
   const dv={model:d.model||'',color:d.color||'',plate:d.plate||'',
              guest:d.guest||'',obs:d.obs||'',size:d.size||'small',
-             vaga:fromPasseio?(d.lastVaga||''):id};
+             vaga:fromPasseio?(d.lastVaga||''):id,hospedagem:d.hospedagem||''};
   const hist=getHistorico(apt);
   const anexos=getAnexos(id,fromPasseio);
   compartilharPDF(apt,dv,hist,anexos);
@@ -1387,9 +1437,11 @@ function showDet(id, fromPasseio){
   // Carro grande
   const isLarge = d.size==='large';
 
+  const hospedagemNum = d.hospedagem || '';
   const rows = fromPasseio
     ? [
         ['Apartamento', apt],
+        ['Hospedagem',  hospedagemNum||'—'],
         ['Última vaga',  vagaLbl],
         ['Modelo / Cor', modelCor],
         ['Placa',        d.plate||'—'],
@@ -1400,6 +1452,7 @@ function showDet(id, fromPasseio){
       ]
     : [
         ['Apartamento',  apt],
+        ['Hospedagem',   hospedagemNum||'—'],
         ['Vaga',         vagaLbl],
         ['Modelo / Cor', modelCor],
         ['Placa',        d.plate||'—'],
@@ -1410,11 +1463,11 @@ function showDet(id, fromPasseio){
       ];
 
   const nAnexos = getAnexos(id, fromPasseio).length;
-  // Título mostra só o número do apt, share fica imediatamente ao lado
   const tituloTxt = fromPasseio ? 'Passeio — '+apt : apt;
+  const hospSufixo = hospedagemNum ? ' · '+hospedagemNum : '';
   mc.innerHTML=`
     <div class="mt" style="display:flex;align-items:center;gap:4px">
-      <span style="white-space:nowrap">ℹ️ ${tituloTxt}</span>
+      <span style="white-space:nowrap;cursor:pointer;text-decoration:underline dotted" onclick="showHistoricoModal('${apt}','${hospedagemNum}')" title="Ver histórico">ℹ️ ${tituloTxt}${hospSufixo}</span>
       <button class="share-btn" onclick="doShare('${id}',${fromPasseio?1:0})" title="Compartilhar" style="flex-shrink:0"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" stroke-width="2" fill="none"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg></button>
       <button class="attach-btn" onclick="toggleAnexosDet('${id}',${fromPasseio?1:0})" title="Vistoria / Fotos" style="margin-left:auto">${nAnexos>0?'📎<sup style="font-size:8px;color:#185FA5">'+nAnexos+'</sup>':'📎'}</button>
     </div>
@@ -1504,8 +1557,18 @@ function showPasseioCheckout(apt){
       <button class="bcx" onclick="closeOv()" style="margin-top:4px">Cancelar</button>
     </div>`);
   document.getElementById('pco-sim').onclick=function(){
-    delete PASSEIO[apt];
-    upd(); saveData(); closeOv();
+    confirmarUsuario('realizando o check-out',function(usuario){
+      const usuarioStr=usuario?(usuario.nome+' · '+usuario.cargo):'';
+      const hospNum=d.hospedagem||'';
+      addHistorico(apt,'checkout','','Checkout (a passeio)',usuarioStr,hospNum);
+      if(hospNum&&HOSPEDAGENS[hospNum]){
+        HOSPEDAGENS[hospNum].checkout_ts=Date.now();
+        HOSPEDAGENS[hospNum].usuario_checkout=usuarioStr;
+        saveHospedagens();
+      }
+      delete PASSEIO[apt];
+      upd(); saveData(); closeOv();
+    });
   };
 }
 
@@ -1546,7 +1609,7 @@ function executarReset(){
   Object.keys(S).forEach(id=>{
     S[id].status='free';S[id].apt='';S[id].model='';S[id].color='';
     S[id].plate='';S[id].guest='';S[id].obs='';S[id].size='small';
-    S[id].mergedMaster=false;S[id].mergedSlave=false;
+    S[id].mergedMaster=false;S[id].mergedSlave=false;S[id].hospedagem='';
     if(id.endsWith('B')){const td=getTd(id);if(td)td.rowSpan=1;}
     ref(id);
   });
@@ -1616,6 +1679,206 @@ function showM(h){document.getElementById('mc').innerHTML=h;document.getElementB
 window.closeOv=function(){document.getElementById('ov').classList.remove('on');document.getElementById('mc').innerHTML='';};
 function tick(){document.getElementById('clk').textContent=new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});}
 
+// ── HOSPEDAGEM ────────────────────────────────────────────────────────────
+function nextNumHospedagem(){
+  let counter=0;
+  try{ const s=localStorage.getItem('garagespot_hospedagem_counter'); if(s) counter=parseInt(s)||0; }catch(e){}
+  counter++;
+  try{ localStorage.setItem('garagespot_hospedagem_counter',String(counter)); }catch(e){}
+  return 'GS'+(counter<=999?String(counter).padStart(3,'0'):String(counter));
+}
+function saveHospedagens(){ try{ localStorage.setItem('garagespot_hospedagens',JSON.stringify(HOSPEDAGENS)); }catch(e){} }
+function loadHospedagens(){
+  try{ const r=localStorage.getItem('garagespot_hospedagens'); if(r) Object.assign(HOSPEDAGENS,JSON.parse(r)); }catch(e){}
+}
+
+// ── USUÁRIOS ──────────────────────────────────────────────────────────────
+function saveUsuarios(){ try{ localStorage.setItem('garagespot_usuarios',JSON.stringify(USUARIOS)); }catch(e){} }
+function loadUsuarios(){
+  try{ const r=localStorage.getItem('garagespot_usuarios'); if(r) USUARIOS=JSON.parse(r)||[]; }catch(e){}
+}
+function estaNoExpediente(u){
+  if(!u||!u.horaInicio||!u.horaFim) return true;
+  const now=new Date(); const nowMin=now.getHours()*60+now.getMinutes();
+  const toMin=s=>{ const [h,m]=s.split(':').map(Number); return h*60+m; };
+  const ini=toMin(u.horaInicio); const fim=toMin(u.horaFim);
+  if(ini<=fim) return nowMin>=ini && nowMin<fim;
+  return nowMin>=ini || nowMin<fim; // turno que passa da meia-noite
+}
+
+// ── CONFIRMAR USUÁRIO ─────────────────────────────────────────────────────
+function confirmarUsuario(acao, callback){
+  if(!USUARIOS.length){ callback(null); return; }
+  const noExp=USUARIOS.filter(u=>estaNoExpediente(u)).sort((a,b)=>a.nome.localeCompare(b.nome));
+  const foraExp=USUARIOS.filter(u=>!estaNoExpediente(u)).sort((a,b)=>a.nome.localeCompare(b.nome));
+  const todosForaOuSemExp=noExp.length===0;
+
+  function renderItemUsr(u){
+    const fora=foraExp.includes(u);
+    return `<div class="usr-item" id="cu-usr-${u.id}">
+      <div>
+        <div><span class="usr-nome">${u.nome}</span>${fora?'<span class="usr-badge-out">Fora do expediente</span>':''}</div>
+        <div class="usr-cargo-lbl">${u.cargo}${!fora&&u.horaInicio?' · '+u.horaInicio+'–'+u.horaFim:''}</div>
+      </div>
+    </div>`;
+  }
+
+  function bindClicks(lista){
+    lista.forEach(u=>{
+      const el=document.getElementById('cu-usr-'+u.id);
+      if(el) el.onclick=()=>mostrarConfirmacao(u);
+    });
+  }
+
+  function mostrarLista(expandido){
+    const itens=expandido||todosForaOuSemExp?[...noExp,...foraExp]:noExp;
+    const listaHTML=itens.length>0?itens.map(renderItemUsr).join('')
+      :'<span style="font-size:12px;color:#bbb;padding:8px 0;display:block">Nenhum usuário no expediente</span>';
+    const verMaisHTML=!expandido&&!todosForaOuSemExp&&foraExp.length>0
+      ?`<button onclick="window._cuExpandir()" style="background:none;border:1px solid #ddd;border-radius:5px;padding:5px 10px;font-size:11px;color:#888;cursor:pointer;font-family:inherit;width:100%;margin-top:4px">Ver mais (${foraExp.length})</button>`:'';
+    const mc=document.getElementById('mc');
+    mc.innerHTML=`<div class="mt">Quem está ${acao}?</div>
+      <div class="usr-list">${listaHTML}</div>
+      ${verMaisHTML}
+      <button class="bcx" onclick="closeOv()" style="width:100%;margin-top:8px">Cancelar</button>`;
+    document.getElementById('ov').classList.add('on');
+    window._cuExpandir=()=>mostrarLista(true);
+    bindClicks(itens);
+  }
+
+  function mostrarConfirmacao(u){
+    const fora=foraExp.includes(u);
+    const mc=document.getElementById('mc');
+    const avisoFora=fora?`<div style="background:#FFF3E0;border:1px solid #E65100;border-radius:7px;padding:8px 12px;font-size:12px;color:#BF360C;margin-bottom:10px">⚠️ Fora do horário de expediente</div>`:'';
+    mc.innerHTML=`<div class="mt">Confirma</div>
+      <div style="background:#f5f4f0;border-radius:8px;padding:10px 12px;margin-bottom:12px">
+        <div style="font-size:14px;font-weight:700;color:#111">${u.nome} · ${u.cargo}</div>
+        ${u.horaInicio?'<div style="font-size:11px;color:#888;margin-top:3px">Expediente: '+u.horaInicio+'–'+u.horaFim+'</div>':''}
+      </div>
+      ${avisoFora}
+      <div class="b2">
+        <button class="bcx" id="cu-voltar">← Voltar</button>
+        <button class="bsv" id="cu-ok">Confirmar</button>
+      </div>`;
+    document.getElementById('ov').classList.add('on');
+    document.getElementById('cu-voltar').onclick=()=>mostrarLista(false);
+    document.getElementById('cu-ok').onclick=()=>callback({nome:u.nome,cargo:u.cargo,foraExpediente:fora});
+  }
+
+  mostrarLista(false);
+}
+
+// ── MODAL USUÁRIOS ────────────────────────────────────────────────────────
+function toggleToolsDropdown(){
+  const dd=document.getElementById('tools-dropdown');
+  if(!dd) return;
+  const aberto=dd.style.display!=='none';
+  dd.style.display=aberto?'none':'';
+  if(!aberto){
+    setTimeout(()=>{
+      function fora(e){ if(!e.target.closest('#toolbar-ferramentas')){ dd.style.display='none'; document.removeEventListener('click',fora); } }
+      document.addEventListener('click',fora);
+    },10);
+  }
+}
+function closeToolsDropdown(){ const dd=document.getElementById('tools-dropdown'); if(dd) dd.style.display='none'; }
+
+function showModalUsuarios(){
+  closeToolsDropdown();
+  function renderLista(){
+    const lista=[...USUARIOS].sort((a,b)=>a.nome.localeCompare(b.nome));
+    const listaHTML=lista.length===0
+      ?'<span style="font-size:12px;color:#bbb;font-style:italic">Nenhum usuário cadastrado</span>'
+      :lista.map(u=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;border:1px solid #eee;border-radius:7px;margin-bottom:5px">
+          <div><div style="font-size:13px;font-weight:700;color:#111">${u.nome}</div>
+          <div style="font-size:11px;color:#888">${u.cargo} · ${u.horaInicio||'—'}–${u.horaFim||'—'}</div></div>
+          <button onclick="window._editUsr('${u.id}')" style="background:none;border:1px solid #ddd;border-radius:5px;padding:3px 8px;font-size:11px;color:#555;cursor:pointer;font-family:inherit">✏️ Editar</button>
+        </div>`).join('');
+    const mc=document.getElementById('mc');
+    mc.innerHTML=`<div class="mt">👥 Usuários</div>
+      <div style="margin-bottom:8px">
+        <input class="fi" id="busca-usr" placeholder="Buscar usuário..." oninput="window._filtrarUsr(this.value)" style="margin-bottom:6px">
+        <div id="lista-usr" style="max-height:230px;overflow-y:auto">${listaHTML}</div>
+      </div>
+      <button class="bsv" onclick="window._novoUsr()" style="width:100%;margin-bottom:8px">+ Novo usuário</button>
+      <button class="bcx" onclick="closeOv()" style="width:100%">Fechar</button>`;
+    document.getElementById('ov').classList.add('on');
+    window._novoUsr=()=>mostrarForm(null);
+    window._editUsr=(uid)=>{ const u=USUARIOS.find(x=>x.id===uid); if(u) mostrarForm(u); };
+    window._filtrarUsr=(q)=>{
+      const ql=q.toLowerCase();
+      const f=USUARIOS.filter(u=>u.nome.toLowerCase().includes(ql)||u.cargo.toLowerCase().includes(ql)).sort((a,b)=>a.nome.localeCompare(b.nome));
+      const el=document.getElementById('lista-usr'); if(!el) return;
+      el.innerHTML=f.length===0?'<span style="font-size:12px;color:#bbb">Sem resultado</span>'
+        :f.map(u=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;border:1px solid #eee;border-radius:7px;margin-bottom:5px">
+            <div><div style="font-size:13px;font-weight:700;color:#111">${u.nome}</div>
+            <div style="font-size:11px;color:#888">${u.cargo} · ${u.horaInicio||'—'}–${u.horaFim||'—'}</div></div>
+            <button onclick="window._editUsr('${u.id}')" style="background:none;border:1px solid #ddd;border-radius:5px;padding:3px 8px;font-size:11px;color:#555;cursor:pointer;font-family:inherit">✏️ Editar</button>
+          </div>`).join('');
+    };
+  }
+  function mostrarForm(u){
+    const mc=document.getElementById('mc'); const isNovo=!u;
+    const delBtn=!isNovo?`<button onclick="window._excluirUsr('${u.id}')" style="width:100%;background:none;border:1px solid #E24B4A;color:#A32D2D;border-radius:7px;padding:8px;font-size:12px;cursor:pointer;font-family:inherit;margin-bottom:8px">🗑 Excluir usuário</button>`:'';
+    mc.innerHTML=`<div class="mt">${isNovo?'+ Novo usuário':'✏️ Editar usuário'}</div>
+      <label class="fl">Nome completo <span class="req">*</span></label>
+      <input class="fi" id="uf-nome" value="${u?u.nome:''}" placeholder="Nome completo">
+      <label class="fl">Cargo</label>
+      <input class="fi" id="uf-cargo" value="${u?u.cargo:''}" placeholder="Ex: Recepcionista, Porteiro...">
+      <label class="fl">Início do expediente</label>
+      <input type="time" class="fi" id="uf-inicio" value="${u?u.horaInicio:''}">
+      <label class="fl">Fim do expediente</label>
+      <input type="time" class="fi" id="uf-fim" value="${u?u.horaFim:''}">
+      ${delBtn}
+      <div class="b2">
+        <button class="bcx" id="uf-back">← Voltar</button>
+        <button class="bsv" id="uf-save">Salvar</button>
+      </div>`;
+    document.getElementById('ov').classList.add('on');
+    document.getElementById('uf-back').onclick=renderLista;
+    document.getElementById('uf-save').onclick=function(){
+      const nome=document.getElementById('uf-nome').value.trim();
+      const cargo=document.getElementById('uf-cargo').value.trim();
+      const horaInicio=document.getElementById('uf-inicio').value;
+      const horaFim=document.getElementById('uf-fim').value;
+      if(!nome){ const el=document.getElementById('uf-nome'); el.classList.add('err'); el.addEventListener('input',()=>el.classList.remove('err'),{once:true}); return; }
+      if(isNovo){ USUARIOS.push({id:'u'+Date.now(),nome,cargo,horaInicio,horaFim}); }
+      else{ const idx=USUARIOS.findIndex(x=>x.id===u.id); if(idx>=0) USUARIOS[idx]={...USUARIOS[idx],nome,cargo,horaInicio,horaFim}; }
+      saveUsuarios(); renderLista();
+    };
+    window._excluirUsr=(uid)=>{ USUARIOS=USUARIOS.filter(x=>x.id!==uid); saveUsuarios(); renderLista(); };
+  }
+  renderLista();
+}
+
+// ── TOAST ─────────────────────────────────────────────────────────────────
+function showToast(msg,duration){
+  document.querySelectorAll('.gs-toast').forEach(t=>t.remove());
+  const t=document.createElement('div'); t.className='gs-toast'; t.textContent=msg;
+  document.body.appendChild(t);
+  setTimeout(()=>{ t.style.opacity='0'; setTimeout(()=>t.remove(),350); }, duration||3500);
+}
+
+// ── MODAL HISTÓRICO ───────────────────────────────────────────────────────
+function showHistoricoModal(apt, hospedagem){
+  const hist=getHistorico(apt);
+  const tLabel={checkin:'Check-in',saida_passeio:'Saída para Passeio',retorno_passeio:'Retorno do Passeio',checkout:'Check-out',edicao:'Edição'};
+  const tColor={checkin:'#0F6E56',saida_passeio:'#854F0B',retorno_passeio:'#185FA5',checkout:'#A32D2D',edicao:'#555'};
+  const titulo=hospedagem?`Histórico — Apt. ${apt} · ${hospedagem}`:`Histórico — Apt. ${apt}`;
+  const cardsHTML=hist.length===0
+    ?'<span style="font-size:12px;color:#bbb;font-style:italic">Sem eventos registrados</span>'
+    :hist.map(ev=>`<div class="hist-card" style="background:${tColor[ev.tipo]||'#666'}">
+        <div class="hist-tipo">${tLabel[ev.tipo]||ev.tipo}</div>
+        <div class="hist-info">${fmtDt(ev.ts)}</div>
+        ${ev.vaga?'<div class="hist-info">Vaga: '+ev.vaga+'</div>':''}
+        <div class="hist-info">Por: ${ev.usuario||'Não identificado'}</div>
+        ${ev.extra?'<div class="hist-info">'+ev.extra+'</div>':''}
+      </div>`).join('');
+  showM(`<div class="mt">${titulo}</div>
+    <div style="margin:10px 0;max-height:55vh;overflow-y:auto">${cardsHTML}</div>
+    <button class="bcx" onclick="closeOv()" style="width:100%;margin-top:8px">Fechar</button>`);
+}
+
 // ── HISTÓRICO DE EVENTOS ─────────────────────────────────────────────────
 const HISTORICO = {};
 
@@ -1625,10 +1888,11 @@ function fmtDt(ts){
   return d.toLocaleDateString('pt-BR')+' '+d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
 }
 
-function addHistorico(apt, tipo, vaga, extra){
+function addHistorico(apt, tipo, vaga, extra, usuario, hospedagem){
   if(!apt) return;
   if(!HISTORICO[apt]) HISTORICO[apt]=[];
-  HISTORICO[apt].push({tipo, ts:Date.now(), vaga:vaga||'', extra:extra||''});
+  HISTORICO[apt].push({tipo, ts:Date.now(), vaga:vaga||'', extra:extra||'',
+    usuario:usuario||'', hospedagem:hospedagem||''});
   saveHistorico();
 }
 
@@ -1643,10 +1907,13 @@ function loadHistorico(){
   }catch(e){}
 }
 
-function iniciarHistorico(apt, vaga){
-  HISTORICO[apt]=[{tipo:'checkin', ts:Date.now(), vaga:vaga, extra:''}];
+function iniciarHistorico(apt, vaga, hospedagem, usuario){
+  HISTORICO[apt]=[{tipo:'checkin', ts:Date.now(), vaga:vaga, extra:'',
+    usuario:usuario||'', hospedagem:hospedagem||''}];
   saveHistorico();
 }
+
+function getHistorico(apt){ return HISTORICO[apt]||[]; }
 
 function aptJaFezCheckout(apt){
   return (HISTORICO[apt]||[]).some(e=>e.tipo==='checkout');
@@ -1683,7 +1950,9 @@ function buildRegistroHTML(apt,dv,hist,anexos){
     checkout:'#A32D2D',
     edicao:'#555',
   };
+  const hospedagemNum=dv.hospedagem||((hist||[]).find(e=>e.tipo==='checkin')?.hospedagem)||'';
   const campos=[
+    ['Hospedagem',  hospedagemNum||'Não informado'],
     ['Apartamento', ni(apt)],
     ['Hóspede',     ni(dv.guest)],
     ['Modelo',      ni(dv.model)],
@@ -1756,7 +2025,10 @@ function buildRegistroHTML(apt,dv,hist,anexos){
       <h1>🅿 GarageSpot</h1>
       <div style="font-size:12px;margin-top:3px;opacity:.85">Registro do Veículo — Apartamento ${apt}</div>
     </div>
-    <small>Developed by Douglas Nascimento</small>
+    <div style="text-align:right">
+      ${hospedagemNum?`<div style="font-size:22px;font-weight:700;letter-spacing:2px">${hospedagemNum}</div>`:''}
+      <small style="opacity:.75">Developed by Douglas Nascimento</small>
+    </div>
   </div>
 
   <!-- Pg 1: Dados do veículo -->
@@ -1778,6 +2050,7 @@ function buildRegistroHTML(apt,dv,hist,anexos){
           <div>
             <div class="evento-tipo">${tLabel[ev.tipo]||ev.tipo}</div>
             ${ev.vaga?`<div class="evento-vaga">Vaga: ${ev.vaga}</div>`:''}
+            <div class="evento-vaga">Por: ${ev.usuario||'Não identificado'}</div>
           </div>
           <div class="evento-hora">${fmtDt(ev.ts)}</div>
         </div>`).join('')
@@ -1799,46 +2072,41 @@ ${imgPages}
 function isCapacitor(){ return !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()); }
 
 async function compartilharPDF(apt,dv,hist,anexos){
-  const nome=fmtNomeArquivo(apt,dv.guest,
+  const nomeArquivo=fmtNomeArquivo(apt,dv.guest,
     (hist||[]).find(e=>e.tipo==='checkin')?.ts,
     (hist||[]).slice().reverse().find(e=>e.tipo==='checkout')?.ts);
   const html=buildRegistroHTML(apt,dv,hist,anexos);
 
-  if(isCapacitor()){
-    try{
-      // Plugins registrados pelo bridge nativo — não usar import() dinâmico em HTML estático
-      const Filesystem = window.Capacitor.Plugins.Filesystem;
-      const Share = window.Capacitor.Plugins.Share;
-
-      if(Filesystem && Share){
-        const nomeArq = nome+'.html';
+  if(window.Capacitor && window.Capacitor.Plugins){
+    const Filesystem = window.Capacitor.Plugins.Filesystem;
+    const Share = window.Capacitor.Plugins.Share;
+    if(Filesystem && Share){
+      try{
         await Filesystem.writeFile({
-          path: 'GarageSpot/'+nomeArq,
+          path: 'GarageSpot/'+nomeArquivo+'.html',
           data: html,
           directory: 'DOCUMENTS',
           encoding: 'utf8',
-          recursive: true,
+          recursive: true
         });
-        const fileResult = await Filesystem.getUri({
-          path: 'GarageSpot/'+nomeArq,
-          directory: 'DOCUMENTS',
+        const uriResult = await Filesystem.getUri({
+          path: 'GarageSpot/'+nomeArquivo+'.html',
+          directory: 'DOCUMENTS'
         });
         await Share.share({
           title: 'GarageSpot — Apt. '+apt,
-          text: 'Registro do veículo — Apt. '+apt,
-          url: fileResult.uri,
-          dialogTitle: 'Compartilhar registro',
+          url: uriResult.uri,
+          dialogTitle: 'Compartilhar registro'
         });
         return;
-      }
-    }catch(e){ console.warn('Capacitor share error:',e); }
+      }catch(e){ console.error('Share error:',e); }
+    }
   }
-
-  // Fallback browser: abre em nova aba para imprimir/salvar
+  // Fallback browser
   const blob=new Blob([html],{type:'text/html;charset=utf-8'});
   const url=URL.createObjectURL(blob);
   const a=document.createElement('a');
-  a.href=url; a.target='_blank'; a.rel='noopener';
+  a.href=url; a.target='_blank';
   document.body.appendChild(a); a.click();
   document.body.removeChild(a);
   setTimeout(()=>URL.revokeObjectURL(url),10000);
@@ -2001,7 +2269,7 @@ function buildSnapshot(){
       status:d.status, apt:d.apt, model:d.model, color:d.color,
       plate:d.plate, guest:d.guest, obs:d.obs||'', size:d.size,
       mergedMaster:d.mergedMaster, mergedSlave:d.mergedSlave,
-      hmergeWith:d.hmergeWith||null,
+      hmergeWith:d.hmergeWith||null, hospedagem:d.hospedagem||'',
     };
   });
   return { vagas, passeio: JSON.parse(JSON.stringify(PASSEIO)), ts: Date.now() };
@@ -2023,6 +2291,7 @@ function applySnapshot(data){
     S[id].mergedMaster = saved.mergedMaster || false;
     S[id].mergedSlave  = saved.mergedSlave  || false;
     S[id].hmergeWith   = saved.hmergeWith   || null;
+    S[id].hospedagem   = saved.hospedagem   || '';
   });
   if(data.passeio){
     Object.entries(data.passeio).forEach(([apt,d])=>{
@@ -2198,6 +2467,8 @@ checkLicense().then(async (ativo)=>{
       const restored = await loadData();
       loadAnexos();
       loadHistorico();
+      loadUsuarios();
+      loadHospedagens();
       buildTable();
       if(restored) Object.keys(S).forEach(id=>ref(id));
       attachDrag();
