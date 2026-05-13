@@ -221,6 +221,64 @@ html,body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;bac
 .dr{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #f0efea;font-size:12px}
 .dl{color:#888}.dv{font-weight:700;color:#111}
 .warn-box{background:#FFF8E6;border:1.5px solid #BA7517;border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:12px;color:#633806;line-height:1.5}
+
+/* ── NAVBAR ── */
+.navbar{display:flex;gap:4px;flex-shrink:0;background:#fff;border:1px solid #ddd;border-radius:9px;padding:4px;overflow:hidden}
+.nav-btn{flex:1;padding:7px 4px;font-size:11px;font-weight:700;border:none;border-radius:6px;background:none;color:#555;cursor:pointer;font-family:inherit;transition:background .15s,color .15s;white-space:nowrap}
+.nav-btn:active{background:#f5f4f0}
+.nav-btn.nav-active{background:#185FA5;color:#fff}
+
+/* ── PAINEL DO DIA ── */
+.painel-wrap{flex:1;min-height:0;overflow-y:auto;background:#fff;border:1px solid #ccc;border-radius:9px;padding:10px}
+.painel-sec{margin-bottom:16px}
+.painel-sec-title{font-size:10px;font-weight:700;color:#185FA5;border-bottom:2px solid #e8eef8;padding-bottom:3px;margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px}
+.painel-stat-row{display:flex;gap:6px;margin-bottom:8px}
+.painel-stat-card{flex:1;background:#f5f4f0;border-radius:8px;padding:8px 6px;text-align:center}
+.painel-stat-val{font-size:20px;font-weight:700}
+.painel-stat-lbl{font-size:9px;color:#888;margin-top:2px;white-space:nowrap}
+.painel-event-row{display:flex;align-items:flex-start;gap:7px;padding:5px 0;border-bottom:1px solid #f0efea;font-size:11px}
+.painel-event-row:last-child{border-bottom:none}
+.painel-badge{border-radius:4px;padding:2px 6px;font-size:9px;font-weight:700;white-space:nowrap;flex-shrink:0;color:#fff}
+.painel-staff-item{display:flex;align-items:center;gap:6px;padding:5px 0;border-bottom:1px solid #f0efea;font-size:11px}
+.painel-staff-item:last-child{border-bottom:none}
+
+/* ── BUSCA RÁPIDA ── */
+.busca-bar{flex-shrink:0;display:none;background:#fff;border:1px solid #ddd;border-radius:9px;padding:5px 8px;align-items:center;gap:6px}
+.busca-bar.on{display:flex}
+.busca-btn{background:none;border:1px solid #e0ddd8;border-radius:5px;padding:3px 8px;font-size:13px;cursor:pointer;font-family:inherit;line-height:1.4;color:#555}
+.busca-btn:active{background:#f5f4f0}
+@keyframes pulse-search{0%,100%{outline-color:#185FA5;background:rgba(24,95,165,.09)}50%{outline-color:#A32D2D;background:rgba(163,45,45,.09)}}
+.search-hit{outline:3px solid #185FA5 !important;outline-offset:-2px;animation:pulse-search 1.2s ease-in-out 3}
+
+/* ── PLANTÃO INDICATOR ── */
+.plantao-ind{font-size:10px;color:#0F6E56;font-weight:700;background:#EEF9F2;border:1px solid #A6D8B6;border-radius:4px;padding:2px 5px;cursor:pointer;white-space:nowrap;user-select:none}
+.plantao-ind.zero{color:#888;background:#f5f4f0;border-color:#e0ddd8}
+
+/* ── PIN / GESTÃO ── */
+.pin-display{display:flex;gap:10px;justify-content:center;margin:14px 0}
+.pin-dot{width:14px;height:14px;border-radius:50%;border:2px solid #ddd;background:#fff;transition:background .12s,border-color .12s}
+.pin-dot.filled{background:#185FA5;border-color:#185FA5}
+.pin-keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:6px 0}
+.pin-key{padding:13px;font-size:18px;font-weight:700;border:1.5px solid #ddd;border-radius:9px;background:#fff;color:#111;cursor:pointer;font-family:inherit;text-align:center;line-height:1}
+.pin-key:active{background:#f0efea}
+.pin-key.del{font-size:13px;color:#A32D2D;border-color:#FCEBEB}
+.pin-key.ok{background:#EEF6FF;color:#185FA5;border-color:#378ADD;font-size:13px}
+.gestao-menu-item{display:flex;align-items:center;gap:10px;padding:11px 14px;border:1px solid #eee;border-radius:8px;margin-bottom:6px;cursor:pointer;background:#fafafa;font-size:13px;font-weight:600;color:#333}
+.gestao-menu-item:active{background:#f0efea}
+.gestao-menu-sep{font-size:9px;color:#aaa;text-transform:uppercase;letter-spacing:.5px;margin:10px 0 6px;padding:0 2px}
+
+/* ── RELATÓRIOS ── */
+.rel-row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #f0efea;font-size:12px}
+.rel-row:last-child{border-bottom:none}
+.rel-badge{background:#EEF6FF;color:#185FA5;border-radius:4px;padding:1px 6px;font-size:10px;font-weight:700}
+
+/* ── PORTRAIT ── */
+@media(orientation:portrait){
+  .tb-passeio{display:none}
+  .tb-ob{display:none}
+  .apt-lbl{font-size:2.5vw}
+  .id-lbl{font-size:1.2vw}
+}
 </style>
 </head>
 <body>
@@ -249,17 +307,23 @@ html,body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;bac
       <button class="tb-more" id="tb-more" onclick="togglePanel()" style="display:none" title="Ver todos">···</button>
     </div>
     <div class="tb-right">
+      <span class="plantao-ind zero" id="plantao-ind" onclick="showPlantaoTooltip()" title="Usuários no plantão">👤0</span>
+      <button class="busca-btn" onclick="toggleBusca()" title="Busca rápida">🔍</button>
       <span class="clk" id="clk"></span>
       <span class="pt-arrow" id="pt-arrow" onclick="togglePanel()" title="Carros a passeio">▾</span>
     </div>
   </div>
 
-  <!-- TOOLBAR FERRAMENTAS -->
-  <div class="toolbar-tools" id="toolbar-ferramentas">
-    <button class="tb-tools-btn" onclick="toggleToolsDropdown()">⚙ Ferramentas</button>
-    <div class="tb-dropdown" id="tools-dropdown" style="display:none">
-      <button class="tb-dd-item" onclick="showModalUsuarios()">👥 Cadastro de usuários</button>
-    </div>
+  <!-- NAVBAR -->
+  <div class="navbar">
+    <button class="nav-btn nav-active" id="nav-mapa" onclick="navTo('mapa')">🗺 Mapa Garagem</button>
+    <button class="nav-btn" id="nav-painel" onclick="navTo('painel')">📊 Painel do Dia</button>
+    <button class="nav-btn" id="nav-gestao" onclick="navTo('gestao')">⚙ Gestão ▾</button>
+  </div>
+  <!-- BUSCA RÁPIDA -->
+  <div class="busca-bar" id="busca-bar">
+    <input class="fi" id="busca-input" placeholder="Buscar placa, apto, hóspede, modelo..." oninput="onBuscaInput(this.value)" autocomplete="off" style="margin:0;flex:1">
+    <button class="bcx" onclick="fecharBusca()" style="padding:6px 10px;font-size:12px">✕</button>
   </div>
 
   <!-- PAINEL PASSEIO (retrátil) -->
@@ -281,8 +345,8 @@ html,body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;bac
     🚗 Toque na vaga de destino para mover o carro · <span id="move-apt-lbl"></span> &nbsp;
     <button onclick="cancelMove()" style="background:#fff;border:1px solid #E65100;color:#BF360C;font-size:10px;padding:2px 8px;border-radius:4px;cursor:pointer;font-family:inherit">Cancelar</button>
   </div>
-  <div class="garage-wrap">
-    <div class="garage-inner">
+  <div class="garage-wrap" id="garage-wrap">
+    <div class="garage-inner" id="garage-inner">
       <div class="map-container">
         <div class="map-rel" id="map-rel">
           <table id="gtable"></table>
@@ -305,7 +369,7 @@ html,body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;bac
         <div class="li"><div class="ls" style="background:#888780;border-color:#666"></div>Pilar</div>
       </div>
     </div>
-  </div>
+    <div class="painel-wrap" id="painel-wrap" style="display:none"></div>
 </div>
 <div class="ovbg" id="ov"><div class="modal" id="mc"></div></div>
 
@@ -330,7 +394,7 @@ const ROW_FR = [99, 34.5, 34.5, 34.5, 34.5, 34.5, 34.5, 34.5, 34.5, 34.5, 89.25,
 // Layout exato do Excel
 // [id, tipo, rowspan?, colspan?]
 const ROWS = [
-  [['1E','v'],  ['9C','v'],['8C','v'],['7C','v'],['6C','v'],['5C','v'],['4C','v'],['3C','v'],['2C','v'],['1C','v'], ['','s'],['EXTRA 01','v']],
+  [['1E','v'],  ['1C','v'],['2C','v'],['3C','v'],['4C','v'],['5C','v'],['6C','v'],['7C','v'],['8C','v'],['9C','v'], ['','s'],['EXTRA 01','v']],
   [['2E','v',3],['CORREDOR 01','c',9,3],null,null,['CORREDOR 02','c',9,3],null,null,['CORREDOR 03','c',9,3],null,null,['','s'],['GARAGEM\nHOTEL','h']],
   [null,null,null,null,null,null,null,null,null,null,['','s'],['1D','v']],
   [null,null,null,null,null,null,null,null,null,null,['','s'],['2D','v']],
@@ -340,8 +404,8 @@ const ROWS = [
   [['4E','v',3],null,null,null,null,null,null,null,null,null,['','s'],['6D','v']],
   [null,null,null,null,null,null,null,null,null,null,['','s'],['7D','v']],
   [null,null,null,null,null,null,null,null,null,null,['','s'],['8D','v']],
-  [['','b'],['9B','v'],['8B','v'],['7B','v'],['6B','v'],['5B','v'],['4B','v'],['3B','v'],['2B','v'],['1B','v'],['','s'],['9D','v']],
-  [['','b'],['9A','v'],['8A','v'],['7A','v'],['6A','v'],['5A','v'],['4A','v'],['3A','v'],['2A','v'],['1A','v'],['','s'],['EXTRA 02','v']],
+  [['','b'],['1B','v'],['2B','v'],['3B','v'],['4B','v'],['5B','v'],['6B','v'],['7B','v'],['8B','v'],['9B','v'],['','s'],['9D','v']],
+  [['','b'],['1A','v'],['2A','v'],['3A','v'],['4A','v'],['5A','v'],['6A','v'],['7A','v'],['8A','v'],['9A','v'],['','s'],['EXTRA 02','v']],
 ];
 
 function initState(){
@@ -509,18 +573,20 @@ function positionPilares(){
   // pos vertical: 'row1_bottom' = borda inferior de row1 (entre fileira C e corredor)
   //               'row10_bottom' = borda inferior de row10 (entre corredor e fileira B)
   const pilarDefs = [
-    // Grupo 1 — fileira superior (row 0→1 no drawing = Excel row 1→2)
-    // rowOff ~123px dentro de row1 (99pt alto) → o pilar está na parte de baixo da row1
-    { id:'pilar-1', leftId:'7C', rightId:'6C', vertRef:'7C', vertEdge:'bottom' },
-    { id:'pilar-2', leftId:'5C', rightId:'4C', vertRef:'5C', vertEdge:'bottom' },
-    { id:'pilar-3', leftId:'3C', rightId:'2C', vertRef:'3C', vertEdge:'bottom' },
-    { id:'pilar-4', leftId:'1E', rightId:'9C', vertRef:'1E', vertEdge:'bottom' },
-    // Grupo 2 — fileiras B/A (row 9→10 no drawing = Excel row 10→11)
-    // rowOff ~39-40px dentro de row10 (34.5pt alto) → mais perto da borda inferior de row10
-    // A row10 é a última linha do corredor; row11 é a fileira B
-    // O pilar fica NA BORDA entre corredor e fileira B → usar borda superior de 8B/4B
-    { id:'pilar-5', leftId:'8B', rightId:'7B', vertRef:'8B', vertEdge:'top' },
-    { id:'pilar-6', leftId:'4B', rightId:'3B', vertRef:'4B', vertEdge:'top' },
+    // Grupo 1 — fileira superior (row 0→1): borda entre fileira C e corredor
+    // P1: col3→4 físico = vagas 3C|4C (após rename)
+    { id:'pilar-1', leftId:'3C', rightId:'4C', vertRef:'3C', vertEdge:'bottom' },
+    // P2: col5→6 físico = vagas 5C|6C
+    { id:'pilar-2', leftId:'5C', rightId:'6C', vertRef:'5C', vertEdge:'bottom' },
+    // P3: col7→8 físico = vagas 7C|8C
+    { id:'pilar-3', leftId:'7C', rightId:'8C', vertRef:'7C', vertEdge:'bottom' },
+    // P4: col0→1 físico = vagas 1E|1C
+    { id:'pilar-4', leftId:'1E', rightId:'1C', vertRef:'1E', vertEdge:'bottom' },
+    // Grupo 2 — fileiras B/A: borda superior de row B (entre corredor e fileiras B/A)
+    // P5: col2→3 físico = vagas 2B|3B
+    { id:'pilar-5', leftId:'2B', rightId:'3B', vertRef:'2B', vertEdge:'top' },
+    // P6: col6→7 físico = vagas 6B|7B
+    { id:'pilar-6', leftId:'6B', rightId:'7B', vertRef:'6B', vertEdge:'top' },
   ];
 
   pilarDefs.forEach(def=>{
@@ -897,10 +963,10 @@ function attachDrag(){
 // ── MERGE HORIZONTAL (vagas 4B-7B) ───────────────────────────────────────
 // Vizinhos possíveis (na mesma fileira B, lado a lado)
 const HMERGE_OPTS = {
-  '7B': ['6B'],
-  '6B': ['7B','5B'],
-  '5B': ['6B','4B'],
-  '4B': ['5B'],
+  '3B': ['4B'],
+  '4B': ['3B','5B'],
+  '5B': ['4B','6B'],
+  '6B': ['5B'],
 };
 
 // Aplica merge horizontal: id ocupa colspan=2, alvo some
@@ -915,6 +981,7 @@ function aplicarHMerge(id, alvoId){
   tdSrc.colSpan = 2;
   tdAlvo.classList.add('hmerge-hidden');
   ref(id);
+  setTimeout(positionPilares, 50);
 }
 
 // Desfaz merge horizontal
@@ -932,6 +999,7 @@ function desfazHMerge(id){
     ref(alvoId);
   }
   S[id].hmergeWith = null;
+  setTimeout(positionPilares, 50);
 }
 
 // Pergunta se quer fazer merge horizontal após salvar o carro
@@ -1228,28 +1296,34 @@ function showMenu(id){
   document.getElementById('m-chk').onclick=()=>doChk(id);
 }
 
-// Trocar carro grande → pequeno (libera a vaga A, carro fica só na A)
+// Trocar carro grande → pequeno (carro fica só na B, libera a A)
 window.trocarParaPequeno = function(id){
   const d = S[id];
   const bId = id.endsWith('B') ? id : id.slice(0,-1)+'B';
   const aId = bId.slice(0,-1)+'A';
-  const apt=d.apt,model=d.model,color=d.color,plate=d.plate,guest=d.guest,obs=d.obs||'';
+  const apt=d.apt,model=d.model,color=d.color,plate=d.plate,guest=d.guest,
+        obs=d.obs||'',hospedagem=d.hospedagem||'';
 
   // Desfaz merge horizontal se houver
   if(d.hmergeWith) desfazHMerge(id);
 
-  // Desfaz merge vertical (A+B) se houver
-  if(S[bId]){S[bId].mergedMaster=false;S[bId].status='free';S[bId].apt='';S[bId].size='small';ref(bId);}
+  // Desfaz merge vertical: libera AMBAS as células antes de re-ocupar só uma
   const tdB=getTd(bId);if(tdB)tdB.rowSpan=1;
-  if(S[aId]){S[aId].mergedSlave=false;}
+  if(S[bId]){S[bId].mergedMaster=false;S[bId].status='free';S[bId].apt='';S[bId].size='small';}
+  if(S[aId]){
+    S[aId].mergedSlave=false;S[aId].status='free';S[aId].apt='';
+    S[aId].model='';S[aId].color='';S[aId].plate='';S[aId].guest='';S[aId].obs='';S[aId].size='small';
+    ref(aId);
+  }
 
-  // Carro fica só na vaga original (B se era B, A se era A)
-  const vagaDest = id.endsWith('B') ? bId : aId;
+  // Carro fica sempre na vaga B (mais visível)
   ssz='small';
-  S[vagaDest].status='occupied';S[vagaDest].apt=apt;S[vagaDest].model=model;
-  S[vagaDest].color=color;S[vagaDest].plate=plate;S[vagaDest].guest=guest;S[vagaDest].obs=obs;
-  S[vagaDest].size='small';S[vagaDest].mergedMaster=false;S[vagaDest].mergedSlave=false;
-  ref(vagaDest);
+  S[bId].status='occupied';S[bId].apt=apt;S[bId].model=model;
+  S[bId].color=color;S[bId].plate=plate;S[bId].guest=guest;S[bId].obs=obs;
+  S[bId].hospedagem=hospedagem;
+  S[bId].size='small';S[bId].mergedMaster=false;S[bId].mergedSlave=false;
+  ref(bId);
+  setTimeout(positionPilares, 50);
   refByApt(apt);upd();closeOv();
 };
 
@@ -1379,6 +1453,13 @@ function doChk(id){
         HOSPEDAGENS[hospNum].usuario_checkout=usuarioStr;
         saveHospedagens();
       }
+      // Salva histórico e anexos antes de apagar os dados
+      const histChk=getHistorico(aptKey);
+      const dvChk={model:dadosVeiculo.model,color:dadosVeiculo.color,plate:dadosVeiculo.plate,
+                   guest:dadosVeiculo.guest,obs:dadosVeiculo.obs,size:dadosVeiculo.size,
+                   vaga:id,hospedagem:hospNum};
+      const anexosChk=getAnexos(id,false);
+
       if(aptKey&&PASSEIO[aptKey])delete PASSEIO[aptKey];
       if(d.hmergeWith) desfazHMerge(id);
       if(id.endsWith('B')&&d.mergedMaster){
@@ -1399,7 +1480,14 @@ function doChk(id){
       const keyV='v_'+id, keyP='p_'+aptKey;
       if(ANEXOS[keyV]){delete ANEXOS[keyV];saveAnexos();}
       if(ANEXOS[keyP]){delete ANEXOS[keyP];saveAnexos();}
-      closeOv();
+      // Pergunta se quer compartilhar o registro
+      showM(`<div class="mt">🚪 Check-out realizado!</div>
+        <div class="ms">Hospedagem ${hospNum||'s/n'} · Apt. ${aptKey}<br>${dvChk.guest||'Hóspede não identificado'}</div>
+        <div class="ag">
+          <button class="bsv" id="co-share">📄 Compartilhar Registro</button>
+          <button class="bcx" onclick="closeOv()" style="margin-top:5px">Fechar</button>
+        </div>`);
+      document.getElementById('co-share').onclick=()=>{ closeOv(); compartilharPDF(aptKey,dvChk,histChk,anexosChk); };
     });
   };
 }
@@ -1511,27 +1599,30 @@ function showEdit(id, fromPasseio){
     const guest=document.getElementById('e-gst').value.trim();
     const obs  =document.getElementById('e-obs').value.trim();
 
-    // Monta resumo das alterações para o histórico
     const campos=[['Modelo','model',model],['Cor','color',color],
                   ['Placa','plate',plate],['Hóspede','guest',guest],['Obs','obs',obs]];
     const apt = fromPasseio ? id : (S[id]?.apt||'');
     const atual = fromPasseio ? PASSEIO[id] : S[id];
     const alterados=campos.filter(([l,k,v])=>v!==(atual[k]||'')).map(([l,k,v])=>`${l}: ${v||'—'}`);
 
-    if(fromPasseio){
-      PASSEIO[id].model=model;PASSEIO[id].color=color;PASSEIO[id].plate=plate;PASSEIO[id].guest=guest;PASSEIO[id].obs=obs;
-      if(alterados.length) addHistorico(id,'edicao','',`Editado: ${alterados.join(' · ')}`);
-      upd();
-    } else {
-      S[id].model=model;S[id].color=color;S[id].plate=plate;S[id].guest=guest;S[id].obs=obs;
-      if(id.endsWith('B')&&S[id].mergedMaster){
-        const aId=id.slice(0,-1)+'A';
-        if(S[aId]){S[aId].model=model;S[aId].color=color;S[aId].plate=plate;S[aId].guest=guest;S[aId].obs=obs;}
+    confirmarUsuario('editando os dados',function(usuario){
+      const usuarioStr=usuario?(usuario.nome+' · '+usuario.cargo):'';
+      const hospNum=(fromPasseio?PASSEIO[id]?.hospedagem:S[id]?.hospedagem)||'';
+      if(fromPasseio){
+        PASSEIO[id].model=model;PASSEIO[id].color=color;PASSEIO[id].plate=plate;PASSEIO[id].guest=guest;PASSEIO[id].obs=obs;
+        if(alterados.length) addHistorico(id,'edicao','',`Editado: ${alterados.join(' · ')}`,usuarioStr,hospNum);
+        upd();
+      } else {
+        S[id].model=model;S[id].color=color;S[id].plate=plate;S[id].guest=guest;S[id].obs=obs;
+        if(id.endsWith('B')&&S[id].mergedMaster){
+          const aId=id.slice(0,-1)+'A';
+          if(S[aId]){S[aId].model=model;S[aId].color=color;S[aId].plate=plate;S[aId].guest=guest;S[aId].obs=obs;}
+        }
+        if(alterados.length && apt) addHistorico(apt,'edicao',id,`Editado: ${alterados.join(' · ')}`,usuarioStr,hospNum);
+        saveData();
       }
-      if(alterados.length && apt) addHistorico(apt,'edicao',id,`Editado: ${alterados.join(' · ')}`);
-      saveData();
-    }
-    showDet(id, fromPasseio);
+      showDet(id, fromPasseio);
+    });
   };
 }
 
@@ -1615,6 +1706,7 @@ function executarReset(){
   });
   Object.keys(PASSEIO).forEach(k=>delete PASSEIO[k]);
 
+  addLogSistema('Mapa limpo por usuário');
   upd(); saveData(); closeOv();
   atualizarBotoesRestore();
 }
@@ -1667,17 +1759,20 @@ function executarRestore(){
       ref(id);
       if(id.endsWith('B')){const td=getTd(id);if(td)td.rowSpan=S[id].mergedMaster?2:1;}
     });
-    // Apaga backup e remove botão ↺ — só reaparece se apagar tudo novamente
     try{ localStorage.removeItem(BACKUP_KEY_TUDO); }catch(e){}
     const rbtn=document.getElementById('reset-btns');
     if(rbtn) rbtn.querySelectorAll('.restore').forEach(b=>b.remove());
+    addLogSistema('Mapa restaurado do backup de '+fmtTs(data.ts));
     upd(); saveData(); closeOv();
   }catch(e){ closeOv(); }
 }
 
 function showM(h){document.getElementById('mc').innerHTML=h;document.getElementById('ov').classList.add('on');}
 window.closeOv=function(){document.getElementById('ov').classList.remove('on');document.getElementById('mc').innerHTML='';};
-function tick(){document.getElementById('clk').textContent=new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});}
+function tick(){
+  document.getElementById('clk').textContent=new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+  atualizarPlantao();
+}
 
 // ── HOSPEDAGEM ────────────────────────────────────────────────────────────
 function nextNumHospedagem(){
@@ -1769,22 +1864,7 @@ function confirmarUsuario(acao, callback){
 }
 
 // ── MODAL USUÁRIOS ────────────────────────────────────────────────────────
-function toggleToolsDropdown(){
-  const dd=document.getElementById('tools-dropdown');
-  if(!dd) return;
-  const aberto=dd.style.display!=='none';
-  dd.style.display=aberto?'none':'';
-  if(!aberto){
-    setTimeout(()=>{
-      function fora(e){ if(!e.target.closest('#toolbar-ferramentas')){ dd.style.display='none'; document.removeEventListener('click',fora); } }
-      document.addEventListener('click',fora);
-    },10);
-  }
-}
-function closeToolsDropdown(){ const dd=document.getElementById('tools-dropdown'); if(dd) dd.style.display='none'; }
-
 function showModalUsuarios(){
-  closeToolsDropdown();
   function renderLista(){
     const lista=[...USUARIOS].sort((a,b)=>a.nome.localeCompare(b.nome));
     const listaHTML=lista.length===0
@@ -1849,6 +1929,491 @@ function showModalUsuarios(){
     window._excluirUsr=(uid)=>{ USUARIOS=USUARIOS.filter(x=>x.id!==uid); saveUsuarios(); renderLista(); };
   }
   renderLista();
+}
+
+// ── TURNOS ────────────────────────────────────────────────────────────────
+let TURNOS = [
+  { id:'t1', nome:'Manhã',  inicio:'06:00', fim:'14:00' },
+  { id:'t2', nome:'Tarde',  inicio:'14:00', fim:'22:00' },
+  { id:'t3', nome:'Noite',  inicio:'22:00', fim:'06:00' },
+];
+function saveTurnos(){ try{ localStorage.setItem('garagespot_turnos',JSON.stringify(TURNOS)); }catch(e){} }
+function loadTurnos(){
+  try{ const r=localStorage.getItem('garagespot_turnos'); if(r) TURNOS=JSON.parse(r)||TURNOS; }catch(e){}
+}
+function getTurnoDoEvento(ts){
+  const d=new Date(ts);
+  const nowMin=d.getHours()*60+d.getMinutes();
+  const toMin=s=>{ const [h,m]=s.split(':').map(Number); return h*60+m; };
+  for(const t of TURNOS){
+    const ini=toMin(t.inicio),fim=toMin(t.fim);
+    if(ini<=fim){ if(nowMin>=ini && nowMin<fim) return t.nome; }
+    else { if(nowMin>=ini || nowMin<fim) return t.nome; }
+  }
+  return '';
+}
+function getTurnoAtual(){ return getTurnoDoEvento(Date.now()); }
+
+function showModalTurnos(){
+  function render(){
+    const mc=document.getElementById('mc');
+    mc.innerHTML=`<div class="mt">🕒 Cadastro de Turnos</div>
+      <div class="ms" style="margin-bottom:8px">Defina os 3 turnos do hotel</div>
+      ${TURNOS.map((t,i)=>`
+        <div style="border:1px solid #eee;border-radius:8px;padding:9px 12px;margin-bottom:6px">
+          <div style="font-size:12px;font-weight:700;color:#111;margin-bottom:6px">Turno ${i+1} — ${t.nome}</div>
+          <label class="fl">Nome</label>
+          <input class="fi" id="tn-nome-${i}" value="${t.nome}" style="margin-bottom:5px">
+          <div style="display:flex;gap:8px">
+            <div style="flex:1"><label class="fl">Início</label><input type="time" class="fi" id="tn-ini-${i}" value="${t.inicio}" style="margin-bottom:0"></div>
+            <div style="flex:1"><label class="fl">Fim</label><input type="time" class="fi" id="tn-fim-${i}" value="${t.fim}" style="margin-bottom:0"></div>
+          </div>
+        </div>`).join('')}
+      <div class="b2" style="margin-top:8px">
+        <button class="bcx" onclick="closeOv()">Cancelar</button>
+        <button class="bsv" id="tn-save">Salvar</button>
+      </div>`;
+    document.getElementById('ov').classList.add('on');
+    document.getElementById('tn-save').onclick=function(){
+      TURNOS=TURNOS.map((t,i)=>({
+        id:t.id,
+        nome:document.getElementById('tn-nome-'+i).value.trim()||t.nome,
+        inicio:document.getElementById('tn-ini-'+i).value||t.inicio,
+        fim:document.getElementById('tn-fim-'+i).value||t.fim,
+      }));
+      saveTurnos(); closeOv(); showToast('Turnos salvos');
+    };
+  }
+  render();
+}
+
+// ── PLANTÃO ───────────────────────────────────────────────────────────────
+function atualizarPlantao(){
+  const el=document.getElementById('plantao-ind'); if(!el) return;
+  const n=USUARIOS.filter(u=>estaNoExpediente(u)).length;
+  el.textContent='👤'+n;
+  el.classList.toggle('zero',n===0);
+}
+function showPlantaoTooltip(){
+  const noExp=USUARIOS.filter(u=>estaNoExpediente(u));
+  if(!noExp.length){ showToast('Nenhum usuário no expediente agora',3000); return; }
+  const nomes=noExp.map(u=>`${u.nome} (${u.cargo}${u.horaInicio?' · '+u.horaInicio+'–'+u.horaFim:''})`).join('\n');
+  showM(`<div class="mt">👤 Plantão agora</div>
+    <div style="margin:8px 0">${noExp.map(u=>`<div style="padding:6px 0;border-bottom:1px solid #f0efea;font-size:12px">
+      <div style="font-weight:700">${u.nome}</div>
+      <div style="color:#888">${u.cargo}${u.horaInicio?' · '+u.horaInicio+'–'+u.horaFim:''}</div>
+    </div>`).join('')}</div>
+    <button class="bcx" onclick="closeOv()" style="width:100%;margin-top:8px">Fechar</button>`);
+}
+
+// ── BUSCA RÁPIDA ─────────────────────────────────────────────────────────
+let _buscaTimeout=null;
+function toggleBusca(){
+  const bar=document.getElementById('busca-bar');
+  const on=bar.classList.contains('on');
+  bar.classList.toggle('on',!on);
+  if(!on) setTimeout(()=>{ const i=document.getElementById('busca-input');if(i)i.focus(); },80);
+  else fecharBusca();
+}
+function fecharBusca(){
+  const bar=document.getElementById('busca-bar'); if(bar) bar.classList.remove('on');
+  const inp=document.getElementById('busca-input'); if(inp) inp.value='';
+  clearBuscaHighlight();
+}
+function clearBuscaHighlight(){
+  document.querySelectorAll('.search-hit').forEach(el=>el.classList.remove('search-hit'));
+}
+function onBuscaInput(q){
+  clearTimeout(_buscaTimeout);
+  clearBuscaHighlight();
+  if(!q||q.length<2) return;
+  _buscaTimeout=setTimeout(()=>executarBusca(q),300);
+}
+function executarBusca(q){
+  const ql=q.toLowerCase().trim();
+  let hits=0;
+  // Busca nas vagas ocupadas
+  Object.entries(S).forEach(([id,d])=>{
+    if(d.status!=='occupied') return;
+    const campos=[d.apt,d.model,d.color,d.plate,d.guest,d.hospedagem].map(v=>(v||'').toLowerCase());
+    if(campos.some(c=>c.includes(ql))){
+      const td=getTd(id); if(td){ td.classList.add('search-hit'); hits++; }
+    }
+  });
+  // Busca em carros a passeio (destaca na lista inline)
+  Object.entries(PASSEIO).forEach(([apt,d])=>{
+    const campos=[apt,d.model,d.color,d.plate,d.guest,d.hospedagem].map(v=>(v||'').toLowerCase());
+    if(campos.some(c=>c.includes(ql))){
+      const el=document.querySelector(`.tb-pi[title*="${apt}"]`);
+      if(el) el.classList.add('search-hit');
+    }
+  });
+  if(hits===0) showToast('Nenhuma vaga encontrada para "'+q+'"',2500);
+}
+
+// ── NAVBAR / PAINEL DO DIA ────────────────────────────────────────────────
+function navTo(v){
+  if(v==='gestao'){ showGestaoMenu(); return; }
+  ['mapa','painel'].forEach(n=>{
+    const btn=document.getElementById('nav-'+n); if(btn) btn.classList.toggle('nav-active',n===v);
+  });
+  const nb=document.getElementById('nav-gestao'); if(nb) nb.classList.remove('nav-active');
+  const gi=document.getElementById('garage-inner');
+  const pw=document.getElementById('painel-wrap');
+  if(gi) gi.style.display=v==='mapa'?'':'none';
+  if(pw) pw.style.display=v==='painel'?'':'none';
+  if(v==='painel') renderPainelDia();
+  if(v==='mapa') setTimeout(positionPilares,100);
+  fecharBusca();
+}
+
+function renderPainelDia(){
+  const pw=document.getElementById('painel-wrap'); if(!pw) return;
+  const now=new Date();
+  const startDay=new Date(now.getFullYear(),now.getMonth(),now.getDate()).getTime();
+
+  // Coleta eventos de hoje
+  const allEvts=[];
+  Object.entries(HISTORICO).forEach(([apt,evts])=>evts.forEach(ev=>allEvts.push({apt,...ev})));
+  allEvts.sort((a,b)=>b.ts-a.ts);
+
+  const hoje=allEvts.filter(e=>e.ts>=startDay);
+  const checkinsH=hoje.filter(e=>e.tipo==='checkin');
+  const checkoutsH=hoje.filter(e=>e.tipo==='checkout');
+  const last10=allEvts.slice(0,10);
+
+  // Ocupação atual
+  let occ=0,free=0,obOcc=0,obFree=0;
+  Object.entries(S).forEach(([id,d])=>{
+    if(d.mergedSlave) return;
+    if(d.overbook){ d.status==='occupied'?obOcc++:obFree++; }
+    else { d.status==='occupied'?occ++:free++; }
+  });
+  const out=Object.keys(PASSEIO).length;
+
+  // Staff no plantão
+  const noExp=USUARIOS.filter(u=>estaNoExpediente(u));
+  const turnoAtual=getTurnoAtual();
+
+  const tLabel={checkin:'Check-in',saida_passeio:'Saída Passeio',retorno_passeio:'Retorno',checkout:'Check-out',edicao:'Edição'};
+  const tColor={checkin:'#0F6E56',saida_passeio:'#854F0B',retorno_passeio:'#185FA5',checkout:'#A32D2D',edicao:'#555'};
+
+  pw.innerHTML=`
+    <div class="painel-sec">
+      <div class="painel-sec-title">📊 Hoje — ${now.toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long'})}</div>
+      <div class="painel-stat-row">
+        <div class="painel-stat-card"><div class="painel-stat-val" style="color:#0F6E56">${checkinsH.length}</div><div class="painel-stat-lbl">Check-ins hoje</div></div>
+        <div class="painel-stat-card"><div class="painel-stat-val" style="color:#A32D2D">${checkoutsH.length}</div><div class="painel-stat-lbl">Check-outs hoje</div></div>
+        <div class="painel-stat-card"><div class="painel-stat-val" style="color:#185FA5">${occ}</div><div class="painel-stat-lbl">Ocupadas</div></div>
+        <div class="painel-stat-card"><div class="painel-stat-val" style="color:#0F6E56">${free}</div><div class="painel-stat-lbl">Livres</div></div>
+      </div>
+      <div class="painel-stat-row">
+        <div class="painel-stat-card"><div class="painel-stat-val" style="color:#854F0B">${out}</div><div class="painel-stat-lbl">A passeio</div></div>
+        <div class="painel-stat-card"><div class="painel-stat-val" style="color:#A32D2D">${obOcc}</div><div class="painel-stat-lbl">OB ocupadas</div></div>
+        <div class="painel-stat-card" style="flex:2"><div class="painel-stat-val" style="color:#185FA5;font-size:14px">${turnoAtual||'—'}</div><div class="painel-stat-lbl">Turno atual</div></div>
+      </div>
+    </div>
+
+    <div class="painel-sec">
+      <div class="painel-sec-title">⏱ Últimas movimentações</div>
+      ${last10.length===0?'<span style="font-size:12px;color:#bbb">Nenhuma movimentação registrada</span>':
+        last10.map(ev=>`<div class="painel-event-row">
+          <span class="painel-badge" style="background:${tColor[ev.tipo]||'#888'}">${tLabel[ev.tipo]||ev.tipo}</span>
+          <div style="flex:1;min-width:0">
+            <div style="font-weight:700">Apt. ${ev.apt}${ev.hospedagem?' · '+ev.hospedagem:''}</div>
+            <div style="color:#888;font-size:10px">${fmtDt(ev.ts)}${ev.usuario?' · '+ev.usuario:''}</div>
+          </div>
+        </div>`).join('')}
+    </div>
+
+    <div class="painel-sec">
+      <div class="painel-sec-title">👥 Plantão agora${turnoAtual?' — '+turnoAtual:''}</div>
+      ${noExp.length===0
+        ?'<span style="font-size:12px;color:#bbb">Nenhum usuário no expediente</span>'
+        :noExp.map(u=>`<div class="painel-staff-item">
+          <span style="font-size:18px">👤</span>
+          <div><div style="font-weight:700">${u.nome}</div><div style="color:#888;font-size:10px">${u.cargo}${u.horaInicio?' · '+u.horaInicio+'–'+u.horaFim:''}</div></div>
+        </div>`).join('')}
+    </div>
+
+    <div class="painel-sec">
+      <div class="painel-sec-title">✅ Check-ins hoje (${checkinsH.length})</div>
+      ${checkinsH.length===0?'<span style="font-size:12px;color:#bbb">Nenhum check-in hoje</span>':
+        checkinsH.map(ev=>`<div class="painel-event-row">
+          <span class="painel-badge" style="background:#0F6E56">CI</span>
+          <div style="flex:1"><div style="font-weight:700">Apt. ${ev.apt}${ev.hospedagem?' · '+ev.hospedagem:''}</div>
+          <div style="color:#888;font-size:10px">${fmtDt(ev.ts)}${ev.usuario?' · '+ev.usuario:''}</div></div>
+        </div>`).join('')}
+    </div>`;
+}
+
+// ── GESTÃO COM PIN ────────────────────────────────────────────────────────
+const GESTAO_PIN_KEY='garagespot_gestao_pin';
+const GESTAO_UNLOCK_MS=30*60*1000;
+let _gestaoUnlockTs=0;
+
+function isGestaoUnlocked(){ return Date.now()<_gestaoUnlockTs; }
+
+function showGestaoMenu(){
+  const pinSalvo=localStorage.getItem(GESTAO_PIN_KEY);
+  if(!pinSalvo){ showCriarPIN(); return; }
+  if(!isGestaoUnlocked()){ showEntrarPIN(()=>_mostrarMenuGestao()); return; }
+  _mostrarMenuGestao();
+}
+
+function _mostrarMenuGestao(){
+  const mc=document.getElementById('mc');
+  mc.innerHTML=`<div class="mt">⚙ Gestão</div>
+    <div class="ms">Desbloqueado por mais ${Math.ceil((_gestaoUnlockTs-Date.now())/60000)} min</div>
+    <div class="gestao-menu-sep">Cadastros</div>
+    <div class="gestao-menu-item" onclick="closeOv();showModalUsuarios()">👥 <span>Cadastro de usuários</span></div>
+    <div class="gestao-menu-item" onclick="closeOv();showModalTurnos()">🕒 <span>Cadastro de turnos</span></div>
+    <div class="gestao-menu-sep">Relatórios e análises</div>
+    <div class="gestao-menu-item" onclick="closeOv();showRelatorios()">📊 <span>Relatórios</span></div>
+    <div class="gestao-menu-sep">Dados do mapa</div>
+    <div class="gestao-menu-item" onclick="closeOv();confirmReset()" style="color:#A32D2D;border-color:#FCEBEB">🗑 <span>Limpar / Restaurar mapa</span></div>
+    <div class="gestao-menu-item" onclick="closeOv();showLogSistema()" style="color:#555">📋 <span>Log do sistema</span></div>
+    <div class="gestao-menu-item" onclick="closeOv();trocarPIN()" style="color:#555;font-size:12px">🔑 <span>Trocar PIN</span></div>
+    <button class="bcx" onclick="closeOv()" style="width:100%;margin-top:8px">Fechar</button>`;
+  document.getElementById('ov').classList.add('on');
+}
+
+function showEntrarPIN(callback){
+  let digitado='';
+  const mc=document.getElementById('mc');
+  function render(){
+    mc.innerHTML=`<div class="mt">🔑 PIN de Gestão</div>
+      <div class="ms">Digite o PIN de 4 dígitos</div>
+      <div class="pin-display">${[0,1,2,3].map(i=>`<div class="pin-dot${i<digitado.length?' filled':''}" id="pd-${i}"></div>`).join('')}</div>
+      <div id="pin-err" style="min-height:16px;text-align:center;font-size:11px;color:#A32D2D;margin-bottom:4px"></div>
+      <div class="pin-keypad">
+        ${[1,2,3,4,5,6,7,8,9].map(n=>`<button class="pin-key" onclick="pinKey('${n}')">${n}</button>`).join('')}
+        <button class="pin-key" onclick="closeOv()" style="font-size:11px;color:#888">✕</button>
+        <button class="pin-key" onclick="pinKey('0')">0</button>
+        <button class="pin-key del" onclick="pinDel()">⌫</button>
+      </div>`;
+    document.getElementById('ov').classList.add('on');
+  }
+  window.pinKey=function(d){
+    if(digitado.length>=4) return;
+    digitado+=d;
+    for(let i=0;i<4;i++){
+      const dot=document.getElementById('pd-'+i);
+      if(dot) dot.classList.toggle('filled',i<digitado.length);
+    }
+    if(digitado.length===4){
+      const salvo=localStorage.getItem(GESTAO_PIN_KEY);
+      if(digitado===salvo){
+        _gestaoUnlockTs=Date.now()+GESTAO_UNLOCK_MS;
+        callback();
+      } else {
+        const err=document.getElementById('pin-err');
+        if(err) err.textContent='PIN incorreto — tente novamente';
+        digitado='';
+        setTimeout(()=>{ for(let i=0;i<4;i++){const dot=document.getElementById('pd-'+i);if(dot)dot.classList.remove('filled');} },300);
+      }
+    }
+  };
+  window.pinDel=function(){
+    if(!digitado.length) return;
+    digitado=digitado.slice(0,-1);
+    for(let i=0;i<4;i++){
+      const dot=document.getElementById('pd-'+i);
+      if(dot) dot.classList.toggle('filled',i<digitado.length);
+    }
+  };
+  render();
+}
+
+function showCriarPIN(){
+  let step=1, pin1='';
+  const mc=document.getElementById('mc');
+  function renderStep(){
+    mc.innerHTML=`<div class="mt">🔑 Criar PIN de Gestão</div>
+      <div class="ms">${step===1?'Escolha um PIN de 4 dígitos para proteger a área de gestão':'Confirme o PIN'}</div>
+      <div class="pin-display">${[0,1,2,3].map(i=>`<div class="pin-dot" id="pd-${i}"></div>`).join('')}</div>
+      <div id="pin-err" style="min-height:16px;text-align:center;font-size:11px;color:#A32D2D;margin-bottom:4px"></div>
+      <div class="pin-keypad">
+        ${[1,2,3,4,5,6,7,8,9].map(n=>`<button class="pin-key" onclick="pinKey('${n}')">${n}</button>`).join('')}
+        <button class="pin-key" onclick="closeOv()" style="font-size:11px;color:#888">✕</button>
+        <button class="pin-key" onclick="pinKey('0')">0</button>
+        <button class="pin-key del" onclick="pinDel()">⌫</button>
+      </div>`;
+    document.getElementById('ov').classList.add('on');
+    let digitado='';
+    window.pinKey=function(d){
+      if(digitado.length>=4) return;
+      digitado+=d;
+      for(let i=0;i<4;i++){
+        const dot=document.getElementById('pd-'+i);
+        if(dot) dot.classList.toggle('filled',i<digitado.length);
+      }
+      if(digitado.length===4){
+        if(step===1){ pin1=digitado; step=2; setTimeout(renderStep,300); }
+        else {
+          if(digitado===pin1){
+            localStorage.setItem(GESTAO_PIN_KEY,pin1);
+            _gestaoUnlockTs=Date.now()+GESTAO_UNLOCK_MS;
+            _mostrarMenuGestao();
+          } else {
+            const err=document.getElementById('pin-err');
+            if(err) err.textContent='PINs não coincidem — tente novamente';
+            digitado=''; step=1; pin1='';
+            setTimeout(()=>{ for(let i=0;i<4;i++){const dot=document.getElementById('pd-'+i);if(dot)dot.classList.remove('filled');} },300);
+          }
+        }
+      }
+    };
+    window.pinDel=function(){
+      if(!digitado.length) return;
+      digitado=digitado.slice(0,-1);
+      for(let i=0;i<4;i++){
+        const dot=document.getElementById('pd-'+i);
+        if(dot) dot.classList.toggle('filled',i<digitado.length);
+      }
+    };
+  }
+  renderStep();
+}
+
+function trocarPIN(){
+  showEntrarPIN(()=>{
+    localStorage.removeItem(GESTAO_PIN_KEY);
+    _gestaoUnlockTs=0;
+    showCriarPIN();
+  });
+}
+
+// ── LOG DO SISTEMA ────────────────────────────────────────────────────────
+const LOG_KEY='garagespot_log_sistema';
+function addLogSistema(msg){
+  try{
+    let log=[];
+    const r=localStorage.getItem(LOG_KEY);
+    if(r) log=JSON.parse(r)||[];
+    log.push({ts:Date.now(),msg});
+    if(log.length>200) log=log.slice(-200);
+    localStorage.setItem(LOG_KEY,JSON.stringify(log));
+  }catch(e){}
+}
+function showLogSistema(){
+  try{
+    const r=localStorage.getItem(LOG_KEY);
+    const log=r?JSON.parse(r):[];
+    const html=log.length===0?'<span style="color:#bbb;font-size:12px">Log vazio</span>':
+      log.slice().reverse().slice(0,50).map(e=>`<div style="padding:4px 0;border-bottom:1px solid #f0efea;font-size:11px">
+        <span style="color:#888">${fmtDt(e.ts)}</span> ${e.msg}
+      </div>`).join('');
+    showM(`<div class="mt">📋 Log do sistema</div>
+      <div style="max-height:55vh;overflow-y:auto;margin:8px 0">${html}</div>
+      <button class="bcx" onclick="closeOv()" style="width:100%;margin-top:8px">Fechar</button>`);
+  }catch(e){ showToast('Erro ao carregar log'); }
+}
+
+// ── RELATÓRIOS ────────────────────────────────────────────────────────────
+function showRelatorios(){
+  showM(`<div class="mt">📊 Relatórios</div>
+    <div class="gestao-menu-item" onclick="closeOv();showRelMovimentacoes()">📋 <span>Movimentações</span></div>
+    <div class="gestao-menu-item" onclick="closeOv();showRelOcupacao()">📈 <span>Ocupação atual</span></div>
+    <div class="gestao-menu-item" onclick="closeOv();showRelPorApto()">🏨 <span>Por apartamento</span></div>
+    <div class="gestao-menu-item" onclick="closeOv();showRelOverbooking()">⚠️ <span>Overbooking</span></div>
+    <button class="bcx" onclick="closeOv()" style="width:100%;margin-top:8px">Fechar</button>`);
+}
+
+function showRelMovimentacoes(){
+  const mc=document.getElementById('mc');
+  const now=new Date();
+  const startDay=new Date(now.getFullYear(),now.getMonth(),now.getDate()).getTime();
+
+  // Coleta todos os eventos
+  const allEvts=[];
+  Object.entries(HISTORICO).forEach(([apt,evts])=>evts.forEach(ev=>allEvts.push({apt,...ev})));
+  allEvts.sort((a,b)=>b.ts-a.ts);
+
+  const tLabel={checkin:'Check-in',saida_passeio:'Saída Passeio',retorno_passeio:'Retorno',checkout:'Check-out',edicao:'Edição'};
+  const tColor={checkin:'#0F6E56',saida_passeio:'#854F0B',retorno_passeio:'#185FA5',checkout:'#A32D2D',edicao:'#555'};
+
+  // Filtros
+  let filtro='hoje';
+  function renderCom(f){
+    filtro=f;
+    const ts0 = f==='hoje'?startDay : f==='semana'?(startDay-6*86400000) : 0;
+    const evts=allEvts.filter(e=>e.ts>=ts0);
+    const html=evts.length===0?'<span style="color:#bbb;font-size:12px;padding:8px 0;display:block">Nenhuma movimentação no período</span>':
+      evts.slice(0,100).map(ev=>`<div class="painel-event-row" style="font-size:11px">
+        <span class="painel-badge" style="background:${tColor[ev.tipo]||'#888'};font-size:9px">${tLabel[ev.tipo]||ev.tipo}</span>
+        <div style="flex:1;min-width:0">
+          <div style="font-weight:700">Apt. ${ev.apt}${ev.hospedagem?' · '+ev.hospedagem:''}</div>
+          <div style="color:#888;font-size:10px">${fmtDt(ev.ts)}${ev.usuario?' · '+ev.usuario:''}</div>
+          ${ev.extra?`<div style="color:#888;font-size:10px">${ev.extra}</div>`:''}
+        </div>
+      </div>`).join('');
+    mc.innerHTML=`<div class="mt">📋 Movimentações</div>
+      <div style="display:flex;gap:4px;margin-bottom:8px">
+        ${['hoje','semana','tudo'].map(v=>`<button onclick="window._relFiltro('${v}')" style="flex:1;padding:5px;font-size:11px;border:1px solid ${filtro===v?'#185FA5':'#ddd'};border-radius:6px;background:${filtro===v?'#EEF6FF':'#fff'};color:${filtro===v?'#185FA5':'#555'};cursor:pointer;font-family:inherit;font-weight:600">${v==='hoje'?'Hoje':v==='semana'?'7 dias':'Tudo'}</button>`).join('')}
+      </div>
+      <div style="max-height:52vh;overflow-y:auto">${html}</div>
+      <button class="bcx" onclick="closeOv()" style="width:100%;margin-top:8px">Fechar</button>`;
+    document.getElementById('ov').classList.add('on');
+    window._relFiltro=renderCom;
+  }
+  renderCom('hoje');
+}
+
+function showRelOcupacao(){
+  let occ=0,free=0,obOcc=0,obFree=0,passeioTotal=0;
+  Object.entries(S).forEach(([id,d])=>{
+    if(d.mergedSlave) return;
+    if(d.overbook){ d.status==='occupied'?obOcc++:obFree++; }
+    else { d.status==='occupied'?occ++:free++; }
+  });
+  passeioTotal=Object.keys(PASSEIO).length;
+  const total=occ+free;
+  const pct=total>0?Math.round(occ/total*100):0;
+  showM(`<div class="mt">📈 Ocupação atual</div>
+    <div style="margin:12px 0">
+      <div style="background:#EEF6FF;border-radius:8px;height:14px;overflow:hidden;margin-bottom:8px">
+        <div style="background:#185FA5;height:100%;width:${pct}%;border-radius:8px;transition:width .5s"></div>
+      </div>
+      <div style="text-align:center;font-size:22px;font-weight:700;color:#185FA5">${pct}%</div>
+      <div style="text-align:center;font-size:12px;color:#888">${occ} de ${total} vagas normais ocupadas</div>
+    </div>
+    <div class="rel-row"><span>Vagas normais ocupadas</span><span class="rel-badge" style="background:#EEF6FF;color:#185FA5">${occ}</span></div>
+    <div class="rel-row"><span>Vagas normais livres</span><span class="rel-badge" style="background:#EEF9F2;color:#0F6E56">${free}</span></div>
+    <div class="rel-row"><span>OB ocupadas</span><span class="rel-badge" style="background:#FCEBEB;color:#A32D2D">${obOcc}</span></div>
+    <div class="rel-row"><span>OB livres</span><span class="rel-badge" style="background:#EEF9F2;color:#0F6E56">${obFree}</span></div>
+    <div class="rel-row"><span>A passeio</span><span class="rel-badge" style="background:#FFF8E6;color:#633806">${passeioTotal}</span></div>
+    <button class="bcx" onclick="closeOv()" style="width:100%;margin-top:8px">Fechar</button>`);
+}
+
+function showRelPorApto(){
+  const mc=document.getElementById('mc');
+  const hosps=Object.values(HOSPEDAGENS).sort((a,b)=>(b.checkin_ts||0)-(a.checkin_ts||0));
+  const html=hosps.length===0?'<span style="color:#bbb;font-size:12px">Nenhuma hospedagem registrada</span>':
+    hosps.slice(0,60).map(h=>`<div style="border:1px solid #eee;border-radius:7px;padding:8px;margin-bottom:5px">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div style="font-weight:700;font-size:13px">${h.numero} · Apt. ${h.apt}</div>
+        <span class="rel-badge" style="${h.checkout_ts?'background:#FCEBEB;color:#A32D2D':'background:#EEF9F2;color:#0F6E56'}">${h.checkout_ts?'Check-out':'Ativo'}</span>
+      </div>
+      <div style="font-size:11px;color:#888;margin-top:3px">${[h.model,h.color,h.plate].filter(Boolean).join(' · ')||'Sem dados'}</div>
+      <div style="font-size:10px;color:#aaa;margin-top:2px">Entrada: ${fmtDt(h.checkin_ts)}${h.checkout_ts?' · Saída: '+fmtDt(h.checkout_ts):''}</div>
+    </div>`).join('');
+  showM(`<div class="mt">🏨 Por apartamento</div>
+    <div style="max-height:56vh;overflow-y:auto;margin:8px 0">${html}</div>
+    <button class="bcx" onclick="closeOv()" style="width:100%;margin-top:8px">Fechar</button>`);
+}
+
+function showRelOverbooking(){
+  const obVagas=Object.entries(S).filter(([id,d])=>d.overbook && d.status==='occupied' && !d.mergedSlave);
+  const html=obVagas.length===0?'<span style="color:#bbb;font-size:12px">Nenhuma vaga OB ocupada no momento</span>':
+    obVagas.map(([id,d])=>`<div class="rel-row">
+      <div><div style="font-weight:700">${id} — Apt. ${d.apt}</div>
+      <div style="font-size:10px;color:#888">${[d.model,d.color,d.plate].filter(Boolean).join(' · ')||'Sem dados'}${d.hospedagem?' · '+d.hospedagem:''}</div></div>
+    </div>`).join('');
+  showM(`<div class="mt">⚠️ Overbooking</div>
+    <div class="ms">${obVagas.length} vaga(s) OB ocupada(s)</div>
+    <div style="max-height:52vh;overflow-y:auto;margin:8px 0">${html}</div>
+    <button class="bcx" onclick="closeOv()" style="width:100%;margin-top:8px">Fechar</button>`);
 }
 
 // ── TOAST ─────────────────────────────────────────────────────────────────
@@ -1923,14 +2488,16 @@ function aptJaFezCheckout(apt){
 // Funciona em browser, APK e offline. Gera HTML rico que o dispositivo
 // converte para PDF via menu nativo (Imprimir → Salvar como PDF).
 
-function fmtNomeArquivo(apt, guest, tsEntrada, tsSaida){
-  const limpa=s=>(s||'').replace(/[^a-zA-Z0-9À-ú ]/g,'').trim().replace(/\s+/g,'_');
+function fmtNomeArquivo(apt, guest, tsEntrada, tsSaida, hospNum){
+  const limpa=s=>(s||'').replace(/[^a-zA-Z0-9À-ú]/g,'').trim().replace(/\s+/g,'_');
   const dtE=tsEntrada?new Date(tsEntrada).toLocaleDateString('pt-BR').replace(/\//g,'-'):'';
   const dtS=tsSaida?new Date(tsSaida).toLocaleDateString('pt-BR').replace(/\//g,'-'):'';
-  const p=['GarageSpot','Apt'+apt];
+  const p=[];
+  if(hospNum) p.push(hospNum); else p.push('GarageSpot');
+  p.push('Apt'+apt);
   if(guest) p.push(limpa(guest));
   if(dtE) p.push(dtE);
-  if(dtS) p.push(dtS);
+  if(dtS && dtS!==dtE) p.push(dtS);
   return p.join('_');
 }
 
@@ -1970,48 +2537,46 @@ function buildRegistroHTML(apt,dv,hist,anexos){
       <div class="img-nome">${a.name}</div>
     </div>`).join('');
 
+  const guestNome = dv.guest ? dv.guest.trim() : '';
+  const pdfTitle = hospedagemNum
+    ? `${hospedagemNum} · Apt. ${apt}${guestNome?' · '+guestNome:''}`
+    : `GarageSpot · Apt. ${apt}${guestNome?' · '+guestNome:''}`;
+
   return `<!DOCTYPE html>
 <html lang="pt-BR"><head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>GarageSpot — Apt. ${apt}</title>
+<title>${pdfTitle}</title>
 <style>
   *{box-sizing:border-box;margin:0;padding:0}
   body{font-family:Arial,Helvetica,sans-serif;color:#1a1a1a;background:#fff;font-size:13px}
-  /* ── Tela: botão de salvar ── */
   .screen-tip{background:#185FA5;color:#fff;padding:14px 20px;display:flex;align-items:center;gap:14px;position:sticky;top:0;z-index:99}
   .screen-tip p{font-size:13px;line-height:1.4;flex:1}
   .screen-tip button{background:#fff;color:#185FA5;border:none;padding:8px 18px;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0}
   @media print{.screen-tip{display:none}}
-  /* ── Layout ── */
   .page{padding:24px 28px;max-width:780px;margin:0 auto}
-  /* ── Cabeçalho ── */
-  .hdr{background:#185FA5;color:#fff;padding:14px 20px;border-radius:8px;margin-bottom:22px;display:flex;justify-content:space-between;align-items:flex-end}
-  .hdr h1{font-size:18px;font-weight:700;letter-spacing:.3px}
-  .hdr small{font-size:10px;opacity:.75}
-  /* ── Seções ── */
+  .hdr{background:#185FA5;color:#fff;padding:18px 22px;border-radius:8px;margin-bottom:22px;text-align:center}
+  .hdr-num{font-size:32px;font-weight:700;letter-spacing:3px;margin-bottom:4px}
+  .hdr-apt{font-size:15px;opacity:.9;margin-bottom:2px}
+  .hdr-guest{font-size:13px;opacity:.8}
+  .hdr-sub{font-size:10px;opacity:.55;margin-top:8px}
   h2{font-size:13px;font-weight:700;color:#185FA5;border-bottom:2px solid #185FA5;padding-bottom:5px;margin:22px 0 12px;text-transform:uppercase;letter-spacing:.5px}
-  /* ── Campos de dados ── */
   .campo{display:flex;padding:6px 0;border-bottom:1px solid #f0f0f0}
   .campo:last-child{border-bottom:none}
   .campo-label{font-weight:700;color:#666;width:120px;flex-shrink:0;font-size:12px}
   .campo-valor{color:#1a1a1a;font-size:13px}
-  /* ── Eventos ── */
   .evento{border-radius:6px;padding:9px 14px;margin:6px 0;color:#fff;display:flex;justify-content:space-between;align-items:flex-start;gap:10px;page-break-inside:avoid}
   .evento-tipo{font-weight:700;font-size:13px}
   .evento-vaga{font-size:11px;margin-top:3px;opacity:.88}
   .evento-hora{font-size:11px;opacity:.88;white-space:nowrap;text-align:right;flex-shrink:0}
-  /* ── Imagens: uma por página, landscape dentro do portrait ── */
   .img-page{page-break-before:always;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:90vh;padding:16px}
   .img-page img{max-width:100%;max-height:82vh;object-fit:contain;border-radius:4px;box-shadow:0 2px 12px rgba(0,0,0,.15)}
   .img-nome{font-size:10px;color:#aaa;margin-top:8px;text-align:center}
-  /* ── Rodapé ── */
   .rodape{margin-top:30px;padding-top:10px;border-top:1px solid #eee;font-size:10px;color:#bbb;text-align:center}
   @page{margin:15mm 15mm 15mm 15mm}
 </style>
 </head><body>
 
-<!-- Botão visível só na tela, some ao imprimir -->
 <div class="screen-tip">
   <p>📄 Para salvar como PDF: toque no botão ao lado ou use o menu do navegador → <strong>Imprimir → Salvar como PDF</strong></p>
   <button onclick="window.print()">🖨️ Salvar PDF</button>
@@ -2019,16 +2584,12 @@ function buildRegistroHTML(apt,dv,hist,anexos){
 
 <div class="page">
 
-  <!-- Cabeçalho -->
+  <!-- Cabeçalho com hospedagem em destaque -->
   <div class="hdr">
-    <div>
-      <h1>🅿 GarageSpot</h1>
-      <div style="font-size:12px;margin-top:3px;opacity:.85">Registro do Veículo — Apartamento ${apt}</div>
-    </div>
-    <div style="text-align:right">
-      ${hospedagemNum?`<div style="font-size:22px;font-weight:700;letter-spacing:2px">${hospedagemNum}</div>`:''}
-      <small style="opacity:.75">Developed by Douglas Nascimento</small>
-    </div>
+    ${hospedagemNum?`<div class="hdr-num">${hospedagemNum}</div>`:'<div style="font-size:18px;font-weight:700;margin-bottom:4px">🅿 GarageSpot</div>'}
+    <div class="hdr-apt">🅿 Hotel Gumz · Apartamento ${apt}</div>
+    ${guestNome?`<div class="hdr-guest">👤 ${guestNome}</div>`:''}
+    <div class="hdr-sub">GarageSpot · Developed by Douglas Nascimento</div>
   </div>
 
   <!-- Pg 1: Dados do veículo -->
@@ -2072,9 +2633,11 @@ ${imgPages}
 function isCapacitor(){ return !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()); }
 
 async function compartilharPDF(apt,dv,hist,anexos){
+  const hospNum=dv.hospedagem||((hist||[]).find(e=>e.tipo==='checkin')?.hospedagem)||'';
   const nomeArquivo=fmtNomeArquivo(apt,dv.guest,
     (hist||[]).find(e=>e.tipo==='checkin')?.ts,
-    (hist||[]).slice().reverse().find(e=>e.tipo==='checkout')?.ts);
+    (hist||[]).slice().reverse().find(e=>e.tipo==='checkout')?.ts,
+    hospNum);
   const html=buildRegistroHTML(apt,dv,hist,anexos);
 
   if(window.Capacitor && window.Capacitor.Plugins){
@@ -2113,9 +2676,11 @@ async function compartilharPDF(apt,dv,hist,anexos){
 }
 
 async function salvarPDF(apt,dv,hist,anexos){
+  const hospNum=dv.hospedagem||((hist||[]).find(e=>e.tipo==='checkin')?.hospedagem)||'';
   const nome=fmtNomeArquivo(apt,dv.guest,
     (hist||[]).find(e=>e.tipo==='checkin')?.ts,
-    (hist||[]).slice().reverse().find(e=>e.tipo==='checkout')?.ts);
+    (hist||[]).slice().reverse().find(e=>e.tipo==='checkout')?.ts,
+    hospNum);
   await compartilharPDF(apt,dv,hist,anexos);
   return nome+'.html';
 }
@@ -2132,6 +2697,27 @@ function getAnexos(id, fromPasseio){
   return ANEXOS[getAnexoKey(id, fromPasseio)] || [];
 }
 
+function autoRenameAnexo(id, fromPasseio, file){
+  if(!file.type.startsWith('image/')) return file.name;
+  const apt = fromPasseio ? id : (S[id]?.apt||'');
+  const hospNum = fromPasseio ? (PASSEIO[id]?.hospedagem||'') : (S[id]?.hospedagem||'');
+  if(!hospNum && !apt) return file.name;
+  const ext = file.name.lastIndexOf('.')>=0 ? file.name.slice(file.name.lastIndexOf('.')) : '.jpg';
+  const now = new Date();
+  const d2 = n=>String(n).padStart(2,'0');
+  const dateStr = `${d2(now.getDate())}-${d2(now.getMonth()+1)}-${String(now.getFullYear()).slice(2)}`;
+  const timeStr = `${d2(now.getHours())}h${d2(now.getMinutes())}`;
+  // Count existing images to make unique name
+  const key = getAnexoKey(id, fromPasseio);
+  const idx = ((ANEXOS[key]||[]).filter(a=>a.isImg).length)+1;
+  const parts=[];
+  if(hospNum) parts.push(hospNum);
+  if(apt) parts.push('Apto'+apt);
+  parts.push(dateStr+'_'+timeStr);
+  if(idx>1) parts.push(String(idx));
+  return parts.join('_')+ext;
+}
+
 function addAnexo(id, fromPasseio, file){
   return new Promise((resolve)=>{
     const key = getAnexoKey(id, fromPasseio);
@@ -2139,13 +2725,18 @@ function addAnexo(id, fromPasseio, file){
     if(ANEXOS[key].length >= MAX_ANEXOS){ resolve(false); return; }
     const reader = new FileReader();
     reader.onload = e=>{
+      const nome = autoRenameAnexo(id, fromPasseio, file);
       ANEXOS[key].push({
-        name: file.name,
+        name: nome,
         type: file.type,
         data: e.target.result,
         isImg: file.type.startsWith('image/')
       });
       saveAnexos();
+      // Registra no histórico
+      const apt = fromPasseio ? id : (S[id]?.apt||'');
+      const hospNum = fromPasseio ? (PASSEIO[id]?.hospedagem||'') : (S[id]?.hospedagem||'');
+      if(apt) addHistorico(apt,'edicao',fromPasseio?'':id,`Foto adicionada: ${nome}`,'',hospNum);
       resolve(true);
     };
     reader.readAsDataURL(file);
@@ -2154,8 +2745,14 @@ function addAnexo(id, fromPasseio, file){
 
 function removeAnexo(id, fromPasseio, idx){
   const key = getAnexoKey(id, fromPasseio);
-  if(ANEXOS[key]) ANEXOS[key].splice(idx,1);
-  saveAnexos();
+  if(ANEXOS[key]){
+    const nome = ANEXOS[key][idx]?.name||'';
+    ANEXOS[key].splice(idx,1);
+    saveAnexos();
+    const apt = fromPasseio ? id : (S[id]?.apt||'');
+    const hospNum = fromPasseio ? (PASSEIO[id]?.hospedagem||'') : (S[id]?.hospedagem||'');
+    if(apt && nome) addHistorico(apt,'edicao',fromPasseio?'':id,`Foto removida: ${nome}`,'',hospNum);
+  }
 }
 
 function saveAnexos(){
@@ -2469,6 +3066,7 @@ checkLicense().then(async (ativo)=>{
       loadHistorico();
       loadUsuarios();
       loadHospedagens();
+      loadTurnos();
       buildTable();
       if(restored) Object.keys(S).forEach(id=>ref(id));
       attachDrag();
