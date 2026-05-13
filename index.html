@@ -1,0 +1,2210 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>GarageSpot</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f0efea;height:100%;overflow:hidden}
+.page{display:flex;flex-direction:column;height:100dvh;padding:7px;gap:5px}
+
+/* ── TOPBAR UNIFICADA ── */
+.topbar{background:#fff;border:1px solid #ccc;border-radius:9px;padding:6px 12px;flex-shrink:0;display:flex;align-items:center;gap:0}
+/* Bloco nome */
+.tb-name{flex-shrink:0;padding-right:12px;border-right:1px solid #e0e0da}
+.an{font-size:14px;font-weight:700;color:#111;line-height:1.2}
+.as-dev{font-size:8px;color:#bbb;line-height:1.2}
+/* Bloco stats vagas */
+.tb-stats{display:flex;gap:0;flex-shrink:0;padding:0 12px;border-right:1px solid #e0e0da}
+.tb-stat{text-align:center;padding:0 8px;border-right:1px solid #eee}
+.tb-stat:last-child{border-right:none}
+.tb-val{font-size:16px;font-weight:700;line-height:1.2}
+.tb-lbl{font-size:8px;color:#888;line-height:1.2;white-space:nowrap}
+.tv-total{color:#111}
+.tv-free{color:#0F6E56}
+.tv-occ{color:#185FA5}
+.tv-out{color:#854F0B}
+/* Bloco overbooking */
+.tb-ob{display:flex;gap:0;flex-shrink:0;padding:0 12px;border-right:1px solid #e0e0da}
+.tb-ob-lbl{font-size:8px;color:#A32D2D;font-weight:600;margin-bottom:2px;white-space:nowrap}
+/* Relógio + toggle passeio */
+.tb-right{display:flex;align-items:center;gap:8px;margin-left:auto}
+.clk{font-size:10px;color:#888}
+.pt-arrow{font-size:10px;color:#888;cursor:pointer;user-select:none;padding:4px 6px;border-radius:5px;border:1px solid #e0e0da;background:#f5f4f0;line-height:1}
+.pt-arrow:active{background:#e0e0da}
+
+/* ── PAINEL PASSEIO SLIM ── */
+.panel-body{overflow:hidden;flex-shrink:0}
+.panel-body.open{max-height:80px}
+.panel-body.closed{max-height:0;pointer-events:none}
+.ocard{background:#fff;border:1px solid #e8c97a;border-radius:7px;padding:4px 10px;display:flex;align-items:center;gap:7px;overflow:hidden}
+.och{display:flex;align-items:center;gap:5px;flex-shrink:0}
+.oct{font-size:10px;font-weight:700;color:#633806;white-space:nowrap}
+.ocb{background:#FAEEDA;color:#633806;font-size:9px;font-weight:700;padding:1px 6px;border-radius:4px;min-width:16px;text-align:center}
+.olist-h{display:flex;gap:5px;overflow-x:auto;flex:1;min-width:0;align-items:center;padding:2px 0}
+.olist-h::-webkit-scrollbar{height:2px}
+.olist-h::-webkit-scrollbar-thumb{background:#BA7517;border-radius:2px}
+.oe{font-size:10px;color:#bbb;white-space:nowrap}
+.oi{background:#FAEEDA;border-radius:5px;padding:3px 8px;flex-shrink:0;border:1px solid #e8c97a;cursor:pointer;display:flex;flex-direction:column;justify-content:center;gap:1px}
+.oi:active{filter:brightness(.93)}
+.oa{font-size:11px;font-weight:700;color:#633806;white-space:nowrap}
+.oin{font-size:9px;color:#854F0B;white-space:nowrap;max-width:160px;overflow:hidden;text-overflow:ellipsis}
+
+/* PAINEL RETRÁTIL */
+.pt-left{display:flex;align-items:center;gap:8px}
+.pt-arrow{font-size:11px;color:#888;transition:transform .25s;display:inline-block}
+.pt-arrow.open{transform:rotate(180deg)}
+.panel-body{overflow:hidden;flex-shrink:0}
+.panel-body.open{max-height:200px;opacity:1}
+.panel-body.closed{max-height:0;opacity:0;pointer-events:none}
+.garage-wrap{flex:1;min-height:0;display:flex}
+.garage-inner{background:#fff;border:1px solid #ccc;border-radius:9px;padding:6px;width:100%;display:flex;flex-direction:column;min-height:0;gap:4px}
+
+/* A tabela ocupa 100% width e height do container — sem escala, sem transform */
+.map-container{flex:1;min-height:0;display:flex;position:relative}
+.map-rel{position:relative;width:100%;height:100%;display:flex}
+
+#gtable{
+  width:100%;
+  height:100%;
+  border-collapse:collapse;
+  table-layout:fixed;
+}
+#gtable td{
+  border:1.5px solid #999;
+  text-align:center;
+  vertical-align:middle;
+  padding:1px;
+  overflow:hidden;
+  word-break:break-word;
+}
+
+/* estados */
+.vv{background:#fff;cursor:pointer;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+.vv:active{filter:brightness(.88)}
+.occ{background:#BDD7EE !important;border-color:#378ADD !important}        /* azul — padrão */
+.occ-d{background:#BDD7EE !important;border-color:#378ADD !important}     /* azul — 1D-5D */
+.ob-occ{background:#FCEBEB !important;border-color:#E24B4A !important}    /* vermelho — 6D-9D + corredores */
+.dup-occ{background:#FFE0B2 !important;border-color:#E65100 !important}   /* laranja — duplicidade */
+.blk{background:#D9D9D9;cursor:default}
+.corr{background:#D9D9D9;cursor:pointer;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+.corr:active{filter:brightness(.85)}
+.corr.ob-occ{background:#FCEBEB !important;border-color:#E24B4A !important}
+.sep{background:#f0efea !important;border:none !important;padding:0 !important}
+.hotel{background:#D9D9D9;cursor:default}
+.apt-lbl{font-weight:700;color:#0C447C;display:block;line-height:1.2;font-size:1.4vw}
+.apt-lbl.ob{color:#A32D2D}
+.apt-lbl.dup{color:#BF360C}
+.id-lbl{color:#ccc;display:block;line-height:1;font-size:.7vw}
+
+.leg{display:flex;flex-wrap:wrap;gap:6px;flex-shrink:0}
+.li{display:flex;align-items:center;gap:3px;font-size:8px;color:#777}
+.ls{width:10px;height:10px;border-radius:2px;flex-shrink:0;border:1px solid #aaa}
+
+/* ANEXOS */
+.attach-btn{background:none;border:none;cursor:pointer;padding:2px 4px;color:#888;font-size:18px;line-height:1;flex-shrink:0;margin-left:auto}
+.attach-btn:active{color:#185FA5}
+.share-btn{background:none;border:none;cursor:pointer;padding:2px 4px;color:#888;line-height:1;display:flex;align-items:center;flex-shrink:0}
+.share-btn:active{color:#0F6E56}
+.share-btn svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2}
+.attach-area{margin-top:8px;border-top:1px solid #f0efea;padding-top:8px}
+.attach-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.attach-label{font-size:10px;color:#888;font-weight:600}
+.attach-actions{display:flex;gap:5px}
+.attach-act{background:none;border:1px solid #ddd;border-radius:5px;padding:3px 8px;font-size:10px;color:#555;cursor:pointer;font-family:inherit}
+.attach-act:active{background:#f5f5f5}
+.attach-grid{display:flex;flex-wrap:wrap;gap:5px}
+.attach-thumb{position:relative;width:56px;height:56px;border-radius:6px;overflow:hidden;border:1px solid #ddd;flex-shrink:0;cursor:pointer}
+.attach-thumb img{width:100%;height:100%;object-fit:cover}
+.attach-thumb .del-att{position:absolute;top:1px;right:1px;background:rgba(0,0,0,.55);color:#fff;border:none;border-radius:50%;width:16px;height:16px;font-size:10px;line-height:16px;text-align:center;cursor:pointer;padding:0}
+.attach-doc{display:flex;align-items:center;gap:5px;background:#f5f4f0;border-radius:5px;padding:4px 7px;font-size:10px;color:#444;cursor:pointer;max-width:140px}
+.attach-doc span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+.attach-empty{font-size:10px;color:#bbb;font-style:italic}
+/* MERGE HORIZONTAL (4B-7B) — vaga coberta some */
+.hmerge-hidden{display:none !important}
+.drag-src{
+  opacity:0.55;
+  outline:3px solid #E65100 !important;
+  outline-offset:-2px;
+  cursor:grabbing !important;
+  transition:opacity .15s;
+}
+.drag-over{
+  outline:2.5px dashed #378ADD !important;
+  outline-offset:-2px;
+  background:#E3F2FD !important;
+  transition:background .1s;
+}
+.drag-ghost{
+  position:fixed;pointer-events:none;z-index:600;
+  background:#fff;border:2px solid #E65100;border-radius:8px;
+  padding:5px 10px;font-size:12px;font-weight:700;color:#E65100;
+  box-shadow:0 4px 16px rgba(0,0,0,.22);
+  white-space:nowrap;
+  transform:translate(-50%,-50%);
+  transition:none;
+}
+.move-banner{background:#FFF3E0;border:1px solid #E65100;border-radius:7px;padding:5px 10px;font-size:11px;color:#BF360C;text-align:center;flex-shrink:0;display:none}
+.move-banner.on{display:block}
+.map-rel{position:relative;width:100%;height:100%;display:flex}
+.pilar{position:absolute;background:#888780;border-radius:3px;pointer-events:none;z-index:2}
+
+/* Lista passeio inline na topbar */
+.tb-passeio{display:flex;align-items:center;gap:5px;flex:1;min-width:0;overflow:hidden;padding:0 8px;border-left:1px solid #e0e0da}
+.tb-passeio-items{display:flex;gap:4px;overflow:hidden;flex:1;min-width:0;align-items:center}
+.tb-pi{background:#FAEEDA;border:1px solid #e8c97a;border-radius:5px;padding:2px 7px;white-space:nowrap;font-size:11px;font-weight:700;color:#633806;cursor:pointer;flex-shrink:0}
+.tb-pi:active{filter:brightness(.93)}
+.tb-more{background:none;border:none;color:#BA7517;font-size:13px;font-weight:700;cursor:pointer;padding:2px 4px;flex-shrink:0;font-family:inherit;line-height:1}
+.tb-more:active{color:#633806}
+.tb-out-lbl{font-size:9px;color:#854F0B;white-space:nowrap;flex-shrink:0}
+/* Botões reset no painel */
+.reset-btns{display:flex;flex-direction:column;gap:3px;flex-shrink:0;padding-left:7px;margin-left:2px}
+.rbtn{background:none;border:1px solid #e0ddd8;border-radius:4px;font-size:12px;color:#ccc;cursor:pointer;padding:2px 6px;font-family:inherit;line-height:1.4;transition:border-color .15s,color .15s;font-weight:600}
+.rbtn:hover{border-color:#E24B4A;color:#E24B4A}
+.rbtn.restore{border-color:#c5d8f0 !important;color:#378ADD !important;font-size:13px}
+.rbtn.restore:hover{background:#EEF6FF;color:#185FA5 !important}
+
+@media(orientation:portrait){
+  .top-strip{flex-direction:column}
+  .apt-lbl{font-size:2.5vw}
+  .id-lbl{font-size:1.2vw}
+}
+
+/* modal */
+.ovbg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:500;align-items:center;justify-content:center}
+.ovbg.on{display:flex}
+.modal{background:#fff;border-radius:14px;width:310px;padding:18px;border:1px solid #ddd;max-height:90vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,.2)}
+.mt{font-size:15px;font-weight:700;color:#111;margin-bottom:4px}
+.ms{font-size:11px;color:#888;margin-bottom:12px}
+.fl{display:block;font-size:10px;color:#555;margin-bottom:3px;font-weight:600}
+.req{color:#E24B4A;font-weight:400}
+.fi{width:100%;padding:9px 11px;border:1.5px solid #ddd;border-radius:7px;font-size:14px;background:#fff;color:#111;outline:none;margin-bottom:8px;font-family:inherit}
+.fi:focus{border-color:#378ADD;box-shadow:0 0 0 3px rgba(55,138,221,.15)}
+.fi.err{border-color:#E24B4A}
+.szr{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:9px}
+.szb{padding:9px;border:2px solid #ddd;border-radius:7px;background:#fff;color:#333;font-size:12px;cursor:pointer;text-align:center;font-family:inherit;font-weight:600}
+.szb.sel{border-color:#378ADD;background:#EEF6FF;color:#0C447C}
+.b2{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:5px}
+.bcx{padding:9px;border:1.5px solid #ddd;border-radius:7px;background:#fff;color:#777;font-size:12px;cursor:pointer;font-family:inherit;font-weight:600}
+.bcx:active{background:#f5f5f5}
+.bsv{padding:9px;border:none;border-radius:7px;background:#185FA5;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit}
+.bsv:active{background:#0C447C}
+.ag{display:flex;flex-direction:column;gap:7px;margin-top:4px}
+.ab{padding:12px 14px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;border:none;text-align:left;display:flex;align-items:center;gap:9px;font-family:inherit}
+.ab:active{filter:brightness(.92)}
+.ao{background:#FAEEDA;color:#633806}.ad{background:#f5f4f0;color:#222}.ac{background:#FCEBEB;color:#791F1F}
+.dr{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #f0efea;font-size:12px}
+.dl{color:#888}.dv{font-weight:700;color:#111}
+.warn-box{background:#FFF8E6;border:1.5px solid #BA7517;border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:12px;color:#633806;line-height:1.5}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- TOPBAR UNIFICADA -->
+  <div class="topbar">
+    <div class="tb-name">
+      <div class="an">🅿 GarageSpot</div>
+      <div class="as-dev">Developed by Douglas Nascimento</div>
+    </div>
+    <div class="tb-stats">
+      <div class="tb-stat"><div class="tb-val tv-total" id="st">–</div><div class="tb-lbl">Total</div></div>
+      <div class="tb-stat"><div class="tb-val tv-free" id="sf">–</div><div class="tb-lbl">Disponíveis</div></div>
+      <div class="tb-stat"><div class="tb-val tv-occ" id="so">0</div><div class="tb-lbl">Ocupadas</div></div>
+      <div class="tb-stat"><div class="tb-val tv-out" id="sp">0</div><div class="tb-lbl">A passeio</div></div>
+    </div>
+    <div class="tb-ob">
+      <div class="tb-stat"><div class="tb-val" style="color:#0F6E56" id="sob-free">–</div><div class="tb-lbl" style="color:#A32D2D">OB livre</div></div>
+      <div class="tb-stat"><div class="tb-val" style="color:#A32D2D" id="sob">0</div><div class="tb-lbl" style="color:#A32D2D">OB ocup.</div></div>
+    </div>
+    <!-- Lista inline de passeio -->
+    <div class="tb-passeio" id="tb-passeio">
+      <span class="tb-out-lbl">Passeio:</span>
+      <div class="tb-passeio-items" id="tb-pi-list"><span style="font-size:10px;color:#bbb">—</span></div>
+      <button class="tb-more" id="tb-more" onclick="togglePanel()" style="display:none" title="Ver todos">···</button>
+    </div>
+    <div class="tb-right">
+      <span class="clk" id="clk"></span>
+      <span class="pt-arrow" id="pt-arrow" onclick="togglePanel()" title="Carros a passeio">▾</span>
+    </div>
+  </div>
+
+  <!-- PAINEL PASSEIO (retrátil) -->
+  <div class="panel-body open" id="panel-body">
+    <div class="ocard">
+      <div class="och">
+        <span class="oct">A passeio</span>
+        <span class="ocb" id="oc2">0</span>
+      </div>
+      <div class="olist-h" id="ol"><span class="oe">Nenhum carro fora no momento</span></div>
+      <!-- Botão de reset — discreto, canto direito -->
+      <div class="reset-btns" id="reset-btns">
+        <button class="rbtn" id="btn-reset-tudo" onclick="confirmReset('tudo')" title="Apagar todo o controle">×</button>
+      </div>
+    </div>
+  </div>
+  <!-- Banner modo mover vaga -->
+  <div class="move-banner" id="move-banner">
+    🚗 Toque na vaga de destino para mover o carro · <span id="move-apt-lbl"></span> &nbsp;
+    <button onclick="cancelMove()" style="background:#fff;border:1px solid #E65100;color:#BF360C;font-size:10px;padding:2px 8px;border-radius:4px;cursor:pointer;font-family:inherit">Cancelar</button>
+  </div>
+  <div class="garage-wrap">
+    <div class="garage-inner">
+      <div class="map-container">
+        <div class="map-rel" id="map-rel">
+          <table id="gtable"></table>
+          <!-- Pilares de concreto — apenas visuais, pointer-events:none -->
+          <!-- 4 pilares na borda inferior da fileira superior (entre fileira C e corredor) -->
+          <!-- 2 pilares na borda superior das fileiras B/A (entre corredor e fileiras B/A) -->
+          <div class="pilar" id="pilar-1"></div>
+          <div class="pilar" id="pilar-2"></div>
+          <div class="pilar" id="pilar-3"></div>
+          <div class="pilar" id="pilar-4"></div>
+          <div class="pilar" id="pilar-5"></div>
+          <div class="pilar" id="pilar-6"></div>
+        </div>
+      </div>
+      <div class="leg">
+        <div class="li"><div class="ls" style="background:#fff"></div>Livre</div>
+        <div class="li"><div class="ls" style="background:#BDD7EE;border-color:#378ADD"></div>Ocupada</div>
+        <div class="li"><div class="ls" style="background:#FCEBEB;border-color:#E24B4A"></div>Overbooking</div>
+        <div class="li"><div class="ls" style="background:#FFE0B2;border-color:#E65100"></div>Duplicidade</div>
+        <div class="li"><div class="ls" style="background:#888780;border-color:#666"></div>Pilar</div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="ovbg" id="ov"><div class="modal" id="mc"></div></div>
+
+<script>
+const S={}, PASSEIO={};
+let cur=null, ssz='small';
+// Overbooking VERMELHO: corredores + 6D-9D
+const OB=new Set(['CORREDOR 01','CORREDOR 02','CORREDOR 03','6D','7D','8D','9D']);
+// Vagas D azuis normais (1D-5D) — não são overbooking
+const D_NORMAL=new Set(['1D','2D','3D','4D','5D']);
+const FIXED=new Set(['CORREDOR 01','CORREDOR 02','CORREDOR 03','2E','3E','4E']);
+let TOTAL=0;
+
+// Proporções relativas das colunas (do Excel) — serão usadas como fr no CSS
+// A:12.4  B:13  C:12.7  D:12.1  E:11.1  F:10.7  G:12.1  H:11.4  I:11.7  J:11.1  K:1.7  L:12.6
+const COL_FR = [12.4, 13, 12.7, 12.1, 11.1, 10.7, 12.1, 11.4, 11.7, 11.1, 1.7, 12.6];
+// Proporções relativas das linhas
+// R1:99  R2-10:34.5 cada  R11:89.25  R12:89.25
+const ROW_FR = [99, 34.5, 34.5, 34.5, 34.5, 34.5, 34.5, 34.5, 34.5, 34.5, 89.25, 89.25];
+
+// Layout exato do Excel
+// [id, tipo, rowspan?, colspan?]
+const ROWS = [
+  [['1E','v'],  ['9C','v'],['8C','v'],['7C','v'],['6C','v'],['5C','v'],['4C','v'],['3C','v'],['2C','v'],['1C','v'], ['','s'],['EXTRA 01','v']],
+  [['2E','v',3],['CORREDOR 01','c',9,3],null,null,['CORREDOR 02','c',9,3],null,null,['CORREDOR 03','c',9,3],null,null,['','s'],['GARAGEM\nHOTEL','h']],
+  [null,null,null,null,null,null,null,null,null,null,['','s'],['1D','v']],
+  [null,null,null,null,null,null,null,null,null,null,['','s'],['2D','v']],
+  [['3E','v',3],null,null,null,null,null,null,null,null,null,['','s'],['3D','v']],
+  [null,null,null,null,null,null,null,null,null,null,['','s'],['4D','v']],
+  [null,null,null,null,null,null,null,null,null,null,['','s'],['5D','v']],
+  [['4E','v',3],null,null,null,null,null,null,null,null,null,['','s'],['6D','v']],
+  [null,null,null,null,null,null,null,null,null,null,['','s'],['7D','v']],
+  [null,null,null,null,null,null,null,null,null,null,['','s'],['8D','v']],
+  [['','b'],['9B','v'],['8B','v'],['7B','v'],['6B','v'],['5B','v'],['4B','v'],['3B','v'],['2B','v'],['1B','v'],['','s'],['9D','v']],
+  [['','b'],['9A','v'],['8A','v'],['7A','v'],['6A','v'],['5A','v'],['4A','v'],['3A','v'],['2A','v'],['1A','v'],['','s'],['EXTRA 02','v']],
+];
+
+function initState(){
+  let totalNormal=0;
+  ROWS.forEach(row=>row.forEach(cell=>{
+    if(!cell||!cell[0]||'sbh'.includes(cell[1]))return;
+    S[cell[0]]={status:'free',apt:'',model:'',color:'',plate:'',guest:'',obs:'',size:'small',
+                overbook:OB.has(cell[0]),mergedMaster:false,mergedSlave:false,
+                hmergeWith:null}; // merge horizontal: id da vaga coberta
+    TOTAL++;
+    if(!OB.has(cell[0])) totalNormal++;
+  }));
+  // Total exibido = apenas vagas normais (sem overbooking)
+  document.getElementById('st').textContent=totalNormal;
+}
+
+function buildTable(){
+  const tbl=document.getElementById('gtable');
+
+  // colgroup com larguras proporcionais em %
+  const totalFr=COL_FR.reduce((a,b)=>a+b,0);
+  const cg=document.createElement('colgroup');
+  COL_FR.forEach(fr=>{
+    const c=document.createElement('col');
+    c.style.width=(fr/totalFr*100).toFixed(3)+'%';
+    cg.appendChild(c);
+  });
+  tbl.appendChild(cg);
+
+  // Calcular alturas proporcionais em % para cada row
+  const totalRh=ROW_FR.reduce((a,b)=>a+b,0);
+
+  const covered=new Set();
+  ROWS.forEach((row,ri)=>{
+    const tr=document.createElement('tr');
+    // Altura em % via estilo
+    tr.style.height=(ROW_FR[ri]/totalRh*100).toFixed(3)+'%';
+
+    row.forEach((cell,ci)=>{
+      if(covered.has(`${ri},${ci}`)||cell===null)return;
+      const[id,tipo,rs=1,cs=1]=cell;
+      const td=document.createElement('td');
+      if(rs>1){td.rowSpan=rs;for(let r=1;r<rs;r++)for(let c=0;c<cs;c++)covered.add(`${ri+r},${ci+c}`);}
+      if(cs>1){td.colSpan=cs;for(let c=1;c<cs;c++)covered.add(`${ri},${ci+c}`);}
+
+      if(tipo==='s'){td.className='sep';}
+      else if(tipo==='b'){td.className='blk';}
+      else if(tipo==='h'){td.className='hotel';td.innerHTML=`<span style="font-size:.9vw;font-weight:700;color:#555;line-height:1.4;white-space:pre">${id}</span>`;}
+      else if(tipo==='c'){
+        td.className='corr';td.dataset.id=id;
+        td.innerHTML=cellHTML(id);
+        td.addEventListener('click',()=>clkV(id));
+      } else {
+        td.className='vv';td.dataset.id=id;
+        td.innerHTML=cellHTML(id);
+        td.addEventListener('click',()=>clkV(id));
+      }
+      tr.appendChild(td);
+    });
+    tbl.appendChild(tr);
+  });
+}
+
+// Reconstrói a tabela preservando o estado S (usado na rotação)
+function rebuildTable(){
+  const tbl=document.getElementById('gtable');
+  tbl.innerHTML='';
+  buildTable();
+  Object.keys(S).forEach(id=>ref(id));
+  // Reaplicar merges horizontais visuais
+  Object.entries(S).forEach(([id,d])=>{
+    if(d.hmergeWith && d.status==='occupied'){
+      const tdSrc=getTd(id); const tdAlvo=getTd(d.hmergeWith);
+      if(tdSrc && tdAlvo){
+        // Só aplica se este é o "dono" (não o coberto)
+        // O dono tem colSpan e o coberto some — evita dupla aplicação
+        if(S[d.hmergeWith]?.hmergeWith===id){
+          // Determina quem é o dono: o de menor colspan (ou o mais à esquerda)
+          const numId=parseInt(id); const numAlvo=parseInt(d.hmergeWith);
+          if(numId > numAlvo){ // id é mais à direita, alvo é mais à esquerda
+            tdSrc.classList.add('hmerge-hidden');
+            if(tdAlvo) tdAlvo.colSpan=2;
+          } else {
+            tdSrc.colSpan=2;
+            tdAlvo.classList.add('hmerge-hidden');
+          }
+        }
+      }
+    }
+  });
+  attachDrag();
+  positionPilares();
+}
+
+function cellHTML(id){
+  return `<span class="id-lbl">${id}</span>`;
+}
+
+function getTd(id){return document.querySelector(`[data-id="${id}"]`);}
+
+// Verifica duplicidade REAL: mesmo apt em vagas INDEPENDENTES (exclui merge do mesmo carro)
+function isDup(apt){
+  if(!apt) return false;
+  let count=0;
+  Object.entries(S).forEach(([id,d])=>{
+    if(d.status==='occupied' && d.apt===apt && !d.mergedSlave) count++;
+  });
+  // count=1 → apenas um carro (mesmo que ocupe 2 células via merge)
+  // count>1 → realmente mais de um carro usando o mesmo apt
+  return count>1;
+}
+
+// Retorna a classe de cor correta para uma vaga ocupada
+function occClass(id, apt){
+  if(isDup(apt)) return 'dup-occ';
+  if(OB.has(id)) return 'ob-occ';
+  return 'occ'; // azul padrão (inclui 1D-5D e todos os outros)
+}
+
+function ref(id){
+  const d=S[id],td=getTd(id);
+  if(!td)return;
+  if(d.mergedSlave){td.style.display='none';return;}
+  td.style.display='';
+  const isC=id.startsWith('CORREDOR');
+  let cls=isC?'corr':'vv';
+  if(d.status==='occupied') cls+=' '+occClass(id,d.apt);
+  td.className=cls;
+  if(id.endsWith('B')&&!FIXED.has(id)) td.rowSpan=d.mergedMaster?2:1;
+  if(d.status==='free'){
+    td.innerHTML=`<span class="id-lbl">${id}</span>`;
+  } else {
+    const aptCls=isDup(d.apt)?'dup':(OB.has(id)?'ob':'');
+    td.innerHTML=`<span class="id-lbl">${id}</span><span class="apt-lbl${aptCls?' '+aptCls:''}">${d.apt}</span>`;
+  }
+}
+
+// Atualiza todas as vagas que têm um determinado apt (para pintar/despintar duplicidade)
+function refByApt(apt){
+  Object.entries(S).forEach(([id,d])=>{if(d.apt===apt||d.status==='occupied')ref(id);});
+}
+
+// ── PILARES DE CONCRETO ───────────────────────────────────────────────────
+// Posições exatas do drawing1.xml (col 0-based, row 0-based):
+// P1: col3→4 (7C|6C), row0→1 — borda direita de 7C / esquerda de 6C, na fileira superior
+// P2: col5→6 (5C|4C), row0→1 — borda direita de 5C / esquerda de 4C, na fileira superior
+// P3: col7→8 (3C|2C), row0→1 — borda direita de 3C / esquerda de 2C, na fileira superior
+// P4: col0→1 (1E|9C), row0→1 — borda direita de 1E / esquerda de 9C, na fileira superior
+// P5: col2→3 (8B|7B), row9→10 — borda direita de 8B / esquerda de 7B, nas fileiras B/A
+// P6: col6→7 (4B|3B), row9→10 — borda direita de 4B / esquerda de 3B, nas fileiras B/A
+
+function positionPilares(){
+  const tbl = document.getElementById('gtable');
+  const rel  = document.getElementById('map-rel');
+  if(!tbl||!rel) return;
+
+  const relRect = rel.getBoundingClientRect();
+
+  // Tamanho do pilar proporcional à tabela
+  const tblRect = tbl.getBoundingClientRect();
+  const pw = Math.max(8, Math.round(tblRect.width * 0.013));
+  const ph = Math.max(8, Math.round(pw * 0.9));
+
+  // Cada pilar: pega as duas células vizinhas e usa suas bordas reais
+  // pos vertical: 'row1_bottom' = borda inferior de row1 (entre fileira C e corredor)
+  //               'row10_bottom' = borda inferior de row10 (entre corredor e fileira B)
+  const pilarDefs = [
+    // Grupo 1 — fileira superior (row 0→1 no drawing = Excel row 1→2)
+    // rowOff ~123px dentro de row1 (99pt alto) → o pilar está na parte de baixo da row1
+    { id:'pilar-1', leftId:'7C', rightId:'6C', vertRef:'7C', vertEdge:'bottom' },
+    { id:'pilar-2', leftId:'5C', rightId:'4C', vertRef:'5C', vertEdge:'bottom' },
+    { id:'pilar-3', leftId:'3C', rightId:'2C', vertRef:'3C', vertEdge:'bottom' },
+    { id:'pilar-4', leftId:'1E', rightId:'9C', vertRef:'1E', vertEdge:'bottom' },
+    // Grupo 2 — fileiras B/A (row 9→10 no drawing = Excel row 10→11)
+    // rowOff ~39-40px dentro de row10 (34.5pt alto) → mais perto da borda inferior de row10
+    // A row10 é a última linha do corredor; row11 é a fileira B
+    // O pilar fica NA BORDA entre corredor e fileira B → usar borda superior de 8B/4B
+    { id:'pilar-5', leftId:'8B', rightId:'7B', vertRef:'8B', vertEdge:'top' },
+    { id:'pilar-6', leftId:'4B', rightId:'3B', vertRef:'4B', vertEdge:'top' },
+  ];
+
+  pilarDefs.forEach(def=>{
+    const el   = document.getElementById(def.id);
+    if(!el) return;
+
+    const tdL  = document.querySelector(`[data-id="${def.leftId}"]`);
+    const tdR  = document.querySelector(`[data-id="${def.rightId}"]`);
+    const tdV  = document.querySelector(`[data-id="${def.vertRef}"]`);
+    if(!tdL||!tdR||!tdV){ el.style.display='none'; return; }
+
+    const rL = tdL.getBoundingClientRect();
+    const rR = tdR.getBoundingClientRect();
+    const rV = tdV.getBoundingClientRect();
+
+    // Centro horizontal: entre borda direita de L e borda esquerda de R
+    const centerX = ((rL.right + rR.left) / 2) - relRect.left;
+
+    // Centro vertical: na borda indicada (top ou bottom) da célula de referência
+    const centerY = def.vertEdge === 'bottom'
+      ? rV.bottom - relRect.top
+      : rV.top    - relRect.top;
+
+    el.style.display = 'block';
+    el.style.width   = pw + 'px';
+    el.style.height  = ph + 'px';
+    el.style.left    = (centerX - pw/2) + 'px';
+    el.style.top     = (centerY - ph/2) + 'px';
+  });
+}
+
+function togglePanel(){
+  const body=document.getElementById('panel-body');
+  const btn=document.getElementById('pt-arrow');
+  const isOpen=body.classList.contains('open');
+  body.classList.toggle('open',!isOpen);
+  body.classList.toggle('closed',isOpen);
+  btn.style.opacity=isOpen?'0.5':'1';
+  requestAnimationFrame(positionPilares);
+}
+
+function upd(){
+  let occ=0, free=0, ob_occ=0, ob_free=0;
+  Object.entries(S).forEach(([id,d])=>{
+    if(d.mergedSlave) return;
+    if(d.overbook){
+      if(d.status==='occupied') ob_occ++;
+      else ob_free++;
+    } else {
+      if(d.status==='occupied') occ++;
+      else free++;
+    }
+  });
+  const out=Object.keys(PASSEIO).length;
+
+  // Calcula o "peso" dos carros a passeio nas vagas disponíveis
+  // Carro grande (size='large') vale 2 vagas, pequeno vale 1
+  let passeioWeight=0;
+  Object.values(PASSEIO).forEach(d=>{
+    passeioWeight += (d.size==='large') ? 2 : 1;
+  });
+
+  const disponiveis = Math.max(0, free - passeioWeight);
+
+  // Topbar stats
+  document.getElementById('sf').textContent      = disponiveis;
+  document.getElementById('so').textContent      = occ;
+  document.getElementById('sp').textContent      = out;
+  document.getElementById('sob').textContent     = ob_occ;
+  document.getElementById('sob-free').textContent= ob_free;
+  document.getElementById('oc2').textContent     = out;
+  renderP();
+}
+
+function renderP(){
+  const ol    = document.getElementById('ol');
+  const piList= document.getElementById('tb-pi-list');
+  const more  = document.getElementById('tb-more');
+  const items = Object.entries(PASSEIO);
+
+  // Painel expandido
+  if(!items.length){
+    ol.innerHTML='<span class="oe">Nenhum carro fora no momento</span>';
+    piList.innerHTML='<span style="font-size:10px;color:#bbb">—</span>';
+    if(more) more.style.display='none';
+    // Botões continuam visíveis — só esconde os de restore se não houver backup
+    return;
+  }
+
+  ol.innerHTML='';
+  items.forEach(([apt,d])=>{
+    const info=[d.model,d.color].filter(Boolean).join(' · ');
+    const isLarge=d.size==='large';
+    const dv=document.createElement('div');dv.className='oi';
+    dv.innerHTML=`
+      <div style="display:flex;align-items:center;gap:5px">
+        <div class="oa">${apt}</div>
+        ${isLarge?'<span style="font-size:9px;background:#E3F2FD;color:#185FA5;border-radius:3px;padding:1px 4px;font-weight:700;line-height:1.4">🚐 Grande</span>':''}
+      </div>
+      ${info?`<div class="oin">${info}</div>`:''}`;
+
+    // Clique normal → detalhes
+    dv.addEventListener('click',()=>showPasseioDetail(apt));
+
+    // Long press → opção de checkout
+    let _lpT=null;
+    const startLp=()=>{
+      dv.style.transition='transform .4s';
+      dv.style.transform='scale(0.93)';
+      _lpT=setTimeout(()=>{
+        _lpT=null;
+        dv.style.transform='';dv.style.transition='';
+        showPasseioCheckout(apt);
+      },600);
+    };
+    const cancelLp=()=>{
+      if(_lpT){clearTimeout(_lpT);_lpT=null;}
+      dv.style.transform='';dv.style.transition='';
+    };
+    dv.addEventListener('mousedown',startLp);
+    dv.addEventListener('mouseup',cancelLp);
+    dv.addEventListener('mouseleave',cancelLp);
+    dv.addEventListener('touchstart',startLp,{passive:true});
+    dv.addEventListener('touchend',cancelLp);
+    dv.addEventListener('touchmove',cancelLp,{passive:true});
+
+    ol.appendChild(dv);
+  });
+
+  // Lista inline — cabe quantos couberem, resto vira "···"
+  piList.innerHTML='';
+  // Renderiza até MAX_INLINE itens, o resto mostra ···
+  const MAX_INLINE = 4;
+  const visible = items.slice(0, MAX_INLINE);
+  const hidden  = items.length - visible.length;
+
+  visible.forEach(([apt,d])=>{
+    const btn=document.createElement('span');
+    btn.className='tb-pi'+(d.size==='large'?' large-badge':'');
+    btn.textContent=apt;
+    btn.title=([d.model,d.color,d.plate].filter(Boolean).join(' · '))||'Apt. '+apt;
+    btn.addEventListener('click',()=>showPasseioDetail(apt));
+    piList.appendChild(btn);
+  });
+
+  if(more){
+    if(hidden>0){
+      more.style.display='';
+      more.textContent='···';
+      more.title=`+${hidden} mais`;
+    } else {
+      more.style.display='none';
+    }
+  }
+}
+
+// ── ARRASTAR VAGA (drag & drop) ───────────────────────────────────────────
+let dragState = null;   // { id, apt, model, color, plate, guest, obs, size }
+let ghost     = null;   // elemento visual que segue o dedo/cursor
+
+function startDrag(id, startX, startY){
+  if(!S[id] || S[id].status==='free') return;
+  const d = S[id];
+  dragState = {id, apt:d.apt, model:d.model, color:d.color,
+               plate:d.plate, guest:d.guest, obs:d.obs||'', size:d.size||'small'};
+
+  // Destaca vaga de origem
+  const td = getTd(id); if(td) td.classList.add('drag-src');
+
+  // Cria ghost visual
+  ghost = document.createElement('div');
+  ghost.className = 'drag-ghost';
+  ghost.textContent = '🚗 Apt. ' + d.apt + (d.size==='large' ? '  🚐' : '');
+  ghost.style.left = startX+'px';
+  ghost.style.top  = startY+'px';
+  document.body.appendChild(ghost);
+
+  // Banner
+  document.getElementById('move-apt-lbl').textContent = 'Apt. '+d.apt;
+  document.getElementById('move-banner').classList.add('on');
+}
+
+function moveDrag(x, y){
+  if(!dragState || !ghost) return;
+  ghost.style.left = x+'px';
+  ghost.style.top  = y+'px';
+
+  // Destaca a célula sob o cursor/dedo
+  document.querySelectorAll('.drag-over').forEach(e=>e.classList.remove('drag-over'));
+  const el = document.elementFromPoint(x, y);
+  const td = el && el.closest ? el.closest('[data-id]') : null;
+  if(td && td.dataset.id && S[td.dataset.id] && S[td.dataset.id].status==='free'){
+    td.classList.add('drag-over');
+  }
+}
+
+// Garante limpeza total do estado de drag em qualquer situação
+function forceCleanDrag(){
+  if(!dragState && !ghost) return;
+  // Remove ghost do DOM
+  if(ghost){ ghost.remove(); ghost=null; }
+  // Remove classes visuais
+  if(dragState){
+    const td=getTd(dragState.id); if(td) td.classList.remove('drag-src');
+  }
+  document.querySelectorAll('.drag-over').forEach(e=>e.classList.remove('drag-over'));
+  const banner=document.getElementById('move-banner');
+  if(banner) banner.classList.remove('on');
+  dragState=null;
+  // Remove qualquer ghost órfão que possa ter ficado
+  document.querySelectorAll('.drag-ghost').forEach(e=>e.remove());
+}
+
+window.cancelMove = function(){
+  forceCleanDrag();
+};
+
+function dropDrag(x, y){
+  if(!dragState) return;
+  const ms = {...dragState};
+
+  // Limpa TUDO antes de processar o drop
+  forceCleanDrag();
+
+  // Descobre a célula de destino
+  const el = document.elementFromPoint(x, y);
+  const td = el && el.closest ? el.closest('[data-id]') : null;
+  const destId = td && td.dataset.id;
+
+  // Se não caiu em vaga livre válida, cancela sem mover
+  if(!destId || !S[destId] || S[destId].status!=='free' || destId===ms.id) return;
+
+  executarMove(ms, destId);
+}
+
+function executarMove(ms, destId){
+  // Remove da vaga de origem sem ir para passeio
+  const src = S[ms.id];
+  if(ms.id.endsWith('B') && src.mergedMaster){
+    const aId = ms.id.slice(0,-1)+'A';
+    const tdB = getTd(ms.id); if(tdB) tdB.rowSpan=1;
+    src.mergedMaster=false;
+    if(S[aId]){S[aId].mergedSlave=false;S[aId].status='free';S[aId].apt='';ref(aId);}
+  }
+  if(ms.id.endsWith('A') && src.mergedSlave){
+    const bId=ms.id.slice(0,-1)+'B';
+    const tdB=getTd(bId);if(tdB)tdB.rowSpan=1;
+    if(S[bId]){S[bId].mergedMaster=false;S[bId].status='free';S[bId].apt='';ref(bId);}
+    src.mergedSlave=false;
+  }
+  src.status='free';src.apt='';src.model='';src.color='';src.plate='';
+  src.guest='';src.obs='';src.size='small';src.mergedMaster=false;src.mergedSlave=false;
+  ref(ms.id);
+
+  const isA      = destId.endsWith('A');
+  const bId      = isA ? destId.slice(0,-1)+'B' : null;
+  const bOcupada = bId && S[bId] && S[bId].status==='occupied';
+
+  if(isA && !bOcupada){
+    // Pergunta tamanho — se cancelar, restaura origem
+    cur  = destId;
+    ssz  = ms.size || 'small';
+    const mc = document.getElementById('mc');
+    mc.innerHTML=`
+      <div class="mt">🚗 Mover para ${destId}</div>
+      <div class="ms">Apt. ${ms.apt} · Confirme o tamanho</div>
+      <div class="szr">
+        <div class="szb ${ssz==='small'?'sel':''}" id="f-szs" onclick="setSz('small')">🚗 Pequeno</div>
+        <div class="szb ${ssz==='large'?'sel':''}" id="f-szl" onclick="setSz('large')">🚐 Grande</div>
+      </div>
+      <div class="b2">
+        <button class="bcx" id="mv-cancel">Cancelar</button>
+        <button class="bsv" id="mv-ok">Confirmar</button>
+      </div>`;
+    document.getElementById('ov').classList.add('on');
+    // Cancelar: restaura carro na origem
+    document.getElementById('mv-cancel').onclick=function(){
+      ssz=ms.size||'small';
+      saveV(ms.id,ms.apt,ms.model,ms.color,ms.plate,ms.guest,ms.obs);
+      refByApt(ms.apt);upd();closeOv();
+    };
+    document.getElementById('mv-ok').onclick=function(){
+      saveV(destId,ms.apt,ms.model,ms.color,ms.plate,ms.guest,ms.obs);
+      refByApt(ms.apt);upd();closeOv();
+    };
+  } else {
+    if(isA && bOcupada) ssz='small';
+    else ssz = isA ? (ms.size||'small') : 'small';
+    saveV(destId,ms.apt,ms.model,ms.color,ms.plate,ms.guest,ms.obs);
+    refByApt(ms.apt);upd();
+  }
+}
+
+// Touch & Mouse events para arrastar
+function attachDrag(){
+  document.querySelectorAll('.vv,.corr').forEach(el=>{
+    if(el._dragMD){el.removeEventListener('mousedown',el._dragMD);el._dragMD=null;}
+    if(el._dragTS){el.removeEventListener('touchstart',el._dragTS);el._dragTS=null;}
+    if(el._dragMU2){el.removeEventListener('mouseup',el._dragMU2);el._dragMU2=null;}
+    if(el._dragTE2){el.removeEventListener('touchend',el._dragTE2);el._dragTE2=null;}
+
+    const id = el.dataset.id;
+    if(!id) return;
+
+    let holdTimer=null;
+
+    function beginHold(x,y){
+      if(!S[id]||S[id].status==='free') return;
+      // Feedback visual: borda que vai crescendo durante o hold
+      el.style.transition='outline-width .9s ease';
+      el.style.outline='0px solid #E65100';
+      el.style.outlineOffset='-2px';
+      requestAnimationFrame(()=>{ el.style.outline='4px solid #E65100'; });
+      holdTimer=setTimeout(()=>{
+        holdTimer=null;
+        el.style.transition='';el.style.outline='';el.style.outlineOffset='';
+        startDrag(id,x,y);
+      },800);
+    }
+    function cancelHold(){
+      if(holdTimer){clearTimeout(holdTimer);holdTimer=null;}
+      el.style.transition='';el.style.outline='';el.style.outlineOffset='';
+    }
+
+    el._dragMD = function(e){
+      if(e.button!==0||!S[id]||S[id].status==='free') return;
+      e.preventDefault();
+      beginHold(e.clientX,e.clientY);
+    };
+    el._dragMU2 = function(){ cancelHold(); };
+    el._dragTS = function(e){
+      if(!S[id]||S[id].status==='free') return;
+      const t=e.touches[0];
+      beginHold(t.clientX,t.clientY);
+    };
+    el._dragTE2 = function(){ cancelHold(); };
+    // Suprime menu de contexto do navegador durante o hold/drag
+    el._dragCM = function(e){ e.preventDefault(); };
+
+    el.addEventListener('mousedown',  el._dragMD);
+    el.addEventListener('mouseup',    el._dragMU2);
+    el.addEventListener('mouseleave', el._dragMU2);
+    el.addEventListener('touchstart', el._dragTS,{passive:true});
+    el.addEventListener('touchend',   el._dragTE2);
+    el.addEventListener('touchmove',  el._dragTE2,{passive:true});
+    el.addEventListener('contextmenu',el._dragCM);
+  });
+
+  // Handlers globais de movimento e soltar
+  if(!window._dragMM){
+    window._dragMM = function(e){
+      if(!dragState) return;
+      const x=e.clientX, y=e.clientY;
+      moveDrag(x,y);
+    };
+    window._dragTM = function(e){
+      if(!dragState) return;
+      const t=e.touches[0];
+      moveDrag(t.clientX, t.clientY);
+    };
+    window._dragMU = function(e){ if(dragState) dropDrag(e.clientX, e.clientY); };
+    window._dragTE = function(e){
+      if(!dragState) return;
+      const t=e.changedTouches[0];
+      dropDrag(t.clientX, t.clientY);
+    };
+    document.addEventListener('mousemove',  window._dragMM);
+    document.addEventListener('touchmove',  window._dragTM, {passive:true});
+    document.addEventListener('mouseup',    window._dragMU);
+    document.addEventListener('touchend',   window._dragTE);
+  }
+}
+
+// ── MERGE HORIZONTAL (vagas 4B-7B) ───────────────────────────────────────
+// Vizinhos possíveis (na mesma fileira B, lado a lado)
+const HMERGE_OPTS = {
+  '7B': ['6B'],
+  '6B': ['7B','5B'],
+  '5B': ['6B','4B'],
+  '4B': ['5B'],
+};
+
+// Aplica merge horizontal: id ocupa colspan=2, alvo some
+function aplicarHMerge(id, alvoId){
+  const tdSrc = getTd(id);
+  const tdAlvo = getTd(alvoId);
+  if(!tdSrc||!tdAlvo) return;
+  S[id].hmergeWith = alvoId;
+  S[alvoId].hmergeWith = id; // referência cruzada para desfazer
+  S[alvoId].status = 'occupied';
+  S[alvoId].apt    = S[id].apt;
+  tdSrc.colSpan = 2;
+  tdAlvo.classList.add('hmerge-hidden');
+  ref(id);
+}
+
+// Desfaz merge horizontal
+function desfazHMerge(id){
+  const alvoId = S[id]?.hmergeWith;
+  if(!alvoId) return;
+  const tdSrc = getTd(id);
+  const tdAlvo = getTd(alvoId);
+  if(tdSrc) tdSrc.colSpan = 1;
+  if(tdAlvo) tdAlvo.classList.remove('hmerge-hidden');
+  if(S[alvoId]){
+    S[alvoId].hmergeWith = null;
+    S[alvoId].status = 'free';
+    S[alvoId].apt    = '';
+    ref(alvoId);
+  }
+  S[id].hmergeWith = null;
+}
+
+// Pergunta se quer fazer merge horizontal após salvar o carro
+function perguntarHMerge(id, apt, model, color, plate, guest, obs){
+  const opts = HMERGE_OPTS[id];
+  if(!opts){ upd();closeOv();return; }
+
+  // Filtra apenas vizinhos LIVRES
+  const livres = opts.filter(v=>S[v]&&S[v].status==='free');
+  if(!livres.length){ upd();closeOv();return; } // nenhum vizinho livre — fecha normalmente
+
+  const mc = document.getElementById('mc');
+
+  // Monta opções com info da vaga A atrás
+  const opcoesHTML = livres.map(v=>{
+    const num = v.slice(0,-1);
+    const aId = num+'A';
+    const aInfo = S[aId]&&S[aId].status==='occupied'
+      ? `· Apt. <strong>${S[aId].apt}</strong> atrás`
+      : '';
+    const lado = (parseInt(v) > parseInt(id)) ? 'esquerda' : 'direita';
+    return `<button class="ab ao" id="hm-${v}" style="margin-bottom:6px">
+      Vaga ${v} · ${lado} ${aInfo}
+    </button>`;
+  }).join('');
+
+  mc.innerHTML=`
+    <div class="mt">Mesclar com vaga ao lado?</div>
+    <div class="ms" style="margin-bottom:10px">Apt. ${apt} · Vaga ${id}</div>
+    ${opcoesHTML}
+    <button class="bcx" onclick="closeOv()" style="width:100%;margin-top:6px">Não, só esta vaga</button>`;
+  document.getElementById('ov').classList.add('on');
+
+  livres.forEach(v=>{
+    document.getElementById('hm-'+v).onclick=function(){
+      aplicarHMerge(id, v);
+      upd();closeOv();
+    };
+  });
+}
+
+function clkV(id){
+  if(!S[id]) return;
+  if(dragState) return; // em drag, ignora cliques
+  cur=id;
+  S[id].status==='free' ? showOcc(id) : showMenu(id);
+}
+
+function showOcc(id){
+  const isA = id.endsWith('A');
+  // Se é vaga A, verifica se a B correspondente já tem carro
+  const bId = isA ? id.slice(0,-1)+'B' : null;
+  const bOcupada = bId && S[bId] && S[bId].status==='occupied';
+  // B ocupada → A só pode ser pequeno (sem opção de escolha)
+  ssz = 'small';
+  const mc=document.getElementById('mc');
+
+  // Monta seção de tamanho conforme situação
+  let tamanhoHTML = '';
+  if(isA && !bOcupada){
+    // B livre → mostra opção de escolher pequeno ou grande
+    tamanhoHTML = `
+    <label class="fl">Tamanho do veículo <span class="req">*</span></label>
+    <div class="szr">
+      <div class="szb sel" id="f-szs" onclick="setSz('small')">🚗 Pequeno</div>
+      <div class="szb" id="f-szl" onclick="setSz('large')">🚐 Grande</div>
+    </div>`;
+  } else if(isA && bOcupada){
+    // B ocupada → apenas pequeno, aviso informativo
+    tamanhoHTML = `
+    <div style="background:#EEF6FF;border:1px solid #378ADD;border-radius:7px;padding:7px 10px;font-size:11px;color:#185FA5;margin-bottom:8px">
+      🚗 Apenas carro pequeno — vaga ${bId} já está ocupada
+    </div>`;
+  }
+
+  mc.innerHTML=`
+    <div class="mt" style="display:flex;align-items:center;gap:6px">
+      <span style="flex:1">🅿 Ocupar ${id}</span>
+      <button class="attach-btn" onclick="toggleAnexosOcc('${id}')" title="Vistoria / Fotos">📎</button>
+    </div>
+    <div class="ms">Dados do veículo</div>
+    <label class="fl">Apartamento <span class="req">* obrigatório</span></label>
+    <input class="fi" id="f-apt" type="text" inputmode="numeric" placeholder="Ex: 301" autocomplete="off">
+    ${tamanhoHTML}
+    <label class="fl">Modelo</label>
+    <input class="fi" id="f-mod" type="text" placeholder="Ex: Civic, HB20...">
+    <label class="fl">Cor</label>
+    <input class="fi" id="f-cor" type="text" placeholder="Ex: Prata, Preto...">
+    <label class="fl">Placa</label>
+    <input class="fi" id="f-pla" type="text" placeholder="ABC1D23" style="text-transform:uppercase">
+    <label class="fl">Hóspede</label>
+    <input class="fi" id="f-gst" type="text" placeholder="Nome completo">
+    <label class="fl">Observações</label>
+    <input class="fi" id="f-obs" type="text" placeholder="Ex: chave na recepção, veículo danificado...">
+    <div id="att-occ-area"></div>
+    <div class="b2">
+      <button class="bcx" onclick="closeOv()">Cancelar</button>
+      <button class="bsv" id="f-btn">Confirmar</button>
+    </div>`;
+  document.getElementById('ov').classList.add('on');
+  setTimeout(()=>{const e=document.getElementById('f-apt');if(e)e.focus();},80);
+
+  document.getElementById('f-btn').onclick = function(){
+    const apt   = document.getElementById('f-apt').value.trim();
+    const model = document.getElementById('f-mod').value.trim();
+    const color = document.getElementById('f-cor').value.trim();
+    const plate = document.getElementById('f-pla').value.trim().toUpperCase();
+    const guest = document.getElementById('f-gst').value.trim();
+    const obs   = document.getElementById('f-obs').value.trim();
+    if(!apt){
+      const e=document.getElementById('f-apt');
+      e.classList.add('err');e.focus();
+      e.addEventListener('input',()=>e.classList.remove('err'),{once:true});
+      return;
+    }
+    if(PASSEIO[apt]){
+      const dp=PASSEIO[apt];
+      const info=[dp.model,dp.color,dp.plate].filter(Boolean).join(' · ');
+      mc.innerHTML=`
+        <div class="mt">🚗 Carro retornando?</div>
+        <div class="warn-box">${apt} está na lista de passeio${info?':<br><strong>'+info+'</strong>':'.'}
+        <br><br>Este carro está voltando do passeio?</div>
+        <div class="ag">
+          <button class="bsv" id="f-sim">✓ Sim, está voltando</button>
+          <button class="bcx" id="f-nao">Não — corrigir apartamento</button>
+          <button class="bcx" onclick="closeOv()">Cancelar</button>
+        </div>`;
+      document.getElementById('f-sim').onclick=function(){
+        const dd=PASSEIO[apt];
+        delete PASSEIO[apt];
+        // Transfere anexos do passeio de volta para a vaga
+        const keyP='p_'+apt, keyV='v_'+cur;
+        if(ANEXOS[keyP]&&ANEXOS[keyP].length){
+          ANEXOS[keyV]=[...ANEXOS[keyP]];
+          delete ANEXOS[keyP];
+          saveAnexos();
+        }
+        // false = retorno de passeio (não é check-in novo)
+        saveV(cur,apt,dd.model,dd.color,dd.plate,dd.guest,dd.obs||'',false);
+      };
+      document.getElementById('f-nao').onclick=function(){
+        showOcc(cur);
+        setTimeout(()=>{const e=document.getElementById('f-apt');if(e){e.value='';e.focus();}},80);
+      };
+    } else {
+      // Verifica duplicidade
+      const dupVaga=Object.entries(S).find(([vid,vd])=>vd.status==='occupied'&&vd.apt===apt&&vid!==cur);
+      if(dupVaga){
+        mc.innerHTML=`
+          <div class="mt">⚠️ Apartamento duplicado</div>
+          <div class="warn-box">O apartamento <strong>${apt}</strong> já está registrado na vaga <strong>${dupVaga[0]}</strong>.
+          <br><br>Deseja mesmo colocar esse apartamento nesta vaga também?</div>
+          <div class="ag">
+            <button class="bsv" id="f-dup-sim" style="background:#E65100">Sim, confirmar mesmo assim</button>
+            <button class="bcx" id="f-dup-nao">Não — corrigir apartamento</button>
+            <button class="bcx" onclick="closeOv()">Cancelar</button>
+          </div>`;
+        document.getElementById('f-dup-sim').onclick=function(){ perguntarCheckin(cur,apt,model,color,plate,guest,obs); };
+        document.getElementById('f-dup-nao').onclick=function(){
+          showOcc(cur);
+          setTimeout(()=>{const e=document.getElementById('f-apt');if(e){e.value='';e.focus();}},80);
+        };
+      } else {
+        perguntarCheckin(cur,apt,model,color,plate,guest,obs);
+      }
+    }
+  };
+}
+
+window.setSz = function(z){
+  ssz = z;
+  const s=document.getElementById('f-szs');
+  const l=document.getElementById('f-szl');
+  if(s)s.classList.toggle('sel',z==='small');
+  if(l)l.classList.toggle('sel',z==='large');
+};
+
+function perguntarCheckin(vagaId, apt, model, color, plate, guest, obs){
+  const mc=document.getElementById('mc');
+  // Verifica se apt já tem histórico ativo (sem checkout)
+  const hist=HISTORICO[apt]||[];
+  const temHistoricoAtivo=hist.length>0 && !hist.some(e=>e.tipo==='checkout');
+  // Se já tem histórico ativo, registra como retorno normal sem perguntar
+  if(temHistoricoAtivo){
+    saveV(vagaId,apt,model,color,plate,guest,obs,null);
+    return;
+  }
+  // Pergunta se é check-in
+  mc.innerHTML=`
+    <div class="mt">🏨 Check-in?</div>
+    <div class="warn-box" style="font-size:12px">O apartamento <strong>${apt}</strong> não possui registro ativo no sistema.<br><br>Este veículo está fazendo check-in agora?</div>
+    <div class="ag">
+      <button class="bsv" id="ci-sim">✅ Sim, é check-in</button>
+      <button class="bcx" id="ci-nao">Não — corrigir apartamento</button>
+      <button class="bcx" onclick="closeOv()" style="margin-top:4px">Cancelar</button>
+    </div>`;
+  document.getElementById('ci-sim').onclick=function(){
+    saveV(vagaId,apt,model,color,plate,guest,obs,true); // true = check-in
+  };
+  document.getElementById('ci-nao').onclick=function(){
+    showOcc(vagaId);
+    setTimeout(()=>{const e=document.getElementById('f-apt');if(e){e.value='';e.focus();}},80);
+  };
+}
+
+function saveV(id,apt,model,color,plate,guest,obs,isCheckin){
+  const d=S[id];
+  d.apt=String(apt||'');d.model=String(model||'');d.color=String(color||'');
+  d.plate=String(plate||'');d.guest=String(guest||'');d.obs=String(obs||'');d.status='occupied';
+  if(id.endsWith('A')){
+    d.size=ssz;
+    if(ssz==='large'){
+      const bId=id.slice(0,-1)+'B';
+      if(S[bId]){
+        S[bId].mergedMaster=true;S[bId].status='occupied';S[bId].apt=d.apt;
+        S[bId].size='large';S[bId].model=d.model;S[bId].color=d.color;
+        S[bId].plate=d.plate;S[bId].guest=d.guest;S[bId].obs=d.obs;
+        ref(bId);
+      }
+      d.mergedSlave=true;
+    } else { d.mergedSlave=false;d.mergedMaster=false; }
+  }
+  // Registra check-in no histórico
+  if(isCheckin){
+    iniciarHistorico(apt, id);
+  } else if(isCheckin===false){
+    addHistorico(apt,'retorno_passeio',id,'');
+  }
+  ref(id);refByApt(d.apt);
+  // Para vagas com opção de merge horizontal, pergunta após salvar
+  if(HMERGE_OPTS[id]){
+    upd(); // atualiza stats antes de mostrar pergunta
+    perguntarHMerge(id,d.apt,d.model,d.color,d.plate,d.guest,d.obs);
+    return; // closeOv chamado dentro de perguntarHMerge
+  }
+  upd();closeOv();
+}
+
+function showMenu(id){
+  const d=S[id];
+  const mc=document.getElementById('mc');
+  const info=[d.model,d.color,d.plate].filter(Boolean).join(' · ')||'Sem detalhes adicionais';
+  const dupWarn=isDup(d.apt)?`<div style="background:#FFF3E0;border:1px solid #E65100;border-radius:6px;padding:6px 10px;font-size:11px;color:#BF360C;margin-bottom:8px">⚠️ Apt. ${d.apt} também está em outra vaga</div>`:'';
+
+  // Lógica dos botões de trocar tamanho
+  const isAB = id.endsWith('A') || id.endsWith('B');
+  let trocaBtn = '';
+  if(isAB){
+    const num = id.slice(0,-1);
+    const isLarge = d.size==='large' || d.mergedMaster;
+    const hasHMerge = !!d.hmergeWith;
+
+    if(isLarge || hasHMerge){
+      // Grande ou mesclado horizontalmente → botão tornar pequeno
+      trocaBtn = `<button onclick="trocarParaPequeno('${id}')" style="position:absolute;top:0;right:0;background:#EEF6FF;border:1px solid #378ADD;color:#185FA5;font-size:10px;padding:3px 8px;border-radius:5px;cursor:pointer;font-family:inherit;font-weight:600">🚗 Tornar pequeno</button>`;
+    } else {
+      // Carro pequeno — verifica se há alguma opção de tornar grande
+      const parId = id.endsWith('A') ? num+'B' : num+'A';
+      const parLivre = S[parId] && S[parId].status==='free';
+      // Para 4B-7B verifica também se há vizinho lateral livre
+      const temLateral = HMERGE_OPTS[id]&&HMERGE_OPTS[id].some(v=>S[v]&&S[v].status==='free');
+      if(parLivre || temLateral){
+        trocaBtn = `<button onclick="trocarParaGrande('${id}')" style="position:absolute;top:0;right:0;background:#FFF8E6;border:1px solid #BA7517;color:#633806;font-size:10px;padding:3px 8px;border-radius:5px;cursor:pointer;font-family:inherit;font-weight:600">🚐 Tornar grande</button>`;
+      }
+    }
+  }
+
+  mc.innerHTML=`
+    <div class="mt" style="position:relative;padding-right:${trocaBtn?'110px':'0'}">Vaga ${id} — ${d.apt}${trocaBtn}</div>
+    <div class="ms">🅿 Na garagem · ${info}</div>
+    ${dupWarn}
+    <div class="ag">
+      <button class="ab ao" id="m-out">🛣️ &nbsp;Passeio</button>
+      <button class="ab ad" id="m-det">ℹ️ &nbsp;Detalhes</button>
+      <button class="ab ac" id="m-chk">🚪 &nbsp;Check-out</button>
+    </div>
+    <button class="bcx" onclick="closeOv()" style="width:100%;margin-top:9px">Fechar</button>`;
+  document.getElementById('ov').classList.add('on');
+  document.getElementById('m-out').onclick=()=>doOut(id);
+  document.getElementById('m-det').onclick=()=>showDet(id);
+  document.getElementById('m-chk').onclick=()=>doChk(id);
+}
+
+// Trocar carro grande → pequeno (libera a vaga A, carro fica só na A)
+window.trocarParaPequeno = function(id){
+  const d = S[id];
+  const bId = id.endsWith('B') ? id : id.slice(0,-1)+'B';
+  const aId = bId.slice(0,-1)+'A';
+  const apt=d.apt,model=d.model,color=d.color,plate=d.plate,guest=d.guest,obs=d.obs||'';
+
+  // Desfaz merge horizontal se houver
+  if(d.hmergeWith) desfazHMerge(id);
+
+  // Desfaz merge vertical (A+B) se houver
+  if(S[bId]){S[bId].mergedMaster=false;S[bId].status='free';S[bId].apt='';S[bId].size='small';ref(bId);}
+  const tdB=getTd(bId);if(tdB)tdB.rowSpan=1;
+  if(S[aId]){S[aId].mergedSlave=false;}
+
+  // Carro fica só na vaga original (B se era B, A se era A)
+  const vagaDest = id.endsWith('B') ? bId : aId;
+  ssz='small';
+  S[vagaDest].status='occupied';S[vagaDest].apt=apt;S[vagaDest].model=model;
+  S[vagaDest].color=color;S[vagaDest].plate=plate;S[vagaDest].guest=guest;S[vagaDest].obs=obs;
+  S[vagaDest].size='small';S[vagaDest].mergedMaster=false;S[vagaDest].mergedSlave=false;
+  ref(vagaDest);
+  refByApt(apt);upd();closeOv();
+};
+
+// Trocar carro pequeno → grande
+// Para vagas 4B-7B: pergunta se mescla para trás (A) ou para o lado
+window.trocarParaGrande = function(id){
+  const d = S[id];
+  const num = id.slice(0,-1);
+  const aId = num+'A';
+  const bId = num+'B';
+  const apt=d.apt,model=d.model,color=d.color,plate=d.plate,guest=d.guest,obs=d.obs||'';
+  const mc=document.getElementById('mc');
+
+  // Opções disponíveis
+  const opcoes=[];
+
+  // Opção: mesclar com vaga A atrás (merge vertical)
+  if(id.endsWith('B') && S[aId]&&S[aId].status==='free'){
+    opcoes.push({tipo:'vertical', label:`🚐 Vaga ${aId} (atrás)`, id:aId});
+  }
+
+  // Opção: mesclar com vagas do lado (merge horizontal, só para 4B-7B)
+  if(HMERGE_OPTS[id]){
+    HMERGE_OPTS[id].filter(v=>S[v]&&S[v].status==='free').forEach(v=>{
+      const vNum=v.slice(0,-1); const vAId=vNum+'A';
+      const aInfo=S[vAId]&&S[vAId].status==='occupied'?` · Apt. ${S[vAId].apt} atrás`:'';
+      const lado=(parseInt(v)>parseInt(id))?'esquerda':'direita';
+      opcoes.push({tipo:'horizontal', label:`↔ Vaga ${v} (${lado}${aInfo})`, id:v});
+    });
+  }
+
+  if(!opcoes.length){ closeOv(); return; }
+
+  // Se só tem uma opção, aplica direto
+  if(opcoes.length===1){
+    const op=opcoes[0];
+    if(op.tipo==='vertical'){
+      S[id].status='free';S[id].apt='';S[id].size='small';S[id].mergedMaster=false;S[id].mergedSlave=false;ref(id);
+      ssz='large'; saveV(aId,apt,model,color,plate,guest,obs);
+    } else {
+      aplicarHMerge(id,op.id); upd();closeOv();
+    }
+    return;
+  }
+
+  // Mostra opções
+  const opHTML=opcoes.map((op,i)=>`
+    <button class="ab ao" id="tg-op-${i}" style="margin-bottom:6px">${op.label}</button>`).join('');
+  mc.innerHTML=`
+    <div class="mt">🚐 Tornar grande — ${id}</div>
+    <div class="ms" style="margin-bottom:10px">Apt. ${apt} · Escolha como mesclar:</div>
+    ${opHTML}
+    <button class="bcx" onclick="closeOv()" style="width:100%;margin-top:6px">Cancelar</button>`;
+  document.getElementById('ov').classList.add('on');
+
+  opcoes.forEach((op,i)=>{
+    document.getElementById('tg-op-'+i).onclick=function(){
+      if(op.tipo==='vertical'){
+        S[id].status='free';S[id].apt='';S[id].size='small';S[id].mergedMaster=false;S[id].mergedSlave=false;ref(id);
+        ssz='large'; saveV(aId,apt,model,color,plate,guest,obs);
+      } else {
+        aplicarHMerge(id,op.id); upd();closeOv();
+      }
+    };
+  });
+};
+
+function doOut(id){
+  const d=S[id];
+  const aptKey=d.apt;
+  PASSEIO[aptKey]={model:d.model,color:d.color,plate:d.plate,guest:d.guest,obs:d.obs||'',lastVaga:id,size:d.size||'small'};
+  addHistorico(aptKey,'saida_passeio',id,'');
+  // Copia anexos da vaga para o passeio (ficam acessíveis enquanto em passeio)
+  const keyV='v_'+id, keyP='p_'+aptKey;
+  if(ANEXOS[keyV]&&ANEXOS[keyV].length){
+    ANEXOS[keyP]=[...ANEXOS[keyV]];
+    saveAnexos();
+  }
+  // Desfaz merge horizontal se houver
+  if(d.hmergeWith) desfazHMerge(id);
+  if(id.endsWith('B')&&d.mergedMaster){
+    const aId=id.slice(0,-1)+'A';
+    const tdB=getTd(id);if(tdB)tdB.rowSpan=1;
+    d.mergedMaster=false;
+    if(S[aId]){S[aId].mergedSlave=false;S[aId].status='free';S[aId].apt='';ref(aId);}
+  }
+  if(id.endsWith('A')&&d.mergedSlave){
+    const bId=id.slice(0,-1)+'B';
+    const tdB=getTd(bId);if(tdB)tdB.rowSpan=1;
+    if(S[bId]){S[bId].mergedMaster=false;S[bId].status='free';S[bId].apt='';ref(bId);}
+    d.mergedSlave=false;
+  }
+  d.status='free';d.apt='';d.model='';d.color='';d.plate='';d.guest='';
+  d.mergedMaster=false;d.mergedSlave=false;
+  ref(id);refByApt(aptKey);upd();closeOv();
+}
+
+function doChk(id){
+  const d=S[id];
+  const aptKey=d.apt;
+  const mc=document.getElementById('mc');
+
+  const dadosVeiculo={
+    model:d.model,color:d.color,plate:d.plate,guest:d.guest,
+    obs:d.obs||'',size:d.size||'small',vaga:id
+  };
+
+  mc.innerHTML=`
+    <div class="mt">🚪 Check-out — Apt. ${aptKey}</div>
+    <div class="ms">${[d.model,d.color,d.plate].filter(Boolean).join(' · ')||'Sem detalhes'}</div>
+    <div class="warn-box" style="font-size:12px">Confirma o check-out deste veículo?</div>
+    <div class="ag">
+      <button class="ab ac" id="chk-sim">🚪 Confirmar check-out</button>
+      <button class="bcx" onclick="closeOv()" style="margin-top:4px">Cancelar</button>
+    </div>`;
+  document.getElementById('ov').classList.add('on');
+
+  document.getElementById('chk-sim').onclick=function(){
+    addHistorico(aptKey,'checkout',id,'');
+
+    // Limpa vaga
+    if(aptKey&&PASSEIO[aptKey])delete PASSEIO[aptKey];
+    // Desfaz merge horizontal se houver
+    if(d.hmergeWith) desfazHMerge(id);
+    if(id.endsWith('B')&&d.mergedMaster){
+      const aId=id.slice(0,-1)+'A';
+      const tdB=getTd(id);if(tdB)tdB.rowSpan=1;
+      d.mergedMaster=false;
+      if(S[aId]){S[aId].mergedSlave=false;S[aId].status='free';S[aId].apt='';ref(aId);}
+    }
+    if(id.endsWith('A')&&d.mergedSlave){
+      const bId=id.slice(0,-1)+'B';
+      const tdB=getTd(bId);if(tdB)tdB.rowSpan=1;
+      if(S[bId]){S[bId].mergedMaster=false;S[bId].status='free';S[bId].apt='';ref(bId);}
+      d.mergedSlave=false;
+    }
+    d.status='free';d.apt='';d.model='';d.color='';d.plate='';d.guest='';d.obs='';
+    d.mergedMaster=false;d.mergedSlave=false;
+    ref(id);refByApt(aptKey);upd();saveData();
+
+    // Limpa anexos da vaga e do passeio (já foram para o PDF)
+    const keyV='v_'+id, keyP='p_'+aptKey;
+    if(ANEXOS[keyV]){delete ANEXOS[keyV];saveAnexos();}
+    if(ANEXOS[keyP]){delete ANEXOS[keyP];saveAnexos();}
+
+    // Fecha overlay
+    closeOv();
+  };
+}
+
+// Exibe detalhes com opção de editar secundária
+window.toggleAnexosOcc = function(id){
+  const area = document.getElementById('att-occ-area');
+  if(!area) return;
+  if(area.children.length > 0){ area.innerHTML=''; return; }
+  renderAnexosArea(id, false, 'att-occ-area');
+};
+
+window.doShare = function(id, fp){
+  const fromPasseio=fp===1||fp===true;
+  const d=fromPasseio?PASSEIO[id]:S[id];
+  if(!d) return;
+  const apt=fromPasseio?id:d.apt;
+  const dv={model:d.model||'',color:d.color||'',plate:d.plate||'',
+             guest:d.guest||'',obs:d.obs||'',size:d.size||'small',
+             vaga:fromPasseio?(d.lastVaga||''):id};
+  const hist=getHistorico(apt);
+  const anexos=getAnexos(id,fromPasseio);
+  compartilharPDF(apt,dv,hist,anexos);
+};
+
+function showDet(id, fromPasseio){
+  const d = fromPasseio ? PASSEIO[id] : S[id];
+  const apt = fromPasseio ? id : d.apt;
+  const status = fromPasseio ? '🛣️ A passeio' : 'Na garagem';
+  const vagaLbl = fromPasseio ? (d.lastVaga||'—') : id;
+  const mc=document.getElementById('mc');
+
+  // Modelo e Cor na mesma linha
+  const modelCor = [d.model,d.color].filter(Boolean).join(' · ') || '—';
+  // Carro grande
+  const isLarge = d.size==='large';
+
+  const rows = fromPasseio
+    ? [
+        ['Apartamento', apt],
+        ['Última vaga',  vagaLbl],
+        ['Modelo / Cor', modelCor],
+        ['Placa',        d.plate||'—'],
+        ['Hóspede',      d.guest||'—'],
+        ...(isLarge ? [['Veículo', '🚐 Carro grande']] : []),
+        ['Observações',  d.obs||'—'],
+        ['Status',       status],
+      ]
+    : [
+        ['Apartamento',  apt],
+        ['Vaga',         vagaLbl],
+        ['Modelo / Cor', modelCor],
+        ['Placa',        d.plate||'—'],
+        ['Hóspede',      d.guest||'—'],
+        ...(isLarge ? [['Veículo', '🚐 Carro grande']] : []),
+        ['Observações',  d.obs||'—'],
+        ['Status',       status],
+      ];
+
+  const nAnexos = getAnexos(id, fromPasseio).length;
+  // Título mostra só o número do apt, share fica imediatamente ao lado
+  const tituloTxt = fromPasseio ? 'Passeio — '+apt : apt;
+  mc.innerHTML=`
+    <div class="mt" style="display:flex;align-items:center;gap:4px">
+      <span style="white-space:nowrap">ℹ️ ${tituloTxt}</span>
+      <button class="share-btn" onclick="doShare('${id}',${fromPasseio?1:0})" title="Compartilhar" style="flex-shrink:0"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" stroke-width="2" fill="none"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg></button>
+      <button class="attach-btn" onclick="toggleAnexosDet('${id}',${fromPasseio?1:0})" title="Vistoria / Fotos" style="margin-left:auto">${nAnexos>0?'📎<sup style="font-size:8px;color:#185FA5">'+nAnexos+'</sup>':'📎'}</button>
+    </div>
+    <div style="margin:8px 0 10px">${rows.map(([l,v])=>`<div class="dr"><span class="dl">${l}</span><span class="dv">${v}</span></div>`).join('')}</div>
+    <div id="att-det-area"></div>
+    <div style="display:flex;gap:7px;margin-top:8px">
+      <button class="bcx" style="flex:1" onclick="closeOv()">Fechar</button>
+      <button class="bcx" style="flex:1;color:#185FA5;border-color:#185FA5" id="btn-edit">✏️ Editar</button>
+    </div>`;
+  document.getElementById('ov').classList.add('on');
+  document.getElementById('btn-edit').onclick=()=>showEdit(id, fromPasseio);
+}
+
+// Edição de detalhes — formulário compacto
+function showEdit(id, fromPasseio){
+  const d = fromPasseio ? PASSEIO[id] : S[id];
+  const mc=document.getElementById('mc');
+  mc.innerHTML=`
+    <div class="mt">✏️ Editar — ${fromPasseio?'Apt. '+id:id}</div>
+    <div class="ms" style="margin-bottom:10px">Campos opcionais</div>
+    <label class="fl">Modelo</label>
+    <input class="fi" id="e-mod" value="${d.model||''}" placeholder="Ex: Civic, HB20...">
+    <label class="fl">Cor</label>
+    <input class="fi" id="e-cor" value="${d.color||''}" placeholder="Ex: Prata, Preto...">
+    <label class="fl">Placa</label>
+    <input class="fi" id="e-pla" value="${d.plate||''}" placeholder="ABC1D23" style="text-transform:uppercase">
+    <label class="fl">Hóspede</label>
+    <input class="fi" id="e-gst" value="${d.guest||''}" placeholder="Nome completo">
+    <label class="fl">Observações</label>
+    <input class="fi" id="e-obs" value="${d.obs||''}" placeholder="Ex: chave na recepção...">
+    <div class="b2">
+      <button class="bcx" id="e-back">← Voltar</button>
+      <button class="bsv" id="e-save">Salvar</button>
+    </div>`;
+  document.getElementById('ov').classList.add('on');
+  document.getElementById('e-back').onclick=()=>showDet(id, fromPasseio);
+  document.getElementById('e-save').onclick=function(){
+    const model=document.getElementById('e-mod').value.trim();
+    const color=document.getElementById('e-cor').value.trim();
+    const plate=document.getElementById('e-pla').value.trim().toUpperCase();
+    const guest=document.getElementById('e-gst').value.trim();
+    const obs  =document.getElementById('e-obs').value.trim();
+
+    // Monta resumo das alterações para o histórico
+    const campos=[['Modelo','model',model],['Cor','color',color],
+                  ['Placa','plate',plate],['Hóspede','guest',guest],['Obs','obs',obs]];
+    const apt = fromPasseio ? id : (S[id]?.apt||'');
+    const atual = fromPasseio ? PASSEIO[id] : S[id];
+    const alterados=campos.filter(([l,k,v])=>v!==(atual[k]||'')).map(([l,k,v])=>`${l}: ${v||'—'}`);
+
+    if(fromPasseio){
+      PASSEIO[id].model=model;PASSEIO[id].color=color;PASSEIO[id].plate=plate;PASSEIO[id].guest=guest;PASSEIO[id].obs=obs;
+      if(alterados.length) addHistorico(id,'edicao','',`Editado: ${alterados.join(' · ')}`);
+      upd();
+    } else {
+      S[id].model=model;S[id].color=color;S[id].plate=plate;S[id].guest=guest;S[id].obs=obs;
+      if(id.endsWith('B')&&S[id].mergedMaster){
+        const aId=id.slice(0,-1)+'A';
+        if(S[aId]){S[aId].model=model;S[aId].color=color;S[aId].plate=plate;S[aId].guest=guest;S[aId].obs=obs;}
+      }
+      if(alterados.length && apt) addHistorico(apt,'edicao',id,`Editado: ${alterados.join(' · ')}`);
+      saveData();
+    }
+    showDet(id, fromPasseio);
+  };
+}
+
+window.toggleAnexosDet = function(id, fp){
+  const fromPasseio = fp===1||fp===true;
+  const area = document.getElementById('att-det-area');
+  if(!area) return;
+  if(area.children.length > 0){ area.innerHTML=''; return; }
+  renderAnexosArea(id, fromPasseio, 'att-det-area');
+};
+
+function showPasseioDetail(apt){ showDet(apt, true); }
+
+function showPasseioCheckout(apt){
+  const d=PASSEIO[apt];
+  if(!d)return;
+  const info=[d.model,d.color,d.plate].filter(Boolean).join(' · ');
+  showM(`<div class="mt">Check-out — Apt. ${apt}</div>
+    <div class="ms">${info||'Sem detalhes'} · 🛣️ A passeio</div>
+    <div class="warn-box" style="font-size:11px">O hóspede fez check-out.<br>O carro será removido do sistema.</div>
+    <div class="ag">
+      <button class="ab ac" id="pco-sim">🚪 Confirmar check-out</button>
+      <button class="bcx" onclick="closeOv()" style="margin-top:4px">Cancelar</button>
+    </div>`);
+  document.getElementById('pco-sim').onclick=function(){
+    delete PASSEIO[apt];
+    upd(); saveData(); closeOv();
+  };
+}
+
+// ── RESET / BACKUP / RESTAURAÇÃO ─────────────────────────────────────────
+// Backups em memória (persistidos também no localStorage)
+const BACKUP_KEY_TUDO    = 'garagespot_backup_tudo';
+
+function fmtTs(ts){
+  const d=new Date(ts);
+  return d.toLocaleDateString('pt-BR')+' às '+d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+}
+
+window.confirmReset = function(){
+  // 1ª confirmação
+  showM(`<div class="mt">Apagar tudo</div>
+    <div class="ms">Todos os carros nas vagas e na lista de passeio serão removidos.<br><br>Tem certeza?</div>
+    <div class="ag">
+      <button class="ab ac" id="r1-sim">Sim, apagar tudo</button>
+      <button class="bcx" onclick="closeOv()" style="margin-top:4px">Cancelar</button>
+    </div>`);
+  document.getElementById('r1-sim').onclick=function(){
+    showM(`<div class="mt">Confirmar</div>
+      <div class="ms" style="color:#A32D2D;font-weight:600">Confirme uma segunda vez para apagar.</div>
+      <div class="ag">
+        <button class="ab ac" id="r2-sim">Confirmar — apagar agora</button>
+        <button class="bcx" onclick="closeOv()" style="margin-top:4px">Cancelar</button>
+      </div>`);
+    document.getElementById('r2-sim').onclick=function(){ executarReset(); };
+  };
+};
+
+function executarReset(){
+  const ts = Date.now();
+  const snap = buildSnapshot(); snap.ts = ts;
+  try{ localStorage.setItem(BACKUP_KEY_TUDO, JSON.stringify(snap)); }catch(e){}
+
+  // Apaga tudo
+  Object.keys(S).forEach(id=>{
+    S[id].status='free';S[id].apt='';S[id].model='';S[id].color='';
+    S[id].plate='';S[id].guest='';S[id].obs='';S[id].size='small';
+    S[id].mergedMaster=false;S[id].mergedSlave=false;
+    if(id.endsWith('B')){const td=getTd(id);if(td)td.rowSpan=1;}
+    ref(id);
+  });
+  Object.keys(PASSEIO).forEach(k=>delete PASSEIO[k]);
+
+  upd(); saveData(); closeOv();
+  atualizarBotoesRestore();
+}
+
+function atualizarBotoesRestore(){
+  const rbtn = document.getElementById('reset-btns');
+  if(!rbtn) return;
+  // Remove botões restore antigos
+  rbtn.querySelectorAll('.restore').forEach(b=>b.remove());
+  // Adiciona restore se houver backup
+  try{
+    const bt = localStorage.getItem(BACKUP_KEY_TUDO);
+    if(bt){
+      const data = JSON.parse(bt);
+      const b = document.createElement('button');
+      b.className = 'rbtn restore';
+      b.textContent = '↺';
+      b.title = 'Restaurar — backup de '+fmtTs(data.ts);
+      b.onclick = ()=>confirmRestore(data.ts);
+      rbtn.appendChild(b);
+    }
+  }catch(e){}
+}
+
+window.confirmRestore = function(ts){
+  showM(`<div class="mt">Restaurar</div>
+    <div class="ms">Isso vai restaurar todas as vagas e passeio.<br><br>
+    Backup de: <strong>${fmtTs(ts)}</strong><br><br>
+    Confirma?</div>
+    <div class="ag">
+      <button class="ab" style="background:#EEF6FF;color:#185FA5" id="rs-sim">↺ Restaurar</button>
+      <button class="bcx" onclick="closeOv()" style="margin-top:4px">Cancelar</button>
+    </div>`);
+  document.getElementById('rs-sim').onclick=function(){ executarRestore(); };
+};
+
+function executarRestore(){
+  try{
+    const raw = localStorage.getItem(BACKUP_KEY_TUDO);
+    if(!raw){ closeOv(); return; }
+    const data = JSON.parse(raw);
+    Object.keys(S).forEach(id=>{
+      S[id].status='free';S[id].apt='';S[id].model='';S[id].color='';
+      S[id].plate='';S[id].guest='';S[id].obs='';S[id].size='small';
+      S[id].mergedMaster=false;S[id].mergedSlave=false;
+    });
+    Object.keys(PASSEIO).forEach(k=>delete PASSEIO[k]);
+    applySnapshot(data);
+    Object.keys(S).forEach(id=>{
+      ref(id);
+      if(id.endsWith('B')){const td=getTd(id);if(td)td.rowSpan=S[id].mergedMaster?2:1;}
+    });
+    // Apaga backup e remove botão ↺ — só reaparece se apagar tudo novamente
+    try{ localStorage.removeItem(BACKUP_KEY_TUDO); }catch(e){}
+    const rbtn=document.getElementById('reset-btns');
+    if(rbtn) rbtn.querySelectorAll('.restore').forEach(b=>b.remove());
+    upd(); saveData(); closeOv();
+  }catch(e){ closeOv(); }
+}
+
+function showM(h){document.getElementById('mc').innerHTML=h;document.getElementById('ov').classList.add('on');}
+window.closeOv=function(){document.getElementById('ov').classList.remove('on');document.getElementById('mc').innerHTML='';};
+function tick(){document.getElementById('clk').textContent=new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});}
+
+// ── HISTÓRICO DE EVENTOS ─────────────────────────────────────────────────
+const HISTORICO = {};
+
+function fmtDt(ts){
+  if(!ts) return 'Não informado';
+  const d=new Date(ts);
+  return d.toLocaleDateString('pt-BR')+' '+d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+}
+
+function addHistorico(apt, tipo, vaga, extra){
+  if(!apt) return;
+  if(!HISTORICO[apt]) HISTORICO[apt]=[];
+  HISTORICO[apt].push({tipo, ts:Date.now(), vaga:vaga||'', extra:extra||''});
+  saveHistorico();
+}
+
+function saveHistorico(){
+  try{ localStorage.setItem('garagespot_historico', JSON.stringify(HISTORICO)); }catch(e){}
+}
+
+function loadHistorico(){
+  try{
+    const raw=localStorage.getItem('garagespot_historico');
+    if(raw){ const d=JSON.parse(raw); Object.assign(HISTORICO,d); }
+  }catch(e){}
+}
+
+function iniciarHistorico(apt, vaga){
+  HISTORICO[apt]=[{tipo:'checkin', ts:Date.now(), vaga:vaga, extra:''}];
+  saveHistorico();
+}
+
+function aptJaFezCheckout(apt){
+  return (HISTORICO[apt]||[]).some(e=>e.tipo==='checkout');
+}
+
+// ── GERAÇÃO DE REGISTRO (HTML→PDF) — 100% nativo, zero dependências ────────
+// Funciona em browser, APK e offline. Gera HTML rico que o dispositivo
+// converte para PDF via menu nativo (Imprimir → Salvar como PDF).
+
+function fmtNomeArquivo(apt, guest, tsEntrada, tsSaida){
+  const limpa=s=>(s||'').replace(/[^a-zA-Z0-9À-ú ]/g,'').trim().replace(/\s+/g,'_');
+  const dtE=tsEntrada?new Date(tsEntrada).toLocaleDateString('pt-BR').replace(/\//g,'-'):'';
+  const dtS=tsSaida?new Date(tsSaida).toLocaleDateString('pt-BR').replace(/\//g,'-'):'';
+  const p=['GarageSpot','Apt'+apt];
+  if(guest) p.push(limpa(guest));
+  if(dtE) p.push(dtE);
+  if(dtS) p.push(dtS);
+  return p.join('_');
+}
+
+function buildRegistroHTML(apt,dv,hist,anexos){
+  const ni=v=>v&&String(v).trim()?String(v).trim():'Não informado';
+  const tLabel={
+    checkin:'Check-in (Entrada)',
+    saida_passeio:'Saída para Passeio',
+    retorno_passeio:'Retorno do Passeio',
+    checkout:'Check-out (Saída)',
+    edicao:'Edição de Dados',
+  };
+  const tColor={
+    checkin:'#0F6E56',
+    saida_passeio:'#854F0B',
+    retorno_passeio:'#185FA5',
+    checkout:'#A32D2D',
+    edicao:'#555',
+  };
+  const campos=[
+    ['Apartamento', ni(apt)],
+    ['Hóspede',     ni(dv.guest)],
+    ['Modelo',      ni(dv.model)],
+    ['Cor',         ni(dv.color)],
+    ['Placa',       ni(dv.plate)],
+    ['Tamanho',     dv.size==='large'?'Carro grande':'Carro pequeno'],
+    ['Observações', ni(dv.obs)],
+    ['Vaga',        ni(dv.vaga)],
+  ];
+
+  // Imagens: cada uma em página própria, landscape dentro do portrait
+  const imgPages=(anexos||[]).filter(a=>a.isImg).map(a=>`
+    <div class="img-page">
+      <img src="${a.data}" alt="${a.name}">
+      <div class="img-nome">${a.name}</div>
+    </div>`).join('');
+
+  return `<!DOCTYPE html>
+<html lang="pt-BR"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>GarageSpot — Apt. ${apt}</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:Arial,Helvetica,sans-serif;color:#1a1a1a;background:#fff;font-size:13px}
+  /* ── Tela: botão de salvar ── */
+  .screen-tip{background:#185FA5;color:#fff;padding:14px 20px;display:flex;align-items:center;gap:14px;position:sticky;top:0;z-index:99}
+  .screen-tip p{font-size:13px;line-height:1.4;flex:1}
+  .screen-tip button{background:#fff;color:#185FA5;border:none;padding:8px 18px;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0}
+  @media print{.screen-tip{display:none}}
+  /* ── Layout ── */
+  .page{padding:24px 28px;max-width:780px;margin:0 auto}
+  /* ── Cabeçalho ── */
+  .hdr{background:#185FA5;color:#fff;padding:14px 20px;border-radius:8px;margin-bottom:22px;display:flex;justify-content:space-between;align-items:flex-end}
+  .hdr h1{font-size:18px;font-weight:700;letter-spacing:.3px}
+  .hdr small{font-size:10px;opacity:.75}
+  /* ── Seções ── */
+  h2{font-size:13px;font-weight:700;color:#185FA5;border-bottom:2px solid #185FA5;padding-bottom:5px;margin:22px 0 12px;text-transform:uppercase;letter-spacing:.5px}
+  /* ── Campos de dados ── */
+  .campo{display:flex;padding:6px 0;border-bottom:1px solid #f0f0f0}
+  .campo:last-child{border-bottom:none}
+  .campo-label{font-weight:700;color:#666;width:120px;flex-shrink:0;font-size:12px}
+  .campo-valor{color:#1a1a1a;font-size:13px}
+  /* ── Eventos ── */
+  .evento{border-radius:6px;padding:9px 14px;margin:6px 0;color:#fff;display:flex;justify-content:space-between;align-items:flex-start;gap:10px;page-break-inside:avoid}
+  .evento-tipo{font-weight:700;font-size:13px}
+  .evento-vaga{font-size:11px;margin-top:3px;opacity:.88}
+  .evento-hora{font-size:11px;opacity:.88;white-space:nowrap;text-align:right;flex-shrink:0}
+  /* ── Imagens: uma por página, landscape dentro do portrait ── */
+  .img-page{page-break-before:always;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:90vh;padding:16px}
+  .img-page img{max-width:100%;max-height:82vh;object-fit:contain;border-radius:4px;box-shadow:0 2px 12px rgba(0,0,0,.15)}
+  .img-nome{font-size:10px;color:#aaa;margin-top:8px;text-align:center}
+  /* ── Rodapé ── */
+  .rodape{margin-top:30px;padding-top:10px;border-top:1px solid #eee;font-size:10px;color:#bbb;text-align:center}
+  @page{margin:15mm 15mm 15mm 15mm}
+</style>
+</head><body>
+
+<!-- Botão visível só na tela, some ao imprimir -->
+<div class="screen-tip">
+  <p>📄 Para salvar como PDF: toque no botão ao lado ou use o menu do navegador → <strong>Imprimir → Salvar como PDF</strong></p>
+  <button onclick="window.print()">🖨️ Salvar PDF</button>
+</div>
+
+<div class="page">
+
+  <!-- Cabeçalho -->
+  <div class="hdr">
+    <div>
+      <h1>🅿 GarageSpot</h1>
+      <div style="font-size:12px;margin-top:3px;opacity:.85">Registro do Veículo — Apartamento ${apt}</div>
+    </div>
+    <small>Developed by Douglas Nascimento</small>
+  </div>
+
+  <!-- Pg 1: Dados do veículo -->
+  <h2>Dados do Veículo</h2>
+  <div>
+    ${campos.map(([l,v])=>`<div class="campo">
+      <span class="campo-label">${l}</span>
+      <span class="campo-valor">${v}</span>
+    </div>`).join('')}
+  </div>
+
+  <!-- Pg 2: Histórico -->
+  <div style="page-break-before:always">
+    <h2 style="margin-top:24px">Histórico de Eventos</h2>
+    ${!(hist||[]).length
+      ? '<p style="color:#aaa;font-style:italic;padding:8px 0">Nenhum histórico registrado.</p>'
+      : (hist||[]).map(ev=>`
+        <div class="evento" style="background:${tColor[ev.tipo]||'#666'}">
+          <div>
+            <div class="evento-tipo">${tLabel[ev.tipo]||ev.tipo}</div>
+            ${ev.vaga?`<div class="evento-vaga">Vaga: ${ev.vaga}</div>`:''}
+          </div>
+          <div class="evento-hora">${fmtDt(ev.ts)}</div>
+        </div>`).join('')
+    }
+  </div>
+
+  <!-- Rodapé -->
+  <div class="rodape">GarageSpot · Desenvolvido por Douglas Nascimento · Gerado em ${fmtDt(Date.now())}</div>
+
+</div><!-- /page -->
+
+<!-- Páginas de imagens (uma por página) -->
+${imgPages}
+
+</body></html>`;
+}
+
+// Detecta se está rodando dentro do APK (Capacitor)
+function isCapacitor(){ return !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()); }
+
+async function compartilharPDF(apt,dv,hist,anexos){
+  const nome=fmtNomeArquivo(apt,dv.guest,
+    (hist||[]).find(e=>e.tipo==='checkin')?.ts,
+    (hist||[]).slice().reverse().find(e=>e.tipo==='checkout')?.ts);
+  const html=buildRegistroHTML(apt,dv,hist,anexos);
+
+  if(isCapacitor()){
+    try{
+      // Plugins registrados pelo bridge nativo — não usar import() dinâmico em HTML estático
+      const Filesystem = window.Capacitor.Plugins.Filesystem;
+      const Share = window.Capacitor.Plugins.Share;
+
+      if(Filesystem && Share){
+        const nomeArq = nome+'.html';
+        await Filesystem.writeFile({
+          path: 'GarageSpot/'+nomeArq,
+          data: html,
+          directory: 'DOCUMENTS',
+          encoding: 'utf8',
+          recursive: true,
+        });
+        const fileResult = await Filesystem.getUri({
+          path: 'GarageSpot/'+nomeArq,
+          directory: 'DOCUMENTS',
+        });
+        await Share.share({
+          title: 'GarageSpot — Apt. '+apt,
+          text: 'Registro do veículo — Apt. '+apt,
+          url: fileResult.uri,
+          dialogTitle: 'Compartilhar registro',
+        });
+        return;
+      }
+    }catch(e){ console.warn('Capacitor share error:',e); }
+  }
+
+  // Fallback browser: abre em nova aba para imprimir/salvar
+  const blob=new Blob([html],{type:'text/html;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url; a.target='_blank'; a.rel='noopener';
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(url),10000);
+}
+
+async function salvarPDF(apt,dv,hist,anexos){
+  const nome=fmtNomeArquivo(apt,dv.guest,
+    (hist||[]).find(e=>e.tipo==='checkin')?.ts,
+    (hist||[]).slice().reverse().find(e=>e.tipo==='checkout')?.ts);
+  await compartilharPDF(apt,dv,hist,anexos);
+  return nome+'.html';
+}
+
+// ── ANEXOS ────────────────────────────────────────────────────────────────
+// Armazena anexos por chave (id da vaga ou apt do passeio)
+// Cada item: { name, type, data (base64), isImg }
+const ANEXOS = {};
+const MAX_ANEXOS = 20;
+
+function getAnexoKey(id, fromPasseio){ return fromPasseio ? 'p_'+id : 'v_'+id; }
+
+function getAnexos(id, fromPasseio){
+  return ANEXOS[getAnexoKey(id, fromPasseio)] || [];
+}
+
+function addAnexo(id, fromPasseio, file){
+  return new Promise((resolve)=>{
+    const key = getAnexoKey(id, fromPasseio);
+    if(!ANEXOS[key]) ANEXOS[key]=[];
+    if(ANEXOS[key].length >= MAX_ANEXOS){ resolve(false); return; }
+    const reader = new FileReader();
+    reader.onload = e=>{
+      ANEXOS[key].push({
+        name: file.name,
+        type: file.type,
+        data: e.target.result,
+        isImg: file.type.startsWith('image/')
+      });
+      saveAnexos();
+      resolve(true);
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function removeAnexo(id, fromPasseio, idx){
+  const key = getAnexoKey(id, fromPasseio);
+  if(ANEXOS[key]) ANEXOS[key].splice(idx,1);
+  saveAnexos();
+}
+
+function saveAnexos(){
+  try{ localStorage.setItem('garagespot_anexos', JSON.stringify(ANEXOS)); }catch(e){}
+}
+
+function loadAnexos(){
+  try{
+    const raw = localStorage.getItem('garagespot_anexos');
+    if(raw){ const data=JSON.parse(raw); Object.assign(ANEXOS, data); }
+  }catch(e){}
+}
+
+// Abre visualizador de imagem em tela cheia
+function viewImagem(src, nome){
+  const ov = document.createElement('div');
+  ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:900;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px';
+  ov.innerHTML=`
+    <div style="color:#fff;font-size:11px;margin-bottom:8px;opacity:.7">${nome}</div>
+    <img src="${src}" style="max-width:100%;max-height:80vh;border-radius:8px;object-fit:contain">
+    <button onclick="this.parentElement.remove()" style="margin-top:16px;background:rgba(255,255,255,.15);border:none;color:#fff;padding:8px 24px;border-radius:7px;font-size:13px;cursor:pointer;font-family:inherit">Fechar</button>`;
+  document.body.appendChild(ov);
+}
+
+// Renderiza área de anexos dentro de um modal
+function renderAnexosArea(id, fromPasseio, containerId){
+  const container = document.getElementById(containerId);
+  if(!container) return;
+  const lista = getAnexos(id, fromPasseio);
+  const restante = MAX_ANEXOS - lista.length;
+
+  container.innerHTML=`
+    <div class="attach-area">
+      <div class="attach-header">
+        <span class="attach-label">📎 Vistoria / Fotos ${lista.length>0?'('+lista.length+'/'+MAX_ANEXOS+')':''}</span>
+        <div class="attach-actions" ${restante<=0?'style="opacity:.4;pointer-events:none"':''}>
+          <label class="attach-act" title="Tirar foto" style="cursor:pointer">
+            📷 Câmera
+            <input type="file" accept="image/*" capture="environment" style="display:none" id="att-cam-${containerId}">
+          </label>
+          <label class="attach-act" title="Anexar arquivo" style="cursor:pointer">
+            📁 Arquivo
+            <input type="file" accept="image/*,application/pdf,.doc,.docx" multiple style="display:none" id="att-file-${containerId}">
+          </label>
+        </div>
+      </div>
+      <div class="attach-grid" id="att-grid-${containerId}">
+        ${lista.length===0?'<span class="attach-empty">Nenhum anexo</span>':''}
+      </div>
+    </div>`;
+
+  // Renderiza thumbs
+  const grid = document.getElementById('att-grid-'+containerId);
+  lista.forEach((a,i)=>{
+    const el = document.createElement('div');
+    if(a.isImg){
+      el.className='attach-thumb';
+      el.innerHTML=`<img src="${a.data}" alt="${a.name}"><button class="del-att" onclick="delAtt('${id}',${fromPasseio?1:0},${i},'${containerId}')">×</button>`;
+      el.querySelector('img').addEventListener('click',()=>viewImagem(a.data,a.name));
+    } else {
+      el.className='attach-doc';
+      el.innerHTML=`📄<span>${a.name}</span><button class="del-att" style="position:static;background:#ddd;color:#555" onclick="delAtt('${id}',${fromPasseio?1:0},${i},'${containerId}')">×</button>`;
+    }
+    grid.appendChild(el);
+  });
+
+  // Eventos de input
+  const camInput = document.getElementById('att-cam-'+containerId);
+  const fileInput = document.getElementById('att-file-'+containerId);
+
+  async function handleFiles(files){
+    for(const f of Array.from(files)){
+      if(getAnexos(id,fromPasseio).length >= MAX_ANEXOS) break;
+      await addAnexo(id, fromPasseio, f);
+    }
+    renderAnexosArea(id, fromPasseio, containerId);
+  }
+
+  if(camInput)  camInput.addEventListener('change',  e=>handleFiles(e.target.files));
+  if(fileInput) fileInput.addEventListener('change', e=>handleFiles(e.target.files));
+}
+
+window.delAtt = function(id, fp, idx, containerId){
+  removeAnexo(id, fp===1||fp===true, idx);
+  renderAnexosArea(id, fp===1||fp===true, containerId);
+};
+const STORAGE_KEY = 'garagem_spot_v1';
+const DB_NAME     = 'GaragemSpot';
+const DB_STORE    = 'estado';
+let   db          = null;
+
+// Abre o banco IndexedDB
+function openDB(){
+  return new Promise((resolve, reject)=>{
+    const req = indexedDB.open(DB_NAME, 1);
+    req.onupgradeneeded = e => {
+      const d = e.target.result;
+      if(!d.objectStoreNames.contains(DB_STORE))
+        d.createObjectStore(DB_STORE);
+    };
+    req.onsuccess = e => { db = e.target.result; resolve(db); };
+    req.onerror   = () => reject(req.error);
+  });
+}
+
+// Monta o objeto de estado para salvar
+function buildSnapshot(){
+  const vagas = {};
+  Object.entries(S).forEach(([id,d])=>{
+    vagas[id] = {
+      status:d.status, apt:d.apt, model:d.model, color:d.color,
+      plate:d.plate, guest:d.guest, obs:d.obs||'', size:d.size,
+      mergedMaster:d.mergedMaster, mergedSlave:d.mergedSlave,
+      hmergeWith:d.hmergeWith||null,
+    };
+  });
+  return { vagas, passeio: JSON.parse(JSON.stringify(PASSEIO)), ts: Date.now() };
+}
+
+// Restaura o estado a partir de um snapshot
+function applySnapshot(data){
+  if(!data || !data.vagas) return false;
+  Object.entries(data.vagas).forEach(([id, saved])=>{
+    if(!S[id]) return;
+    S[id].status       = saved.status       || 'free';
+    S[id].apt          = saved.apt          || '';
+    S[id].model        = saved.model        || '';
+    S[id].color        = saved.color        || '';
+    S[id].plate        = saved.plate        || '';
+    S[id].guest        = saved.guest        || '';
+    S[id].obs          = saved.obs          || '';
+    S[id].size         = saved.size         || 'small';
+    S[id].mergedMaster = saved.mergedMaster || false;
+    S[id].mergedSlave  = saved.mergedSlave  || false;
+    S[id].hmergeWith   = saved.hmergeWith   || null;
+  });
+  if(data.passeio){
+    Object.entries(data.passeio).forEach(([apt,d])=>{
+      PASSEIO[apt] = {
+        model:d.model||'', color:d.color||'', plate:d.plate||'',
+        guest:d.guest||'', obs:d.obs||'', lastVaga:d.lastVaga||'',
+        size:d.size||'small',
+      };
+    });
+  }
+  return true;
+}
+
+// Salva no IndexedDB (assíncrono, não bloqueia UI)
+function saveData(){
+  const snap = buildSnapshot();
+  // Tenta IndexedDB primeiro
+  if(db){
+    try {
+      const tx = db.transaction(DB_STORE, 'readwrite');
+      tx.objectStore(DB_STORE).put(snap, STORAGE_KEY);
+    } catch(e){ /* silencia erros de escrita */ }
+  }
+  // Salva também no localStorage como backup
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(snap)); } catch(e){}
+}
+
+// Carrega do IndexedDB; se falhar, tenta localStorage
+function loadData(){
+  return new Promise(resolve=>{
+    // Tenta IndexedDB
+    if(db){
+      try {
+        const tx  = db.transaction(DB_STORE, 'readonly');
+        const req = tx.objectStore(DB_STORE).get(STORAGE_KEY);
+        req.onsuccess = ()=>{
+          if(req.result){ resolve(applySnapshot(req.result)); return; }
+          // Não tinha no IDB — tenta localStorage
+          resolve(loadFromLocalStorage());
+        };
+        req.onerror = ()=> resolve(loadFromLocalStorage());
+        return;
+      } catch(e){}
+    }
+    resolve(loadFromLocalStorage());
+  });
+}
+
+function loadFromLocalStorage(){
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(!raw) return false;
+    return applySnapshot(JSON.parse(raw));
+  } catch(e){ return false; }
+}
+
+// Intercepta upd() para salvar automaticamente após qualquer mudança de estado
+const _upd = upd;
+upd = function(){
+  _upd();
+  saveData();
+};
+
+window.addEventListener('orientationchange', ()=>{
+  forceCleanDrag(); // cancela drag em andamento antes de reconstruir
+  setTimeout(rebuildTable, 100);
+  setTimeout(positionPilares, 400);
+  setTimeout(positionPilares, 800);
+});
+window.addEventListener('resize', ()=>{
+  clearTimeout(window._resizeTimer);
+  window._resizeTimer = setTimeout(()=>{ rebuildTable(); positionPilares(); }, 200);
+});
+// Limpa ghost se o browser roubar o foco (menu de contexto, alt-tab, etc.)
+window.addEventListener('blur',        forceCleanDrag);
+window.addEventListener('contextmenu', forceCleanDrag);
+document.addEventListener('visibilitychange', ()=>{
+  if(document.hidden){
+    forceCleanDrag();
+  } else {
+    // App voltou ao foco — força verificação de licença ignorando cache
+    try{ localStorage.removeItem(LICENSE_CACHE_KEY); }catch(e){}
+    checkLicense().then(ativo=>{
+      if(!ativo) showLicenseBlocked(false);
+    });
+  }
+});
+
+// ── KILL SWITCH ──────────────────────────────────────────────────────────
+const LICENSE_URL = 'https://gist.githubusercontent.com/ApolloDSk/a9b3a7937b71c3e0956f236dcfd3b6d8/raw/license.json';
+// Cache de 5 minutos — verifica com frequência mas não a cada clique
+const LICENSE_CACHE_MS  = 5 * 60 * 1000;
+const LICENSE_CACHE_KEY = 'garagespot_license_cache';
+
+function showLicenseBlocked(semInternet){
+  document.body.innerHTML = `
+    <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;
+                height:100vh;background:#f0efea;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+                text-align:center;padding:32px">
+      <div style="font-size:48px;margin-bottom:16px">${semInternet?'📡':'🔒'}</div>
+      <div style="font-size:20px;font-weight:700;color:#111;margin-bottom:8px">
+        ${semInternet?'Sem conexão':'Licença inativa'}
+      </div>
+      <div style="font-size:14px;color:#888;max-width:280px;line-height:1.6">
+        ${semInternet
+          ? 'Não foi possível verificar a licença.<br>Verifique sua conexão com a internet.'
+          : 'Este aplicativo não está autorizado a funcionar neste momento.<br><br>Entre em contato com o administrador.'}
+      </div>
+      ${semInternet?`
+      <button onclick="location.reload()" style="margin-top:24px;background:#185FA5;color:#fff;
+        border:none;border-radius:8px;padding:10px 24px;font-size:14px;font-weight:600;
+        cursor:pointer;font-family:inherit">Tentar novamente</button>`:''}
+      <div style="margin-top:32px;font-size:11px;color:#bbb">GarageSpot · Developed by Douglas Nascimento</div>
+    </div>`;
+}
+
+async function checkLicense(){
+  // Verifica cache local primeiro
+  try{
+    const cached = localStorage.getItem(LICENSE_CACHE_KEY);
+    if(cached){
+      const {ativo, ts} = JSON.parse(cached);
+      if((Date.now() - ts) < LICENSE_CACHE_MS){
+        return ativo;
+      }
+    }
+  }catch(e){}
+
+  // Consulta o servidor
+  try{
+    const res = await fetch(LICENSE_URL, {
+      method: 'GET',
+      cache: 'no-store',
+      signal: AbortSignal.timeout(6000)
+    });
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    // Gist retorna JSON direto: {"ativo": true}
+    // JSONBin retornava: {"record": {"ativo": true}}
+    const json = await res.json();
+    const ativo = json?.ativo === true || json?.record?.ativo === true;
+
+    try{ localStorage.setItem(LICENSE_CACHE_KEY, JSON.stringify({ativo, ts:Date.now()})); }catch(e){}
+    return ativo;
+
+  }catch(e){
+    // Erro de rede — usa cache mesmo expirado se houver
+    try{
+      const cached = localStorage.getItem(LICENSE_CACHE_KEY);
+      if(cached){
+        const {ativo, ts} = JSON.parse(cached);
+        // Cache de até 24h aceito em modo offline
+        if((Date.now() - ts) < 24 * 60 * 60 * 1000){
+          return ativo;
+        }
+      }
+    }catch(e2){}
+    // Sem cache nenhum e sem internet → bloqueia por segurança
+    return false;
+  }
+}
+
+// Inicialização — verifica licença antes de carregar o app
+initState();
+checkLicense().then(async (ativo)=>{
+  if(!ativo){
+    showLicenseBlocked(false);
+    return;
+  }
+  // Licença OK — inicializa normalmente
+  openDB()
+    .catch(()=>{ db=null; })
+    .finally(async ()=>{
+      const restored = await loadData();
+      loadAnexos();
+      loadHistorico();
+      buildTable();
+      if(restored) Object.keys(S).forEach(id=>ref(id));
+      attachDrag();
+      upd(); tick(); setInterval(tick,15000);
+      requestAnimationFrame(()=>setTimeout(positionPilares, 50));
+    });
+});
+</script>
+</body>
+</html>
