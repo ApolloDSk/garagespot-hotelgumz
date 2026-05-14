@@ -272,10 +272,21 @@ html,body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;bac
 .rel-row:last-child{border-bottom:none}
 .rel-badge{background:#EEF6FF;color:#185FA5;border-radius:4px;padding:1px 6px;font-size:10px;font-weight:700}
 
+/* ── BUSCA ROXO ── */
+.vaga-highlight{background:#5C35B0 !important;color:#fff !important;transition:background 0.3s}
+.vaga-highlight-pulse{animation:pulse-roxo 0.4s ease-in-out 3}
+@keyframes pulse-roxo{0%{background:inherit}50%{background:#5C35B0;color:#fff}100%{background:inherit}}
+.passeio-highlight{border:2px solid #5C35B0 !important;background:#F3EFFF !important}
+
 /* ── PORTRAIT ── */
 @media(orientation:portrait){
   .tb-passeio{display:none}
   .tb-ob{display:none}
+  .tb-stats .tb-lbl{display:none}
+  .tb-stat{padding:0 5px}
+  .tb-stats{padding:0 6px}
+  .tb-right{flex-shrink:0}
+  .clk{display:none}
   .apt-lbl{font-size:2.5vw}
   .id-lbl{font-size:1.2vw}
 }
@@ -315,7 +326,7 @@ html,body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;bac
   </div>
 
   <!-- NAVBAR -->
-  <div class="navbar">
+  <div class="navbar" id="navbar">
     <button class="nav-btn nav-active" id="nav-mapa" onclick="navTo('mapa')">🗺 Mapa Garagem</button>
     <button class="nav-btn" id="nav-painel" onclick="navTo('painel')">📊 Painel do Dia</button>
     <button class="nav-btn" id="nav-gestao" onclick="navTo('gestao')">⚙ Gestão ▾</button>
@@ -323,6 +334,9 @@ html,body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;bac
   <!-- BUSCA RÁPIDA -->
   <div class="busca-bar" id="busca-bar">
     <input class="fi" id="busca-input" placeholder="Buscar placa, apto, hóspede, modelo..." oninput="onBuscaInput(this.value)" autocomplete="off" style="margin:0;flex:1">
+    <span id="busca-count" style="font-size:11px;color:#555;white-space:nowrap;display:none;flex-shrink:0"></span>
+    <button id="busca-prev" class="bcx" onclick="buscaNav(-1)" style="padding:6px 8px;font-size:12px;display:none">←</button>
+    <button id="busca-next" class="bcx" onclick="buscaNav(1)" style="padding:6px 8px;font-size:12px;display:none">→</button>
     <button class="bcx" onclick="fecharBusca()" style="padding:6px 10px;font-size:12px">✕</button>
   </div>
 
@@ -616,11 +630,13 @@ function positionPilares(){
 
 function togglePanel(){
   const body=document.getElementById('panel-body');
+  const navbar=document.getElementById('navbar');
   const btn=document.getElementById('pt-arrow');
-  const isOpen=body.classList.contains('open');
-  body.classList.toggle('open',!isOpen);
-  body.classList.toggle('closed',isOpen);
-  btn.style.opacity=isOpen?'0.5':'1';
+  const willClose=body.classList.contains('open');
+  body.classList.toggle('open',!willClose);
+  body.classList.toggle('closed',willClose);
+  if(navbar) navbar.style.display=willClose?'none':'';
+  btn.textContent=willClose?'▴':'▾';
   requestAnimationFrame(positionPilares);
 }
 
@@ -676,7 +692,7 @@ function renderP(){
   items.forEach(([apt,d])=>{
     const info=[d.model,d.color].filter(Boolean).join(' · ');
     const isLarge=d.size==='large';
-    const dv=document.createElement('div');dv.className='oi';
+    const dv=document.createElement('div');dv.className='oi';dv.dataset.apt=apt;
     dv.innerHTML=`
       <div style="display:flex;align-items:center;gap:5px">
         <div class="oa">${apt}</div>
@@ -1505,13 +1521,15 @@ function doChk(id){
       if(ANEXOS[keyV]){delete ANEXOS[keyV];saveAnexos();}
       if(ANEXOS[keyP]){delete ANEXOS[keyP];saveAnexos();}
       // Pergunta se quer compartilhar o registro
-      showM(`<div class="mt">🚪 Check-out realizado!</div>
+      showM(`<div class="mt">✅ Check-out realizado!</div>
         <div class="ms">Hospedagem ${hospNum||'s/n'} · Apt. ${aptKey}<br>${dvChk.guest||'Hóspede não identificado'}</div>
+        <div style="background:#EEF9F2;border:1px solid #A6D8B6;border-radius:8px;padding:10px 12px;margin:10px 0;font-size:12px;color:#0F6E56">✅ Registro salvo — Hospedagem ${hospNum||'s/n'}</div>
+        <div style="font-size:13px;font-weight:700;text-align:center;margin:8px 0 6px">Deseja compartilhar?</div>
         <div class="ag">
-          <button class="bsv" id="co-share">📄 Compartilhar Registro</button>
-          <button class="bcx" onclick="closeOv()" style="margin-top:5px">Fechar</button>
+          <button class="bsv" id="co-share">📤 Sim — Compartilhar</button>
+          <button class="bcx" onclick="closeOv()" style="margin-top:4px">Não — Fechar</button>
         </div>`);
-      document.getElementById('co-share').onclick=()=>{ closeOv(); compartilharPDF(aptKey,dvChk,histChk,anexosChk); };
+      document.getElementById('co-share').onclick=async()=>{ closeOv(); await compartilharPDF(aptKey,dvChk,histChk,anexosChk); };
     });
   };
 }
@@ -2031,48 +2049,108 @@ function showPlantaoTooltip(){
 }
 
 // ── BUSCA RÁPIDA ─────────────────────────────────────────────────────────
-let _buscaTimeout=null;
+let _buscaTimeout=null, _buscaHits=[], _buscaIdx=0, _buscaPanelWasOpen=true;
 function toggleBusca(){
   const bar=document.getElementById('busca-bar');
   const on=bar.classList.contains('on');
   bar.classList.toggle('on',!on);
-  if(!on) setTimeout(()=>{ const i=document.getElementById('busca-input');if(i)i.focus(); },80);
-  else fecharBusca();
+  if(!on){
+    _buscaPanelWasOpen=document.getElementById('panel-body').classList.contains('open');
+    setTimeout(()=>{ const i=document.getElementById('busca-input');if(i)i.focus(); },80);
+  } else fecharBusca();
 }
 function fecharBusca(){
   const bar=document.getElementById('busca-bar'); if(bar) bar.classList.remove('on');
   const inp=document.getElementById('busca-input'); if(inp) inp.value='';
+  const cnt=document.getElementById('busca-count'); if(cnt){cnt.style.display='none';cnt.textContent='';}
+  const prev=document.getElementById('busca-prev'); if(prev) prev.style.display='none';
+  const next=document.getElementById('busca-next'); if(next) next.style.display='none';
   clearBuscaHighlight();
+  // Restaurar estado do painel passeio
+  const body=document.getElementById('panel-body');
+  if(body && !_buscaPanelWasOpen && body.classList.contains('open')){
+    body.classList.remove('open'); body.classList.add('closed');
+    const btn=document.getElementById('pt-arrow'); if(btn) btn.textContent='▴';
+  }
+  _buscaHits=[]; _buscaIdx=0;
 }
 function clearBuscaHighlight(){
   document.querySelectorAll('.search-hit').forEach(el=>el.classList.remove('search-hit'));
+  document.querySelectorAll('.vaga-highlight,.vaga-highlight-pulse').forEach(el=>el.classList.remove('vaga-highlight','vaga-highlight-pulse'));
+  document.querySelectorAll('.passeio-highlight').forEach(el=>el.classList.remove('passeio-highlight'));
 }
 function onBuscaInput(q){
   clearTimeout(_buscaTimeout);
   clearBuscaHighlight();
-  if(!q||q.length<2) return;
+  const cnt=document.getElementById('busca-count');
+  const prev=document.getElementById('busca-prev');
+  const next=document.getElementById('busca-next');
+  if(!q||q.length<2){
+    if(cnt){cnt.style.display='none';cnt.textContent='';}
+    if(prev) prev.style.display='none';
+    if(next) next.style.display='none';
+    _buscaHits=[]; return;
+  }
   _buscaTimeout=setTimeout(()=>executarBusca(q),300);
 }
 function executarBusca(q){
+  clearBuscaHighlight();
+  _buscaHits=[];
   const ql=q.toLowerCase().trim();
-  let hits=0;
-  // Busca nas vagas ocupadas
   Object.entries(S).forEach(([id,d])=>{
     if(d.status!=='occupied') return;
     const campos=[d.apt,d.model,d.color,d.plate,d.guest,d.hospedagem].map(v=>(v||'').toLowerCase());
-    if(campos.some(c=>c.includes(ql))){
-      const td=getTd(id); if(td){ td.classList.add('search-hit'); hits++; }
-    }
+    if(campos.some(c=>c.includes(ql))) _buscaHits.push({type:'vaga',id});
   });
-  // Busca em carros a passeio (destaca na lista inline)
   Object.entries(PASSEIO).forEach(([apt,d])=>{
     const campos=[apt,d.model,d.color,d.plate,d.guest,d.hospedagem].map(v=>(v||'').toLowerCase());
-    if(campos.some(c=>c.includes(ql))){
-      const el=document.querySelector(`.tb-pi[title*="${apt}"]`);
-      if(el) el.classList.add('search-hit');
-    }
+    if(campos.some(c=>c.includes(ql))) _buscaHits.push({type:'passeio',apt});
   });
-  if(hits===0) showToast('Nenhuma vaga encontrada para "'+q+'"',2500);
+  const cnt=document.getElementById('busca-count');
+  const prev=document.getElementById('busca-prev');
+  const next=document.getElementById('busca-next');
+  if(!_buscaHits.length){
+    if(cnt){cnt.textContent='Sem resultados';cnt.style.display='';}
+    if(prev) prev.style.display='none';
+    if(next) next.style.display='none';
+    return;
+  }
+  if(prev) prev.style.display=_buscaHits.length>1?'':'none';
+  if(next) next.style.display=_buscaHits.length>1?'':'none';
+  _buscaIdx=0;
+  highlightBuscaResult(0);
+}
+function highlightBuscaResult(idx){
+  clearBuscaHighlight();
+  if(idx<0||idx>=_buscaHits.length) return;
+  const hit=_buscaHits[idx];
+  const cnt=document.getElementById('busca-count');
+  if(cnt){
+    cnt.textContent=(_buscaHits.length>1?(idx+1)+'/':'')+_buscaHits.length+' resultado(s)';
+    cnt.style.display='';
+  }
+  if(hit.type==='vaga'){
+    const td=getTd(hit.id);
+    if(td){
+      td.classList.add('vaga-highlight','vaga-highlight-pulse');
+      setTimeout(()=>td.classList.remove('vaga-highlight-pulse'),1300);
+    }
+  } else {
+    // Abrir painel se fechado
+    const body=document.getElementById('panel-body');
+    if(body&&!body.classList.contains('open')){
+      body.classList.add('open'); body.classList.remove('closed');
+      const navbar=document.getElementById('navbar'); if(navbar) navbar.style.display='';
+      const btn=document.getElementById('pt-arrow'); if(btn) btn.textContent='▾';
+    }
+    const el=document.querySelector('.oi[data-apt="'+hit.apt+'"]');
+    if(el) el.classList.add('passeio-highlight');
+  }
+}
+function buscaNav(dir){
+  if(!_buscaHits.length) return;
+  _buscaIdx=(_buscaIdx+dir+_buscaHits.length)%_buscaHits.length;
+  highlightBuscaResult(_buscaIdx);
 }
 
 // ── NAVBAR / PAINEL DO DIA ────────────────────────────────────────────────
@@ -2329,6 +2407,91 @@ function showLogSistema(){
   }catch(e){ showToast('Erro ao carregar log'); }
 }
 
+// ── HTML DOS RELATÓRIOS ───────────────────────────────────────────────────
+function _relHdrHTML(titulo, subtitulo){
+  return `<div style="background:#185FA5;color:#fff;padding:18px 22px;border-radius:8px;margin-bottom:22px;display:flex;justify-content:space-between;align-items:center;gap:16px">
+    <div><div style="font-size:18px;font-weight:700">🅿 GarageSpot</div><div style="font-size:10px;opacity:.6;margin-top:4px">Developed by Douglas Nascimento</div></div>
+    <div style="text-align:right"><div style="font-size:16px;font-weight:700;margin-bottom:4px">${titulo}</div><div style="font-size:12px;opacity:.85">${subtitulo}</div></div>
+  </div>`;
+}
+function _relBaseCSS(){
+  return `*{box-sizing:border-box;margin:0;padding:0}body{font-family:Arial,Helvetica,sans-serif;color:#1a1a1a;background:#fff;font-size:13px}.screen-tip{background:#185FA5;color:#fff;padding:14px 20px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:99}.screen-tip p{font-size:13px;line-height:1.4;flex:1}.screen-tip button{background:#fff;color:#185FA5;border:none;padding:8px 14px;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0}.close-doc{position:fixed;top:70px;right:12px;z-index:999;background:rgba(0,0,0,.65);color:#fff;border:none;padding:10px 16px;border-radius:10px;font-size:16px;cursor:pointer;font-family:inherit;line-height:1}@media print{.screen-tip{display:none}.close-doc{display:none}}.page{padding:24px 28px;max-width:780px;margin:0 auto}.rodape{margin-top:30px;padding-top:10px;border-top:1px solid #eee;font-size:10px;color:#bbb;text-align:center}@page{margin:15mm}`;
+}
+function _relWrap(titulo, bodyHTML){
+  return `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${titulo} — GarageSpot</title><style>${_relBaseCSS()}</style></head><body><button class="close-doc" onclick="window.history.back()">✕ Fechar</button><div class="screen-tip"><p>📄 Para salvar como PDF: toque no botão ao lado ou use o menu → <strong>Imprimir → Salvar como PDF</strong></p><button onclick="window.print()">🖨️ Salvar PDF</button></div><div class="page">${bodyHTML}<div class="rodape">GarageSpot · Desenvolvido por Douglas Nascimento · Gerado em ${fmtDt(Date.now())}</div></div></body></html>`;
+}
+
+function buildRelMovimentacoesHTML(evts, deVal, ateVal){
+  const tLabel={checkin:'Check-in',saida_passeio:'Saída Passeio',retorno_passeio:'Retorno',checkout:'Check-out',edicao:'Edição',movimentacao_vaga:'Mudança de Vaga',tornar_grande:'Carro Grande',tornar_pequeno:'Carro Pequeno',merge_lateral:'Mesclagem Lateral',desfaz_merge_lateral:'Merge Desfeito'};
+  const tColor={checkin:'#0F6E56',saida_passeio:'#854F0B',retorno_passeio:'#185FA5',checkout:'#A32D2D',edicao:'#555',movimentacao_vaga:'#5C35B0',tornar_grande:'#185FA5',tornar_pequeno:'#0F6E56',merge_lateral:'#854F0B',desfaz_merge_lateral:'#888'};
+  const ci=evts.filter(e=>e.tipo==='checkin').length, co=evts.filter(e=>e.tipo==='checkout').length;
+  const pass=evts.filter(e=>e.tipo==='saida_passeio'||e.tipo==='retorno_passeio').length;
+  const mov=evts.filter(e=>['movimentacao_vaga','tornar_grande','tornar_pequeno','merge_lateral','desfaz_merge_lateral'].includes(e.tipo)).length;
+  const ed=evts.filter(e=>e.tipo==='edicao').length;
+  const periodo=deVal+(ateVal&&ateVal!==deVal?' a '+ateVal:'');
+  const eventsHTML=evts.length===0?'<p style="color:#aaa;font-style:italic;padding:8px 0">Nenhuma movimentação no período.</p>':
+    evts.slice(0,300).map(ev=>`<div style="border-radius:6px;padding:8px 12px;margin:5px 0;color:#fff;display:flex;justify-content:space-between;align-items:flex-start;gap:10px;background:${tColor[ev.tipo]||'#888'};page-break-inside:avoid">
+      <div><div style="font-weight:700;font-size:12px">${tLabel[ev.tipo]||ev.tipo}</div>
+      <div style="font-size:11px;opacity:.88;margin-top:2px">Apt. ${ev.apt}${ev.hospedagem?' · '+ev.hospedagem:''}${ev.usuario?' · '+ev.usuario:''}</div>
+      ${ev.extra?`<div style="font-size:10px;opacity:.75;margin-top:1px">${ev.extra}</div>`:''}</div>
+      <div style="font-size:10px;opacity:.88;white-space:nowrap;text-align:right;flex-shrink:0">${fmtDt(ev.ts)}</div>
+    </div>`).join('');
+  const body=_relHdrHTML('Relatório de Movimentações','Período: '+periodo+' · Gerado em '+new Date().toLocaleDateString('pt-BR'))+
+    `<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px">
+      <span style="border-radius:5px;padding:4px 10px;font-size:11px;font-weight:700;background:#EEF9F2;color:#0F6E56">CI: ${ci}</span>
+      <span style="border-radius:5px;padding:4px 10px;font-size:11px;font-weight:700;background:#FCEBEB;color:#A32D2D">CO: ${co}</span>
+      <span style="border-radius:5px;padding:4px 10px;font-size:11px;font-weight:700;background:#FFF8E6;color:#633806">Passeio: ${pass}</span>
+      <span style="border-radius:5px;padding:4px 10px;font-size:11px;font-weight:700;background:#F0ECFF;color:#5C35B0">Mov. Vaga: ${mov}</span>
+      <span style="border-radius:5px;padding:4px 10px;font-size:11px;font-weight:700;background:#F2F2F2;color:#555">Edições: ${ed}</span>
+      <span style="border-radius:5px;padding:4px 10px;font-size:11px;font-weight:700;background:#EEF6FF;color:#185FA5">Total: ${evts.length}</span>
+    </div>${eventsHTML}`;
+  return _relWrap('Relatório de Movimentações', body);
+}
+
+function buildRelOcupacaoHTML(dadosOcup, hospsP, deVal, ateVal){
+  const {occ,free,obOcc,passeioTotal,total,pct}=dadosOcup;
+  const ativas=hospsP.filter(h=>!h.checkout_ts).length;
+  const finalizadas=hospsP.filter(h=>!!h.checkout_ts).length;
+  const periodo=deVal+(ateVal&&ateVal!==deVal?' a '+ateVal:'');
+  const body=_relHdrHTML('Relatório de Ocupação','Período: '+periodo+' · Gerado em '+new Date().toLocaleDateString('pt-BR'))+
+    `<div style="margin:10px 0 20px">
+      <div style="background:#EEF6FF;border-radius:8px;height:20px;overflow:hidden;margin-bottom:8px">
+        <div style="background:#185FA5;height:100%;width:${pct}%;border-radius:8px"></div>
+      </div>
+      <div style="text-align:center;font-size:28px;font-weight:700;color:#185FA5">${pct}%</div>
+      <div style="text-align:center;font-size:12px;color:#888;margin-top:4px">${occ} de ${total} vagas normais ocupadas</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:0;border:1px solid #eee;border-radius:8px;overflow:hidden;margin-bottom:16px">
+      <div style="display:flex;justify-content:space-between;padding:8px 12px;border-bottom:1px solid #eee;font-size:12px"><span>Vagas normais ocupadas</span><span style="font-weight:700;color:#185FA5">${occ}</span></div>
+      <div style="display:flex;justify-content:space-between;padding:8px 12px;border-bottom:1px solid #eee;font-size:12px"><span>Vagas normais livres</span><span style="font-weight:700;color:#0F6E56">${free}</span></div>
+      <div style="display:flex;justify-content:space-between;padding:8px 12px;border-bottom:1px solid #eee;font-size:12px"><span>OB ocupadas</span><span style="font-weight:700;color:#A32D2D">${obOcc}</span></div>
+      <div style="display:flex;justify-content:space-between;padding:8px 12px;font-size:12px"><span>A passeio</span><span style="font-weight:700;color:#633806">${passeioTotal}</span></div>
+    </div>
+    <div style="font-weight:700;font-size:12px;color:#555;margin-bottom:8px">Hospedagens no período (check-in de ${periodo})</div>
+    <div style="display:flex;flex-wrap:wrap;gap:6px">
+      <span style="border-radius:5px;padding:4px 10px;font-size:11px;font-weight:700;background:#EEF6FF;color:#185FA5">Total: ${hospsP.length}</span>
+      <span style="border-radius:5px;padding:4px 10px;font-size:11px;font-weight:700;background:#EEF9F2;color:#0F6E56">Ativas: ${ativas}</span>
+      <span style="border-radius:5px;padding:4px 10px;font-size:11px;font-weight:700;background:#FCEBEB;color:#A32D2D">Finalizadas: ${finalizadas}</span>
+    </div>`;
+  return _relWrap('Relatório de Ocupação', body);
+}
+
+function buildRelPorAptoHTML(hosps, aptVal, deVal, ateVal){
+  const periodo=[aptVal?'Apto: '+aptVal:'',deVal?'De: '+deVal:'',ateVal?'Até: '+ateVal:''].filter(Boolean).join(' · ')||'Todos';
+  const cardsHTML=hosps.length===0?'<p style="color:#aaa;font-style:italic;padding:8px 0">Nenhuma hospedagem encontrada.</p>':
+    hosps.slice(0,100).map(h=>`<div style="border:1px solid #eee;border-radius:7px;padding:10px 12px;margin-bottom:8px;page-break-inside:avoid">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+        <div style="font-weight:700;font-size:13px">${h.numero} · Apt. ${h.apt}</div>
+        <span style="border-radius:4px;padding:2px 8px;font-size:10px;font-weight:700;${h.checkout_ts?'background:#FCEBEB;color:#A32D2D':'background:#EEF9F2;color:#0F6E56'}">${h.checkout_ts?'Check-out':'Ativo'}</span>
+      </div>
+      <div style="font-size:11px;color:#888">${[h.guest,h.model,h.color,h.plate].filter(Boolean).join(' · ')||'Sem dados'}</div>
+      <div style="font-size:10px;color:#aaa;margin-top:3px">Entrada: ${fmtDt(h.checkin_ts)}${h.checkout_ts?' · Saída: '+fmtDt(h.checkout_ts):''}</div>
+    </div>`).join('');
+  const body=_relHdrHTML('Relatório por Apartamento','Filtros: '+periodo+' · Gerado em '+new Date().toLocaleDateString('pt-BR'))+
+    `<div style="margin-bottom:12px"><span style="border-radius:5px;padding:4px 10px;font-size:11px;font-weight:700;background:#EEF6FF;color:#185FA5">Total: ${hosps.length} hospedagem(s)</span></div>`+cardsHTML;
+  return _relWrap('Relatório por Apartamento', body);
+}
+
 // ── RELATÓRIOS ────────────────────────────────────────────────────────────
 async function compartilharRelatorio(titulo, textoPlano){
   if(window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.Share){
@@ -2381,8 +2544,7 @@ function showRelMovimentacoes(){
           ${ev.extra?`<div style="color:#888;font-size:10px">${ev.extra}</div>`:''}
         </div>
       </div>`).join('');
-    window._rmvShareText='📋 Movimentações GarageSpot\nPeríodo: '+deVal+' a '+ateVal+'\n\n'+
-      evts.slice(0,150).map(ev=>'['+((tLabel[ev.tipo]||ev.tipo))+'] Apt '+ev.apt+(ev.hospedagem?' '+ev.hospedagem:'')+(ev.usuario?' — '+ev.usuario:'')+' ('+fmtDt(ev.ts)+')').join('\n');
+    window._rmvCurrentEvts=evts; window._rmvCurrentDe=deVal; window._rmvCurrentAte=ateVal;
     mc.innerHTML=`
       <div style="display:flex;gap:6px;margin-bottom:10px">
         <button class="bcx" style="flex:1" onclick="showRelatorios()">← Voltar</button>
@@ -2413,7 +2575,12 @@ function showRelMovimentacoes(){
     ateVal=document.getElementById('rmv-ate').value||ateVal;
     render();
   };
-  window._rmvShare=function(){compartilharRelatorio('Movimentações GarageSpot',window._rmvShareText||'');};
+  window._rmvShare=async function(){
+    const html=buildRelMovimentacoesHTML(window._rmvCurrentEvts||[],window._rmvCurrentDe||'',window._rmvCurrentAte||'');
+    const de=(window._rmvCurrentDe||'').replace(/-/g,'');
+    const ate=(window._rmvCurrentAte||'').replace(/-/g,'');
+    await gerarECompartilharPDF('Relatório de Movimentações',html,'Relatorio-Movimentacoes_'+de+(ate&&ate!==de?'_'+ate:'')+'_GarageSpot');
+  };
   render();
 }
 
@@ -2437,11 +2604,8 @@ function showRelOcupacao(){
     const hospsP=Object.values(HOSPEDAGENS).filter(h=>(h.checkin_ts||0)>=tsI&&(h.checkin_ts||0)<=tsF);
     const ativas=hospsP.filter(h=>!h.checkout_ts).length;
     const finalizadas=hospsP.filter(h=>!!h.checkout_ts).length;
-    window._rocShareText='📈 Ocupação GarageSpot\n'+
-      'Situação atual: '+pct+'% ('+occ+'/'+total+' vagas normais)\n'+
-      'A passeio: '+passeioTotal+'\nOB ocupadas: '+obOcc+'\n\n'+
-      'Período: '+deVal+' a '+ateVal+'\n'+
-      'Hospedagens no período: '+hospsP.length+' (ativas: '+ativas+', finalizadas: '+finalizadas+')';
+    window._rocCurrentData={occ,free,obOcc,passeioTotal,total,pct};
+    window._rocCurrentHosps=hospsP; window._rocCurrentDe=deVal; window._rocCurrentAte=ateVal;
     mc.innerHTML=`
       <div style="display:flex;gap:6px;margin-bottom:10px">
         <button class="bcx" style="flex:1" onclick="showRelatorios()">← Voltar</button>
@@ -2481,7 +2645,12 @@ function showRelOcupacao(){
     ateVal=document.getElementById('roc-ate').value||ateVal;
     render();
   };
-  window._rocShare=function(){compartilharRelatorio('Ocupação GarageSpot',window._rocShareText||'');};
+  window._rocShare=async function(){
+    const html=buildRelOcupacaoHTML(window._rocCurrentData||{occ:0,free:0,obOcc:0,passeioTotal:0,total:0,pct:0},window._rocCurrentHosps||[],window._rocCurrentDe||'',window._rocCurrentAte||'');
+    const de=(window._rocCurrentDe||'').replace(/-/g,'');
+    const ate=(window._rocCurrentAte||'').replace(/-/g,'');
+    await gerarECompartilharPDF('Relatório de Ocupação',html,'Relatorio-Ocupacao_'+de+(ate&&ate!==de?'_'+ate:'')+'_GarageSpot');
+  };
   render();
 }
 
@@ -2506,8 +2675,7 @@ function showRelPorApto(){
         <div style="font-size:11px;color:#888;margin-top:3px">${[h.guest,h.model,h.color,h.plate].filter(Boolean).join(' · ')||'Sem dados'}</div>
         <div style="font-size:10px;color:#aaa;margin-top:2px">Entrada: ${fmtDt(h.checkin_ts)}${h.checkout_ts?' · Saída: '+fmtDt(h.checkout_ts):''}</div>
       </div>`).join('');
-    window._rpaShareText='🏨 Por apartamento — GarageSpot\n\n'+
-      hosps.slice(0,80).map(h=>h.numero+' Apt.'+h.apt+(h.guest?' '+h.guest:'')+(h.checkout_ts?' [CO]':' [ATIVO]')+' Entrada:'+fmtDt(h.checkin_ts)+(h.checkout_ts?' Saída:'+fmtDt(h.checkout_ts):'')).join('\n');
+    window._rpaCurrentHosps=hosps; window._rpaCurrentApt=aptVal; window._rpaCurrentDe=deVal; window._rpaCurrentAte=ateVal;
     mc.innerHTML=`
       <div style="display:flex;gap:6px;margin-bottom:10px">
         <button class="bcx" style="flex:1" onclick="showRelatorios()">← Voltar</button>
@@ -2533,7 +2701,14 @@ function showRelPorApto(){
     ateVal=(document.getElementById('rpa-ate').value||'');
     render();
   };
-  window._rpaShare=function(){compartilharRelatorio('Por apartamento — GarageSpot',window._rpaShareText||'');};
+  window._rpaShare=async function(){
+    const html=buildRelPorAptoHTML(window._rpaCurrentHosps||[],window._rpaCurrentApt||'',window._rpaCurrentDe||'',window._rpaCurrentAte||'');
+    const apt=window._rpaCurrentApt||'';
+    const de=(window._rpaCurrentDe||'').replace(/-/g,'');
+    const ate=(window._rpaCurrentAte||'').replace(/-/g,'');
+    const sufixo=[apt?'Apt'+apt:'',de+(ate&&ate!==de?'_'+ate:'')].filter(Boolean).join('_');
+    await gerarECompartilharPDF('Relatório por Apartamento',html,'Relatorio-Apartamento'+(sufixo?'_'+sufixo:'')+'_GarageSpot');
+  };
   render();
 }
 
@@ -2800,54 +2975,42 @@ ${imgPages}
 // Detecta se está rodando dentro do APK (Capacitor)
 function isCapacitor(){ return !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()); }
 
+async function gerarECompartilharPDF(titulo, htmlContent, nomeArquivo){
+  const nomeCompleto=nomeArquivo+'.html';
+  if(window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.Filesystem&&window.Capacitor.Plugins.Share){
+    const Filesystem=window.Capacitor.Plugins.Filesystem;
+    const Share=window.Capacitor.Plugins.Share;
+    try{
+      await Filesystem.writeFile({path:'GarageSpot/'+nomeCompleto,data:htmlContent,directory:'DOCUMENTS',encoding:'utf8',recursive:true});
+      const uriResult=await Filesystem.getUri({path:'GarageSpot/'+nomeCompleto,directory:'DOCUMENTS'});
+      try{
+        await Share.share({title:'GarageSpot — '+titulo,url:uriResult.uri,dialogTitle:'Compartilhar '+titulo});
+      }catch(shareErr){
+        const msg=(shareErr?.message||shareErr?.errorMessage||'').toLowerCase();
+        if(msg.includes('cancel')||msg.includes('dismiss')||msg.includes('abort')||msg.includes('close'))
+          return {sucesso:false,cancelado:true};
+      }
+      return {sucesso:true};
+    }catch(e){ console.error('Filesystem error:',e); }
+  }
+  // Fallback browser
+  const blob=new Blob([htmlContent],{type:'text/html;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.target='_blank';a.rel='noopener';
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(url),10000);
+  return {sucesso:true};
+}
+
 async function compartilharPDF(apt,dv,hist,anexos){
   const hospNum=dv.hospedagem||((hist||[]).find(e=>e.tipo==='checkin')?.hospedagem)||'';
-  const nomeArquivo=fmtNomeArquivo(apt,dv.guest,
+  const nome=fmtNomeArquivo(apt,dv.guest,
     (hist||[]).find(e=>e.tipo==='checkin')?.ts,
     (hist||[]).slice().reverse().find(e=>e.tipo==='checkout')?.ts,
     hospNum);
   const html=buildRegistroHTML(apt,dv,hist,anexos);
-
-  if(window.Capacitor && window.Capacitor.Plugins){
-    const Filesystem = window.Capacitor.Plugins.Filesystem;
-    const Share = window.Capacitor.Plugins.Share;
-    if(Filesystem && Share){
-      try{
-        await Filesystem.writeFile({
-          path: 'GarageSpot/'+nomeArquivo+'.html',
-          data: html,
-          directory: 'DOCUMENTS',
-          encoding: 'utf8',
-          recursive: true
-        });
-        const uriResult = await Filesystem.getUri({
-          path: 'GarageSpot/'+nomeArquivo+'.html',
-          directory: 'DOCUMENTS'
-        });
-        try{
-          await Share.share({
-            title: 'GarageSpot — Apt. '+apt,
-            url: uriResult.uri,
-            dialogTitle: 'Compartilhar registro'
-          });
-        }catch(shareErr){
-          const msg=(shareErr?.message||shareErr?.errorMessage||'').toLowerCase();
-          if(msg.includes('cancel')||msg.includes('dismiss')||msg.includes('abort')||msg.includes('close')){
-            return; // usuário cancelou o compartilhamento — não abrir fallback
-          }
-        }
-        return;
-      }catch(e){ console.error('Filesystem error:',e); }
-    }
-  }
-  // Fallback browser (só chega aqui se Capacitor não disponível ou erro de filesystem)
-  const blob=new Blob([html],{type:'text/html;charset=utf-8'});
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement('a');
-  a.href=url; a.target='_blank';
-  document.body.appendChild(a); a.click();
-  document.body.removeChild(a);
-  setTimeout(()=>URL.revokeObjectURL(url),10000);
+  await gerarECompartilharPDF('Registro de Movimentação',html,nome);
 }
 
 async function salvarPDF(apt,dv,hist,anexos){
