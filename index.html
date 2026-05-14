@@ -7,6 +7,8 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f0efea;height:100%;overflow:hidden}
+html.font-small{zoom:0.87}
+html.font-large{zoom:1.13}
 .page{display:flex;flex-direction:column;height:100dvh;padding:7px;gap:5px}
 
 /* ── TOPBAR UNIFICADA ── */
@@ -346,6 +348,7 @@ html,body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;bac
       <div class="och">
         <span class="oct">A passeio</span>
         <span class="ocb" id="oc2">0</span>
+        <button id="passeio-sort-btn" onclick="window._togglePasseioSort()" title="Ordenar" style="background:none;border:1px solid #e0ddd8;border-radius:4px;font-size:10px;padding:1px 5px;cursor:pointer;color:#888;font-family:inherit;margin-left:4px">↕ Recente</button>
       </div>
       <div class="olist-h" id="ol"><span class="oe">Nenhum carro fora no momento</span></div>
     </div>
@@ -673,11 +676,21 @@ function upd(){
   renderP();
 }
 
+let _passeioSort = 'recente'; // 'recente' | 'antigo'
+window._togglePasseioSort=function(){
+  _passeioSort=_passeioSort==='recente'?'antigo':'recente';
+  const btn=document.getElementById('passeio-sort-btn');
+  if(btn) btn.textContent='↕ '+(_passeioSort==='recente'?'Recente':'Antigo');
+  renderP();
+};
 function renderP(){
   const ol    = document.getElementById('ol');
   const piList= document.getElementById('tb-pi-list');
   const more  = document.getElementById('tb-more');
-  const items = Object.entries(PASSEIO);
+  let items = Object.entries(PASSEIO);
+  items.sort((a,b)=>_passeioSort==='recente'
+    ? (b[1].saida_ts||0)-(a[1].saida_ts||0)
+    : (a[1].saida_ts||0)-(b[1].saida_ts||0));
 
   // Painel expandido
   if(!items.length){
@@ -692,11 +705,13 @@ function renderP(){
   items.forEach(([apt,d])=>{
     const info=[d.model,d.color].filter(Boolean).join(' · ');
     const isLarge=d.size==='large';
+    const elapsed=d.saida_ts?fmtElapsed(d.saida_ts):'';
     const dv=document.createElement('div');dv.className='oi';dv.dataset.apt=apt;
     dv.innerHTML=`
-      <div style="display:flex;align-items:center;gap:5px">
+      <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap">
         <div class="oa">${apt}</div>
         ${isLarge?'<span style="font-size:9px;background:#E3F2FD;color:#185FA5;border-radius:3px;padding:1px 4px;font-weight:700;line-height:1.4">🚐 Grande</span>':''}
+        ${elapsed?`<span style="font-size:9px;background:#F3EFFF;color:#5C35B0;border-radius:3px;padding:1px 4px;font-weight:600;line-height:1.4">⏱ ${elapsed}</span>`:''}
       </div>
       ${info?`<div class="oin">${info}</div>`:''}`;
 
@@ -842,6 +857,7 @@ function executarMove(ms, destId, usuario){
 
   // Remove da vaga de origem sem ir para passeio
   const src = S[ms.id];
+  if(src.hmergeWith) desfazHMerge(ms.id); // desfaz merge horizontal antes de mover
   if(ms.id.endsWith('B') && src.mergedMaster){
     const aId = ms.id.slice(0,-1)+'A';
     const tdB = getTd(ms.id); if(tdB) tdB.rowSpan=1;
@@ -1054,7 +1070,7 @@ function perguntarHMerge(id, apt, model, color, plate, guest, obs, usuario){
     const aInfo = S[aId]&&S[aId].status==='occupied'
       ? `· Apt. <strong>${S[aId].apt}</strong> atrás`
       : '';
-    const lado = (parseInt(v) > parseInt(id)) ? 'esquerda' : 'direita';
+    const lado = (parseInt(v) > parseInt(id)) ? 'direita' : 'esquerda';
     return `<button class="ab ao" id="hm-${v}" style="margin-bottom:6px">
       Vaga ${v} · ${lado} ${aInfo}
     </button>`;
@@ -1191,7 +1207,29 @@ function showOcc(id){
             <button class="bcx" id="f-dup-nao">Não — corrigir apartamento</button>
             <button class="bcx" onclick="closeOv()">Cancelar</button>
           </div>`;
-        document.getElementById('f-dup-sim').onclick=function(){ perguntarCheckin(cur,apt,model,color,plate,guest,obs); };
+        document.getElementById('f-dup-sim').onclick=function(){
+          mc.innerHTML=`
+            <div class="mt">🚗 Segundo veículo — Apt. ${apt}</div>
+            <div class="ms">Adicione um identificador para distinguir dos demais carros do apartamento</div>
+            <label class="fl">Identificador <span class="req">* obrigatório</span></label>
+            <input class="fi" id="f-id2" type="text" placeholder="Ex: V2, Carro 2, Prata..." autocomplete="off">
+            <div style="background:#FFF8E6;border:1px solid #BA7517;border-radius:7px;padding:7px 10px;font-size:11px;color:#633806;margin-top:4px">
+              O apartamento será registrado como <strong id="apt-preview">${apt}-</strong>
+            </div>
+            <div class="ag">
+              <button class="bcx" onclick="showOcc('${cur}')">← Voltar</button>
+              <button class="bsv" id="f-id2-ok">Confirmar</button>
+            </div>`;
+          const fi=document.getElementById('f-id2');
+          const prev=document.getElementById('apt-preview');
+          fi.addEventListener('input',()=>{ prev.textContent=apt+'-'+(fi.value.trim()||'...'); });
+          setTimeout(()=>fi.focus(),80);
+          document.getElementById('f-id2-ok').onclick=function(){
+            const id2=fi.value.trim();
+            if(!id2){ fi.classList.add('err'); fi.addEventListener('input',()=>fi.classList.remove('err'),{once:true}); fi.focus(); return; }
+            perguntarCheckin(cur, apt+'-'+id2, model, color, plate, guest, obs);
+          };
+        };
         document.getElementById('f-dup-nao').onclick=function(){
           showOcc(cur);
           setTimeout(()=>{const e=document.getElementById('f-apt');if(e){e.value='';e.focus();}},80);
@@ -1278,6 +1316,7 @@ function saveV(id,apt,model,color,plate,guest,obs,isCheckin,usuario){
     ref(id);refByApt(d.apt);
     if(HMERGE_OPTS[id]){ upd(); perguntarHMerge(id,d.apt,d.model,d.color,d.plate,d.guest,d.obs,usuario); return; }
     upd();closeOv();
+    showToast('✅ Retorno registrado — Apt. '+apt);
   } else {
     ref(id);refByApt(d.apt);
     if(HMERGE_OPTS[id]){ upd(); perguntarHMerge(id,d.apt,d.model,d.color,d.plate,d.guest,d.obs,usuario); return; }
@@ -1390,7 +1429,7 @@ window.trocarParaGrande = function(id){
     HMERGE_OPTS[id].filter(v=>S[v]&&S[v].status==='free').forEach(v=>{
       const vNum=v.slice(0,-1); const vAId=vNum+'A';
       const aInfo=S[vAId]&&S[vAId].status==='occupied'?` · Apt. ${S[vAId].apt} atrás`:'';
-      const lado=(parseInt(v)>parseInt(id))?'esquerda':'direita';
+      const lado=(parseInt(v)>parseInt(id))?'direita':'esquerda';
       opcoes.push({tipo:'horizontal', label:`↔ Vaga ${v} (${lado}${aInfo})`, id:v});
     });
   }
@@ -1437,7 +1476,7 @@ function doOut(id){
   confirmarUsuario('liberando para passeio',function(usuario){
     const usuarioStr=usuario?(usuario.nome+' · '+usuario.cargo):'';
     const hospNum=d.hospedagem||'';
-    PASSEIO[aptKey]={model:d.model,color:d.color,plate:d.plate,guest:d.guest,obs:d.obs||'',lastVaga:id,size:d.size||'small',hospedagem:hospNum};
+    PASSEIO[aptKey]={model:d.model,color:d.color,plate:d.plate,guest:d.guest,obs:d.obs||'',lastVaga:id,size:d.size||'small',hospedagem:hospNum,saida_ts:Date.now()};
     addHistorico(aptKey,'saida_passeio',id,'',usuarioStr,hospNum);
     const keyV='v_'+id, keyP='p_'+aptKey;
     if(ANEXOS[keyV]&&ANEXOS[keyV].length){
@@ -1814,6 +1853,7 @@ window.closeOv=function(){document.getElementById('ov').classList.remove('on');d
 function tick(){
   document.getElementById('clk').textContent=new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
   atualizarPlantao();
+  if(Object.keys(PASSEIO).length) renderP();
 }
 
 // ── HOSPEDAGEM ────────────────────────────────────────────────────────────
@@ -1983,6 +2023,14 @@ function saveTurnos(){ try{ localStorage.setItem('garagespot_turnos',JSON.string
 function loadTurnos(){
   try{ const r=localStorage.getItem('garagespot_turnos'); if(r) TURNOS=JSON.parse(r)||TURNOS; }catch(e){}
 }
+let PLANTAO_MANUAL = [];
+function savePlantaoManual(){ try{ localStorage.setItem('garagespot_plantao_manual',JSON.stringify(PLANTAO_MANUAL)); }catch(e){} }
+function loadPlantaoManual(){ try{ const r=localStorage.getItem('garagespot_plantao_manual'); if(r) PLANTAO_MANUAL=JSON.parse(r)||[]; }catch(e){} }
+function agendarLimparPlantao(){
+  const agora=new Date(), amanha=new Date(agora.getFullYear(),agora.getMonth(),agora.getDate()+1,0,0,5);
+  setTimeout(()=>{ PLANTAO_MANUAL=[]; savePlantaoManual(); atualizarPlantao(); agendarLimparPlantao(); }, amanha-agora);
+}
+
 function getTurnoDoEvento(ts){
   const d=new Date(ts);
   const nowMin=d.getHours()*60+d.getMinutes();
@@ -2032,20 +2080,56 @@ function showModalTurnos(){
 // ── PLANTÃO ───────────────────────────────────────────────────────────────
 function atualizarPlantao(){
   const el=document.getElementById('plantao-ind'); if(!el) return;
-  const n=USUARIOS.filter(u=>estaNoExpediente(u)).length;
+  const n=USUARIOS.filter(u=>estaNoExpediente(u)).length + PLANTAO_MANUAL.length;
   el.textContent='👤'+n;
   el.classList.toggle('zero',n===0);
 }
 function showPlantaoTooltip(){
-  const noExp=USUARIOS.filter(u=>estaNoExpediente(u));
-  if(!noExp.length){ showToast('Nenhum usuário no expediente agora',3000); return; }
-  const nomes=noExp.map(u=>`${u.nome} (${u.cargo}${u.horaInicio?' · '+u.horaInicio+'–'+u.horaFim:''})`).join('\n');
-  showM(`<div class="mt">👤 Plantão agora</div>
-    <div style="margin:8px 0">${noExp.map(u=>`<div style="padding:6px 0;border-bottom:1px solid #f0efea;font-size:12px">
-      <div style="font-weight:700">${u.nome}</div>
-      <div style="color:#888">${u.cargo}${u.horaInicio?' · '+u.horaInicio+'–'+u.horaFim:''}</div>
-    </div>`).join('')}</div>
-    <button class="bcx" onclick="closeOv()" style="width:100%;margin-top:8px">Fechar</button>`);
+  const mc=document.getElementById('mc');
+  function renderPlantao(){
+    const noExp=USUARIOS.filter(u=>estaNoExpediente(u));
+    const turnoAtual=getTurnoAtual();
+    const expHtml=noExp.length===0?'<span style="font-size:11px;color:#bbb">Nenhum usuário no expediente cadastrado</span>':
+      noExp.map(u=>`<div style="padding:5px 0;border-bottom:1px solid #f0efea;font-size:12px;display:flex;align-items:center;gap:6px">
+        <span style="font-size:16px">👤</span>
+        <div style="flex:1"><div style="font-weight:700">${u.nome}</div>
+          <div style="color:#888;font-size:10px">${u.cargo}${u.horaInicio?' · '+u.horaInicio+'–'+u.horaFim:''}</div>
+        </div>
+      </div>`).join('');
+    const manualHtml=PLANTAO_MANUAL.length===0?'':
+      PLANTAO_MANUAL.map((e,i)=>`<div style="padding:5px 0;border-bottom:1px solid #f0efea;font-size:12px;display:flex;align-items:center;gap:6px">
+        <span style="font-size:16px">👤</span>
+        <div style="flex:1"><div style="font-weight:700">${e.nome}</div>
+          ${e.obs?`<div style="color:#888;font-size:10px">${e.obs}</div>`:''}
+        </div>
+        <button onclick="window._rmPlantao(${i})" style="background:none;border:none;color:#A32D2D;font-size:14px;cursor:pointer;padding:2px 4px;line-height:1">✕</button>
+      </div>`).join('');
+    mc.innerHTML=`
+      <div class="mt">👥 Plantão agora${turnoAtual?' — '+turnoAtual:''}</div>
+      ${expHtml}
+      ${manualHtml}
+      <div style="display:flex;gap:4px;margin-top:8px">
+        <input class="fi" id="plantao-add-nome" type="text" placeholder="Adicionar nome..." style="flex:1;font-size:11px;padding:5px 8px">
+        <input class="fi" id="plantao-add-obs" type="text" placeholder="Cargo/obs." style="width:90px;font-size:11px;padding:5px 8px">
+        <button onclick="window._addPlantao()" style="background:#185FA5;color:#fff;border:none;border-radius:6px;padding:5px 10px;font-size:12px;cursor:pointer;font-family:inherit;font-weight:600">+</button>
+      </div>
+      <button class="bcx" onclick="closeOv()" style="width:100%;margin-top:8px">Fechar</button>`;
+    document.getElementById('ov').classList.add('on');
+    setTimeout(()=>{ const i=document.getElementById('plantao-add-nome'); if(i) i.focus(); },80);
+  }
+  window._addPlantao=function(){
+    const ni=document.getElementById('plantao-add-nome');
+    const oi=document.getElementById('plantao-add-obs');
+    const nome=(ni&&ni.value.trim())||'';
+    if(!nome){ if(ni){ni.classList.add('err');ni.addEventListener('input',()=>ni.classList.remove('err'),{once:true});ni.focus();} return; }
+    PLANTAO_MANUAL.push({nome, obs:(oi&&oi.value.trim())||''});
+    savePlantaoManual(); atualizarPlantao(); renderPlantao();
+  };
+  window._rmPlantao=function(i){
+    PLANTAO_MANUAL.splice(i,1);
+    savePlantaoManual(); atualizarPlantao(); renderPlantao();
+  };
+  renderPlantao();
 }
 
 // ── BUSCA RÁPIDA ─────────────────────────────────────────────────────────
@@ -2230,11 +2314,14 @@ function renderPainelDia(){
 
     <div class="painel-sec">
       <div class="painel-sec-title">👥 Plantão agora${turnoAtual?' — '+turnoAtual:''}</div>
-      ${noExp.length===0
-        ?'<span style="font-size:12px;color:#bbb">Nenhum usuário no expediente</span>'
+      ${(noExp.length===0&&PLANTAO_MANUAL.length===0)
+        ?'<span style="font-size:12px;color:#bbb">Nenhum usuário no plantão</span>'
         :noExp.map(u=>`<div class="painel-staff-item">
           <span style="font-size:18px">👤</span>
           <div><div style="font-weight:700">${u.nome}</div><div style="color:#888;font-size:10px">${u.cargo}${u.horaInicio?' · '+u.horaInicio+'–'+u.horaFim:''}</div></div>
+        </div>`).join('')+PLANTAO_MANUAL.map(e=>`<div class="painel-staff-item">
+          <span style="font-size:18px">👤</span>
+          <div><div style="font-weight:700">${e.nome}</div>${e.obs?`<div style="color:#888;font-size:10px">${e.obs}</div>`:''}</div>
         </div>`).join('')}
     </div>
 
@@ -2266,6 +2353,8 @@ function _mostrarMenuGestao(){
     <div class="gestao-menu-item" onclick="closeOv();showModalTurnos()">🕒 <span>Cadastro de turnos</span></div>
     <div class="gestao-menu-sep">Relatórios e análises</div>
     <div class="gestao-menu-item" onclick="closeOv();showRelatorios()">📊 <span>Relatórios</span></div>
+    <div class="gestao-menu-sep">Exibição</div>
+    <div class="gestao-menu-item" onclick="closeOv();showExibicao()">🔤 <span>Tamanho de fonte</span></div>
     <div class="gestao-menu-sep">Dados do mapa</div>
     <div class="gestao-menu-item" onclick="closeOv();confirmReset()" style="color:#A32D2D;border-color:#FCEBEB">🗑 <span>Limpar / Restaurar mapa</span></div>
     <div class="gestao-menu-item" onclick="closeOv();showLogSistema()" style="color:#555">📋 <span>Log do sistema</span></div>
@@ -2508,11 +2597,40 @@ async function compartilharRelatorio(titulo, textoPlano){
   }
 }
 
+function showExibicao(){
+  const atual=localStorage.getItem('garagespot_exibicao')||'normal';
+  function apply(v){
+    document.documentElement.classList.remove('font-small','font-large');
+    if(v==='small') document.documentElement.classList.add('font-small');
+    else if(v==='large') document.documentElement.classList.add('font-large');
+    localStorage.setItem('garagespot_exibicao',v);
+  }
+  function renderEx(){
+    const cur=localStorage.getItem('garagespot_exibicao')||'normal';
+    showM(`<div class="mt">🔤 Tamanho de fonte</div>
+      <div style="display:flex;gap:6px;margin:12px 0">
+        ${['small','normal','large'].map(v=>`<button onclick="window._setFonte('${v}')" style="flex:1;padding:10px 0;border-radius:8px;font-family:inherit;cursor:pointer;font-weight:${cur===v?'700':'400'};border:${cur===v?'2px solid #185FA5':'1px solid #ddd'};background:${cur===v?'#EEF6FF':'#fff'};color:${cur===v?'#185FA5':'#555'}">
+          ${v==='small'?'🔡 Pequena':v==='normal'?'🔤 Normal':'🔠 Grande'}
+        </button>`).join('')}
+      </div>
+      <button class="bcx" onclick="closeOv()" style="width:100%">Fechar</button>`);
+  }
+  window._setFonte=function(v){ apply(v); renderEx(); };
+  renderEx();
+}
+function initExibicao(){
+  const v=localStorage.getItem('garagespot_exibicao')||'normal';
+  document.documentElement.classList.remove('font-small','font-large');
+  if(v==='small') document.documentElement.classList.add('font-small');
+  else if(v==='large') document.documentElement.classList.add('font-large');
+}
+
 function showRelatorios(){
   showM(`<div class="mt">📊 Relatórios</div>
     <div class="gestao-menu-item" onclick="showRelMovimentacoes()">📋 <span>Movimentações</span></div>
     <div class="gestao-menu-item" onclick="showRelOcupacao()">📈 <span>Ocupação</span></div>
     <div class="gestao-menu-item" onclick="showRelPorApto()">🏨 <span>Por apartamento</span></div>
+    <div class="gestao-menu-item" onclick="showRelTurno()">🕐 <span>Por turno</span></div>
     <button class="bcx" onclick="closeOv()" style="width:100%;margin-top:8px">✕ Fechar</button>`);
 }
 
@@ -2712,6 +2830,128 @@ function showRelPorApto(){
   render();
 }
 
+function showRelTurno(){
+  const mc=document.getElementById('mc');
+  const tLabel={checkin:'Check-in',saida_passeio:'Saída Passeio',retorno_passeio:'Retorno',checkout:'Check-out',edicao:'Edição',movimentacao_vaga:'Mudança de Vaga',tornar_grande:'Carro Grande',tornar_pequeno:'Carro Pequeno',merge_lateral:'Mesclagem Lateral',desfaz_merge_lateral:'Merge Desfeito'};
+  const tColor={checkin:'#0F6E56',saida_passeio:'#854F0B',retorno_passeio:'#185FA5',checkout:'#A32D2D',edicao:'#555',movimentacao_vaga:'#5C35B0',tornar_grande:'#185FA5',tornar_pequeno:'#0F6E56',merge_lateral:'#854F0B',desfaz_merge_lateral:'#888'};
+  const allEvts=[];
+  Object.entries(HISTORICO).forEach(([apt,evts])=>evts.forEach(ev=>allEvts.push({apt,...ev})));
+  allEvts.sort((a,b)=>a.ts-b.ts);
+  function tdStr(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+  function dts(s){if(!s)return 0;const[y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d).getTime();}
+  function dte(s){if(!s)return Infinity;const[y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d,23,59,59,999).getTime();}
+  const td=tdStr(); let deVal=td,ateVal=td;
+  let turnosSel=TURNOS.map(t=>t.nome);
+  function render(){
+    const tsI=dts(deVal),tsF=dte(ateVal);
+    const evts=allEvts.filter(e=>e.ts>=tsI&&e.ts<=tsF&&turnosSel.includes(getTurnoDoEvento(e.ts)));
+    const grupos={};
+    TURNOS.forEach(t=>{ if(turnosSel.includes(t.nome)) grupos[t.nome]=[]; });
+    evts.forEach(ev=>{ const tn=getTurnoDoEvento(ev.ts); if(grupos[tn]) grupos[tn].push(ev); });
+    const gruposHtml=Object.entries(grupos).map(([nome,evs])=>{
+      const ci=evs.filter(e=>e.tipo==='checkin').length;
+      const co=evs.filter(e=>e.tipo==='checkout').length;
+      const rows=evs.length===0?'<span style="color:#bbb;font-size:11px;padding:4px 0;display:block">Nenhuma movimentação</span>':
+        evs.slice(0,100).map(ev=>`<div class="painel-event-row" style="font-size:11px">
+          <span class="painel-badge" style="background:${tColor[ev.tipo]||'#888'};font-size:9px">${tLabel[ev.tipo]||ev.tipo}</span>
+          <div style="flex:1;min-width:0">
+            <div style="font-weight:700">Apt. ${ev.apt}${ev.hospedagem?' · '+ev.hospedagem:''}</div>
+            <div style="color:#888;font-size:10px">${fmtDt(ev.ts)}${ev.usuario?' · '+ev.usuario:''}</div>
+          </div>
+        </div>`).join('');
+      return `<div style="margin-bottom:10px">
+        <div style="font-weight:700;font-size:12px;color:#185FA5;padding:4px 0;border-bottom:1px solid #ddd;display:flex;justify-content:space-between">
+          <span>🕐 ${nome}</span>
+          <span style="display:flex;gap:4px">
+            <span class="rel-badge" style="background:#EEF9F2;color:#0F6E56">CI:${ci}</span>
+            <span class="rel-badge" style="background:#FCEBEB;color:#A32D2D">CO:${co}</span>
+            <span class="rel-badge" style="background:#F2F2F2;color:#555">${evs.length} ev.</span>
+          </span>
+        </div>
+        <div style="margin-top:4px">${rows}</div>
+      </div>`;
+    }).join('');
+    const chks=TURNOS.map(t=>`<label style="display:flex;align-items:center;gap:3px;font-size:11px;cursor:pointer">
+      <input type="checkbox" id="rt-chk-${t.nome.replace(/\s/g,'_')}" ${turnosSel.includes(t.nome)?'checked':''} onchange="window._rtChk()"> ${t.nome}
+    </label>`).join('');
+    window._rtEvts=evts; window._rtDe=deVal; window._rtAte=ateVal; window._rtTurnos=[...turnosSel];
+    mc.innerHTML=`
+      <div style="display:flex;gap:6px;margin-bottom:10px">
+        <button class="bcx" style="flex:1" onclick="showRelatorios()">← Voltar</button>
+        <button class="bcx" style="flex:1" onclick="closeOv()">✕ Fechar</button>
+      </div>
+      <div class="mt">🕐 Por Turno</div>
+      <div style="display:flex;gap:4px;align-items:center;flex-wrap:wrap;margin-bottom:6px">
+        <button onclick="window._rtHoje()" style="padding:5px 10px;font-size:11px;border:1px solid #185FA5;border-radius:6px;background:#EEF6FF;color:#185FA5;cursor:pointer;font-family:inherit;font-weight:600">Hoje</button>
+        <span style="font-size:11px;color:#888">De</span>
+        <input type="date" id="rt-de" value="${deVal}" onchange="window._rtChange()" style="font-size:11px;padding:4px 6px;border:1px solid #ddd;border-radius:6px;font-family:inherit">
+        <span style="font-size:11px;color:#888">Até</span>
+        <input type="date" id="rt-ate" value="${ateVal}" onchange="window._rtChange()" style="font-size:11px;padding:4px 6px;border:1px solid #ddd;border-radius:6px;font-family:inherit">
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">${chks}</div>
+      <div style="max-height:42vh;overflow-y:auto">${gruposHtml}</div>
+      <button class="bcx" onclick="window._rtShare()" style="width:100%;margin-top:8px">📤 Compartilhar</button>`;
+    document.getElementById('ov').classList.add('on');
+  }
+  window._rtHoje=function(){deVal=ateVal=tdStr();render();};
+  window._rtChange=function(){
+    deVal=document.getElementById('rt-de').value||deVal;
+    ateVal=document.getElementById('rt-ate').value||ateVal;
+    render();
+  };
+  window._rtChk=function(){
+    turnosSel=TURNOS.map(t=>t.nome).filter(n=>{
+      const el=document.getElementById('rt-chk-'+n.replace(/\s/g,'_'));
+      return el&&el.checked;
+    });
+    render();
+  };
+  window._rtShare=async function(){
+    const html=buildRelTurnoHTML(window._rtEvts||[],window._rtDe||'',window._rtAte||'',window._rtTurnos||[]);
+    const de=(window._rtDe||'').replace(/-/g,'');
+    const ate=(window._rtAte||'').replace(/-/g,'');
+    await gerarECompartilharPDF('Relatório por Turno',html,'Relatorio-Turno_'+de+(ate&&ate!==de?'_'+ate:'')+'_GarageSpot');
+  };
+  render();
+}
+
+function buildRelTurnoHTML(evts, deVal, ateVal, turnosSel){
+  const tLabel={checkin:'Check-in',saida_passeio:'Saída Passeio',retorno_passeio:'Retorno',checkout:'Check-out',edicao:'Edição',movimentacao_vaga:'Mudança de Vaga',tornar_grande:'Carro Grande',tornar_pequeno:'Carro Pequeno',merge_lateral:'Mesclagem Lateral',desfaz_merge_lateral:'Merge Desfeito'};
+  const tColor={checkin:'#0F6E56',saida_passeio:'#854F0B',retorno_passeio:'#185FA5',checkout:'#A32D2D',edicao:'#555',movimentacao_vaga:'#5C35B0',tornar_grande:'#185FA5',tornar_pequeno:'#0F6E56',merge_lateral:'#854F0B',desfaz_merge_lateral:'#888'};
+  const grupos={};
+  TURNOS.filter(t=>!turnosSel||turnosSel.includes(t.nome)).forEach(t=>grupos[t.nome]=[]);
+  evts.forEach(ev=>{ const tn=getTurnoDoEvento(ev.ts); if(grupos[tn]) grupos[tn].push(ev); });
+  const periodo=(deVal||ateVal)?(deVal===ateVal?deVal:(deVal+' a '+ateVal)):'Todos os períodos';
+  const gruposHTML=Object.entries(grupos).map(([nome,evs])=>{
+    const ci=evs.filter(e=>e.tipo==='checkin').length, co=evs.filter(e=>e.tipo==='checkout').length;
+    const rows=evs.length===0?'<tr><td colspan="4" style="text-align:center;color:#bbb;padding:8px">Nenhuma movimentação</td></tr>':
+      evs.map(ev=>`<tr style="font-size:11px;border-bottom:1px solid #eee">
+        <td style="padding:4px 6px"><span style="background:${tColor[ev.tipo]||'#888'};color:#fff;border-radius:3px;padding:2px 5px;font-size:9px">${tLabel[ev.tipo]||ev.tipo}</span></td>
+        <td style="padding:4px 6px;font-weight:700">Apt. ${ev.apt}${ev.hospedagem?' · '+ev.hospedagem:''}</td>
+        <td style="padding:4px 6px;color:#555">${fmtDt(ev.ts)}</td>
+        <td style="padding:4px 6px;color:#888;font-size:10px">${ev.usuario||''}</td>
+      </tr>`).join('');
+    return `<div style="margin-bottom:16px">
+      <div style="background:#185FA5;color:#fff;padding:6px 10px;border-radius:6px 6px 0 0;font-weight:700;display:flex;justify-content:space-between">
+        <span>🕐 ${nome}</span>
+        <span style="font-size:11px">CI: ${ci} · CO: ${co} · Total: ${evs.length}</span>
+      </div>
+      <table style="width:100%;border-collapse:collapse;border:1px solid #ddd;border-top:none">
+        <thead style="background:#EEF6FF"><tr>
+          <th style="padding:4px 6px;font-size:10px;text-align:left">Tipo</th>
+          <th style="padding:4px 6px;font-size:10px;text-align:left">Apartamento</th>
+          <th style="padding:4px 6px;font-size:10px;text-align:left">Data/Hora</th>
+          <th style="padding:4px 6px;font-size:10px;text-align:left">Usuário</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>`;
+  }).join('');
+  const subtitulo=`${periodo} · ${(turnosSel||TURNOS.map(t=>t.nome)).join(', ')}`;
+  const body=_relHdrHTML('Relatório por Turno', subtitulo)+gruposHTML;
+  return _relWrap('Relatório por Turno', body);
+}
+
 function showRelOverbooking(){
   const obVagas=Object.entries(S).filter(([id,d])=>d.overbook && d.status==='occupied' && !d.mergedSlave);
   const html=obVagas.length===0?'<span style="color:#bbb;font-size:12px">Nenhuma vaga OB ocupada no momento</span>':
@@ -2764,6 +3004,14 @@ function fmtDt(ts){
   if(!ts) return 'Não informado';
   const d=new Date(ts);
   return d.toLocaleDateString('pt-BR')+' '+d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+}
+function fmtElapsed(ts){
+  if(!ts) return '';
+  const mins=Math.floor((Date.now()-ts)/60000);
+  if(mins<1) return '<1min';
+  if(mins<60) return mins+'min';
+  const h=Math.floor(mins/60), m=mins%60;
+  return h+'h'+(m>0?' '+m+'min':'');
 }
 
 function addHistorico(apt, tipo, vaga, extra, usuario, hospedagem){
@@ -3233,7 +3481,8 @@ function applySnapshot(data){
       PASSEIO[apt] = {
         model:d.model||'', color:d.color||'', plate:d.plate||'',
         guest:d.guest||'', obs:d.obs||'', lastVaga:d.lastVaga||'',
-        size:d.size||'small',
+        size:d.size||'small', hospedagem:d.hospedagem||'',
+        saida_ts:d.saida_ts||null,
       };
     });
   }
@@ -3405,6 +3654,9 @@ checkLicense().then(async (ativo)=>{
       loadUsuarios();
       loadHospedagens();
       loadTurnos();
+      loadPlantaoManual();
+      agendarLimparPlantao();
+      initExibicao();
       buildTable();
       if(restored) Object.keys(S).forEach(id=>ref(id));
       attachDrag();
