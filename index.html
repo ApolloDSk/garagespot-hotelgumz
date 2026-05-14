@@ -819,10 +819,15 @@ function dropDrag(x, y){
   // Se não caiu em vaga livre válida, cancela sem mover
   if(!destId || !S[destId] || S[destId].status!=='free' || destId===ms.id) return;
 
-  executarMove(ms, destId);
+  confirmarUsuario('movendo vaga', function(usuario){
+    executarMove(ms, destId, usuario);
+  });
 }
 
-function executarMove(ms, destId){
+function executarMove(ms, destId, usuario){
+  const hospedagem = S[ms.id]?.hospedagem || '';
+  const usuarioStr = usuario ? (usuario.nome+' · '+usuario.cargo) : '';
+
   // Remove da vaga de origem sem ir para passeio
   const src = S[ms.id];
   if(ms.id.endsWith('B') && src.mergedMaster){
@@ -865,17 +870,22 @@ function executarMove(ms, destId){
     // Cancelar: restaura carro na origem
     document.getElementById('mv-cancel').onclick=function(){
       ssz=ms.size||'small';
+      if(hospedagem) S[ms.id].hospedagem=hospedagem;
       saveV(ms.id,ms.apt,ms.model,ms.color,ms.plate,ms.guest,ms.obs);
       refByApt(ms.apt);upd();closeOv();
     };
     document.getElementById('mv-ok').onclick=function(){
+      if(hospedagem) S[destId].hospedagem=hospedagem;
       saveV(destId,ms.apt,ms.model,ms.color,ms.plate,ms.guest,ms.obs);
+      addHistorico(ms.apt,'movimentacao_vaga',destId,'Movido de '+ms.id+' para '+destId,usuarioStr,hospedagem);
       refByApt(ms.apt);upd();closeOv();
     };
   } else {
     if(isA && bOcupada) ssz='small';
     else ssz = isA ? (ms.size||'small') : 'small';
+    if(hospedagem) S[destId].hospedagem=hospedagem;
     saveV(destId,ms.apt,ms.model,ms.color,ms.plate,ms.guest,ms.obs);
+    addHistorico(ms.apt,'movimentacao_vaga',destId,'Movido de '+ms.id+' para '+destId,usuarioStr,hospedagem);
     refByApt(ms.apt);upd();
   }
 }
@@ -970,7 +980,7 @@ const HMERGE_OPTS = {
 };
 
 // Aplica merge horizontal: id ocupa colspan=2, alvo some
-function aplicarHMerge(id, alvoId){
+function aplicarHMerge(id, alvoId, usuario){
   const tdSrc = getTd(id);
   const tdAlvo = getTd(alvoId);
   if(!tdSrc||!tdAlvo) return;
@@ -981,11 +991,17 @@ function aplicarHMerge(id, alvoId){
   tdSrc.colSpan = 2;
   tdAlvo.classList.add('hmerge-hidden');
   ref(id);
+  if(usuario !== undefined){
+    const usuarioStr=usuario?(usuario.nome+' · '+usuario.cargo):'';
+    const hospedagem=S[id]?.hospedagem||'';
+    const apt=S[id]?.apt||'';
+    addHistorico(apt,'merge_lateral',id,'Vagas mescladas: '+id+' + '+alvoId,usuarioStr,hospedagem);
+  }
   setTimeout(positionPilares, 50);
 }
 
 // Desfaz merge horizontal
-function desfazHMerge(id){
+function desfazHMerge(id, usuario){
   const alvoId = S[id]?.hmergeWith;
   if(!alvoId) return;
   const tdSrc = getTd(id);
@@ -999,11 +1015,17 @@ function desfazHMerge(id){
     ref(alvoId);
   }
   S[id].hmergeWith = null;
+  if(usuario !== undefined){
+    const usuarioStr=usuario?(usuario.nome+' · '+usuario.cargo):'';
+    const hospedagem=S[id]?.hospedagem||'';
+    const apt=S[id]?.apt||'';
+    addHistorico(apt,'desfaz_merge_lateral',id,'Mesclagem desfeita: '+id+' e '+alvoId,usuarioStr,hospedagem);
+  }
   setTimeout(positionPilares, 50);
 }
 
 // Pergunta se quer fazer merge horizontal após salvar o carro
-function perguntarHMerge(id, apt, model, color, plate, guest, obs){
+function perguntarHMerge(id, apt, model, color, plate, guest, obs, usuario){
   const opts = HMERGE_OPTS[id];
   if(!opts){ upd();closeOv();return; }
 
@@ -1035,7 +1057,7 @@ function perguntarHMerge(id, apt, model, color, plate, guest, obs){
 
   livres.forEach(v=>{
     document.getElementById('hm-'+v).onclick=function(){
-      aplicarHMerge(id, v);
+      aplicarHMerge(id, v, usuario);
       upd();closeOv();
     };
   });
@@ -1234,7 +1256,7 @@ function saveV(id,apt,model,color,plate,guest,obs,isCheckin,usuario){
     saveHospedagens();
     iniciarHistorico(apt,id,numH,usuarioStr);
     ref(id);refByApt(d.apt);
-    if(HMERGE_OPTS[id]){ upd(); perguntarHMerge(id,d.apt,d.model,d.color,d.plate,d.guest,d.obs); return; }
+    if(HMERGE_OPTS[id]){ upd(); perguntarHMerge(id,d.apt,d.model,d.color,d.plate,d.guest,d.obs,usuario); return; }
     upd();closeOv();
     showToast('✅ Check-in registrado — Hospedagem '+numH);
   } else if(isCheckin===false){
@@ -1242,11 +1264,11 @@ function saveV(id,apt,model,color,plate,guest,obs,isCheckin,usuario){
     if(hospNum) d.hospedagem=hospNum;
     addHistorico(apt,'retorno_passeio',id,'',usuarioStr,hospNum);
     ref(id);refByApt(d.apt);
-    if(HMERGE_OPTS[id]){ upd(); perguntarHMerge(id,d.apt,d.model,d.color,d.plate,d.guest,d.obs); return; }
+    if(HMERGE_OPTS[id]){ upd(); perguntarHMerge(id,d.apt,d.model,d.color,d.plate,d.guest,d.obs,usuario); return; }
     upd();closeOv();
   } else {
     ref(id);refByApt(d.apt);
-    if(HMERGE_OPTS[id]){ upd(); perguntarHMerge(id,d.apt,d.model,d.color,d.plate,d.guest,d.obs); return; }
+    if(HMERGE_OPTS[id]){ upd(); perguntarHMerge(id,d.apt,d.model,d.color,d.plate,d.guest,d.obs,usuario); return; }
     upd();closeOv();
   }
 }
@@ -1304,37 +1326,43 @@ window.trocarParaPequeno = function(id){
   const apt=d.apt,model=d.model,color=d.color,plate=d.plate,guest=d.guest,
         obs=d.obs||'',hospedagem=d.hospedagem||'';
 
-  // Desfaz merge horizontal se houver
-  if(d.hmergeWith) desfazHMerge(id);
+  confirmarUsuario('reduzindo para carro pequeno', function(usuario){
+    const usuarioStr=usuario?(usuario.nome+' · '+usuario.cargo):'';
 
-  // Desfaz merge vertical: libera AMBAS as células antes de re-ocupar só uma
-  const tdB=getTd(bId);if(tdB)tdB.rowSpan=1;
-  if(S[bId]){S[bId].mergedMaster=false;S[bId].status='free';S[bId].apt='';S[bId].size='small';}
-  if(S[aId]){
-    S[aId].mergedSlave=false;S[aId].status='free';S[aId].apt='';
-    S[aId].model='';S[aId].color='';S[aId].plate='';S[aId].guest='';S[aId].obs='';S[aId].size='small';
-    ref(aId);
-  }
+    // Desfaz merge horizontal se houver (com log de usuario)
+    if(d.hmergeWith) desfazHMerge(id, usuario);
 
-  // Carro fica sempre na vaga B (mais visível)
-  ssz='small';
-  S[bId].status='occupied';S[bId].apt=apt;S[bId].model=model;
-  S[bId].color=color;S[bId].plate=plate;S[bId].guest=guest;S[bId].obs=obs;
-  S[bId].hospedagem=hospedagem;
-  S[bId].size='small';S[bId].mergedMaster=false;S[bId].mergedSlave=false;
-  ref(bId);
-  setTimeout(positionPilares, 50);
-  refByApt(apt);upd();closeOv();
+    // Desfaz merge vertical: libera AMBAS as células antes de re-ocupar só uma
+    const tdB=getTd(bId);if(tdB)tdB.rowSpan=1;
+    if(S[bId]){S[bId].mergedMaster=false;S[bId].status='free';S[bId].apt='';S[bId].size='small';}
+    if(S[aId]){
+      S[aId].mergedSlave=false;S[aId].status='free';S[aId].apt='';
+      S[aId].model='';S[aId].color='';S[aId].plate='';S[aId].guest='';S[aId].obs='';S[aId].size='small';
+      ref(aId);
+    }
+
+    // Carro fica sempre na vaga B (mais visível)
+    ssz='small';
+    S[bId].status='occupied';S[bId].apt=apt;S[bId].model=model;
+    S[bId].color=color;S[bId].plate=plate;S[bId].guest=guest;S[bId].obs=obs;
+    S[bId].hospedagem=hospedagem;
+    S[bId].size='small';S[bId].mergedMaster=false;S[bId].mergedSlave=false;
+    ref(bId);
+    addHistorico(apt,'tornar_pequeno',bId,'Carro reduzido para vaga simples ('+bId+')',usuarioStr,hospedagem);
+    setTimeout(positionPilares, 50);
+    refByApt(apt);upd();closeOv();
+  });
 };
 
 // Trocar carro pequeno → grande
-// Para vagas 4B-7B: pergunta se mescla para trás (A) ou para o lado
+// Para vagas 3B-6B: pergunta se mescla para trás (A) ou para o lado
 window.trocarParaGrande = function(id){
   const d = S[id];
   const num = id.slice(0,-1);
   const aId = num+'A';
   const bId = num+'B';
   const apt=d.apt,model=d.model,color=d.color,plate=d.plate,guest=d.guest,obs=d.obs||'';
+  const hospedagem=d.hospedagem||'';
   const mc=document.getElementById('mc');
 
   // Opções disponíveis
@@ -1345,7 +1373,7 @@ window.trocarParaGrande = function(id){
     opcoes.push({tipo:'vertical', label:`🚐 Vaga ${aId} (atrás)`, id:aId});
   }
 
-  // Opção: mesclar com vagas do lado (merge horizontal, só para 4B-7B)
+  // Opção: mesclar com vagas do lado (merge horizontal, só para 3B-6B)
   if(HMERGE_OPTS[id]){
     HMERGE_OPTS[id].filter(v=>S[v]&&S[v].status==='free').forEach(v=>{
       const vNum=v.slice(0,-1); const vAId=vNum+'A';
@@ -1357,37 +1385,37 @@ window.trocarParaGrande = function(id){
 
   if(!opcoes.length){ closeOv(); return; }
 
-  // Se só tem uma opção, aplica direto
-  if(opcoes.length===1){
-    const op=opcoes[0];
-    if(op.tipo==='vertical'){
-      S[id].status='free';S[id].apt='';S[id].size='small';S[id].mergedMaster=false;S[id].mergedSlave=false;ref(id);
-      ssz='large'; saveV(aId,apt,model,color,plate,guest,obs);
-    } else {
-      aplicarHMerge(id,op.id); upd();closeOv();
-    }
-    return;
-  }
+  confirmarUsuario('expandindo vaga', function(usuario){
+    const usuarioStr=usuario?(usuario.nome+' · '+usuario.cargo):'';
 
-  // Mostra opções
-  const opHTML=opcoes.map((op,i)=>`
-    <button class="ab ao" id="tg-op-${i}" style="margin-bottom:6px">${op.label}</button>`).join('');
-  mc.innerHTML=`
-    <div class="mt">🚐 Tornar grande — ${id}</div>
-    <div class="ms" style="margin-bottom:10px">Apt. ${apt} · Escolha como mesclar:</div>
-    ${opHTML}
-    <button class="bcx" onclick="closeOv()" style="width:100%;margin-top:6px">Cancelar</button>`;
-  document.getElementById('ov').classList.add('on');
-
-  opcoes.forEach((op,i)=>{
-    document.getElementById('tg-op-'+i).onclick=function(){
+    function aplicarOpcao(op){
       if(op.tipo==='vertical'){
         S[id].status='free';S[id].apt='';S[id].size='small';S[id].mergedMaster=false;S[id].mergedSlave=false;ref(id);
-        ssz='large'; saveV(aId,apt,model,color,plate,guest,obs);
+        ssz='large';
+        S[aId].hospedagem=hospedagem;
+        saveV(aId,apt,model,color,plate,guest,obs);
+        if(hospedagem&&S[bId]) S[bId].hospedagem=hospedagem;
+        addHistorico(apt,'tornar_grande',aId,'Carro expandido para vaga dupla ('+aId+'+'+bId+')',usuarioStr,hospedagem);
       } else {
-        aplicarHMerge(id,op.id); upd();closeOv();
+        aplicarHMerge(id,op.id,usuario); upd();closeOv();
       }
-    };
+    }
+
+    if(opcoes.length===1){ aplicarOpcao(opcoes[0]); return; }
+
+    // Mostra opções
+    const opHTML=opcoes.map((op,i)=>`
+      <button class="ab ao" id="tg-op-${i}" style="margin-bottom:6px">${op.label}</button>`).join('');
+    mc.innerHTML=`
+      <div class="mt">🚐 Tornar grande — ${id}</div>
+      <div class="ms" style="margin-bottom:10px">Apt. ${apt} · Escolha como mesclar:</div>
+      ${opHTML}
+      <button class="bcx" onclick="closeOv()" style="width:100%;margin-top:6px">Cancelar</button>`;
+    document.getElementById('ov').classList.add('on');
+
+    opcoes.forEach((op,i)=>{
+      document.getElementById('tg-op-'+i).onclick=function(){ aplicarOpcao(op); };
+    });
   });
 };
 
@@ -2095,8 +2123,8 @@ function renderPainelDia(){
   const noExp=USUARIOS.filter(u=>estaNoExpediente(u));
   const turnoAtual=getTurnoAtual();
 
-  const tLabel={checkin:'Check-in',saida_passeio:'Saída Passeio',retorno_passeio:'Retorno',checkout:'Check-out',edicao:'Edição'};
-  const tColor={checkin:'#0F6E56',saida_passeio:'#854F0B',retorno_passeio:'#185FA5',checkout:'#A32D2D',edicao:'#555'};
+  const tLabel={checkin:'Check-in',saida_passeio:'Saída Passeio',retorno_passeio:'Retorno',checkout:'Check-out',edicao:'Edição',movimentacao_vaga:'Mudança de Vaga',tornar_grande:'Carro Grande',tornar_pequeno:'Carro Pequeno',merge_lateral:'Mesclagem Lateral',desfaz_merge_lateral:'Merge Desfeito'};
+  const tColor={checkin:'#0F6E56',saida_passeio:'#854F0B',retorno_passeio:'#185FA5',checkout:'#A32D2D',edicao:'#555',movimentacao_vaga:'#5C35B0',tornar_grande:'#185FA5',tornar_pequeno:'#0F6E56',merge_lateral:'#854F0B',desfaz_merge_lateral:'#888'};
 
   pw.innerHTML=`
     <div class="painel-sec">
@@ -2155,8 +2183,8 @@ let _gestaoUnlockTs=0;
 function isGestaoUnlocked(){ return Date.now()<_gestaoUnlockTs; }
 
 function showGestaoMenu(){
-  const pinSalvo=localStorage.getItem(GESTAO_PIN_KEY);
-  if(!pinSalvo){ showCriarPIN(); return; }
+  let pinSalvo=localStorage.getItem(GESTAO_PIN_KEY);
+  if(!pinSalvo){ localStorage.setItem(GESTAO_PIN_KEY,'1200'); pinSalvo='1200'; }
   if(!isGestaoUnlocked()){ showEntrarPIN(()=>_mostrarMenuGestao()); return; }
   _mostrarMenuGestao();
 }
@@ -2173,7 +2201,7 @@ function _mostrarMenuGestao(){
     <div class="gestao-menu-sep">Dados do mapa</div>
     <div class="gestao-menu-item" onclick="closeOv();confirmReset()" style="color:#A32D2D;border-color:#FCEBEB">🗑 <span>Limpar / Restaurar mapa</span></div>
     <div class="gestao-menu-item" onclick="closeOv();showLogSistema()" style="color:#555">📋 <span>Log do sistema</span></div>
-    <div class="gestao-menu-item" onclick="closeOv();trocarPIN()" style="color:#555;font-size:12px">🔑 <span>Trocar PIN</span></div>
+    <div class="gestao-menu-item" onclick="closeOv();alterarPIN()" style="color:#555;font-size:12px">🔑 <span>Alterar PIN</span></div>
     <button class="bcx" onclick="closeOv()" style="width:100%;margin-top:8px">Fechar</button>`;
   document.getElementById('ov').classList.add('on');
 }
@@ -2225,14 +2253,17 @@ function showEntrarPIN(callback){
   render();
 }
 
-function showCriarPIN(){
-  let step=1, pin1='';
+function alterarPIN(){
+  let step=1, pinNovo='';
+  const titulos=['','Alterar PIN','Novo PIN','Confirmar novo PIN'];
+  const subs=['','Confirme o PIN atual','Digite o novo PIN (4 dígitos)','Repita o novo PIN'];
   const mc=document.getElementById('mc');
-  function renderStep(){
-    mc.innerHTML=`<div class="mt">🔑 Criar PIN de Gestão</div>
-      <div class="ms">${step===1?'Escolha um PIN de 4 dígitos para proteger a área de gestão':'Confirme o PIN'}</div>
+  function renderStep(err){
+    let digitado='';
+    mc.innerHTML=`<div class="mt">🔑 ${titulos[step]}</div>
+      <div class="ms">${subs[step]}</div>
       <div class="pin-display">${[0,1,2,3].map(i=>`<div class="pin-dot" id="pd-${i}"></div>`).join('')}</div>
-      <div id="pin-err" style="min-height:16px;text-align:center;font-size:11px;color:#A32D2D;margin-bottom:4px"></div>
+      <div id="pin-err" style="min-height:16px;text-align:center;font-size:11px;color:#A32D2D;margin-bottom:4px">${err||''}</div>
       <div class="pin-keypad">
         ${[1,2,3,4,5,6,7,8,9].map(n=>`<button class="pin-key" onclick="pinKey('${n}')">${n}</button>`).join('')}
         <button class="pin-key" onclick="closeOv()" style="font-size:11px;color:#888">✕</button>
@@ -2240,7 +2271,6 @@ function showCriarPIN(){
         <button class="pin-key del" onclick="pinDel()">⌫</button>
       </div>`;
     document.getElementById('ov').classList.add('on');
-    let digitado='';
     window.pinKey=function(d){
       if(digitado.length>=4) return;
       digitado+=d;
@@ -2249,17 +2279,26 @@ function showCriarPIN(){
         if(dot) dot.classList.toggle('filled',i<digitado.length);
       }
       if(digitado.length===4){
-        if(step===1){ pin1=digitado; step=2; setTimeout(renderStep,300); }
-        else {
-          if(digitado===pin1){
-            localStorage.setItem(GESTAO_PIN_KEY,pin1);
-            _gestaoUnlockTs=Date.now()+GESTAO_UNLOCK_MS;
-            _mostrarMenuGestao();
-          } else {
+        if(step===1){
+          const salvo=localStorage.getItem(GESTAO_PIN_KEY);
+          if(digitado===salvo){ step=2; setTimeout(()=>renderStep(),300); }
+          else {
             const err=document.getElementById('pin-err');
-            if(err) err.textContent='PINs não coincidem — tente novamente';
-            digitado=''; step=1; pin1='';
-            setTimeout(()=>{ for(let i=0;i<4;i++){const dot=document.getElementById('pd-'+i);if(dot)dot.classList.remove('filled');} },300);
+            if(err) err.textContent='PIN incorreto — tente novamente';
+            digitado='';
+            setTimeout(()=>{for(let i=0;i<4;i++){const dot=document.getElementById('pd-'+i);if(dot)dot.classList.remove('filled');}},300);
+          }
+        } else if(step===2){
+          pinNovo=digitado; step=3; setTimeout(()=>renderStep(),300);
+        } else {
+          if(digitado===pinNovo){
+            localStorage.setItem(GESTAO_PIN_KEY,pinNovo);
+            _gestaoUnlockTs=Date.now()+GESTAO_UNLOCK_MS;
+            addLogSistema('PIN do gestor alterado');
+            closeOv(); showToast('PIN alterado com sucesso');
+          } else {
+            step=1; pinNovo='';
+            setTimeout(()=>renderStep('PINs não coincidem — recomeçar'),300);
           }
         }
       }
@@ -2274,14 +2313,6 @@ function showCriarPIN(){
     };
   }
   renderStep();
-}
-
-function trocarPIN(){
-  showEntrarPIN(()=>{
-    localStorage.removeItem(GESTAO_PIN_KEY);
-    _gestaoUnlockTs=0;
-    showCriarPIN();
-  });
 }
 
 // ── LOG DO SISTEMA ────────────────────────────────────────────────────────
@@ -2330,8 +2361,8 @@ function showRelMovimentacoes(){
   Object.entries(HISTORICO).forEach(([apt,evts])=>evts.forEach(ev=>allEvts.push({apt,...ev})));
   allEvts.sort((a,b)=>b.ts-a.ts);
 
-  const tLabel={checkin:'Check-in',saida_passeio:'Saída Passeio',retorno_passeio:'Retorno',checkout:'Check-out',edicao:'Edição'};
-  const tColor={checkin:'#0F6E56',saida_passeio:'#854F0B',retorno_passeio:'#185FA5',checkout:'#A32D2D',edicao:'#555'};
+  const tLabel={checkin:'Check-in',saida_passeio:'Saída Passeio',retorno_passeio:'Retorno',checkout:'Check-out',edicao:'Edição',movimentacao_vaga:'Mudança de Vaga',tornar_grande:'Carro Grande',tornar_pequeno:'Carro Pequeno',merge_lateral:'Mesclagem Lateral',desfaz_merge_lateral:'Merge Desfeito'};
+  const tColor={checkin:'#0F6E56',saida_passeio:'#854F0B',retorno_passeio:'#185FA5',checkout:'#A32D2D',edicao:'#555',movimentacao_vaga:'#5C35B0',tornar_grande:'#185FA5',tornar_pequeno:'#0F6E56',merge_lateral:'#854F0B',desfaz_merge_lateral:'#888'};
 
   // Filtros
   let filtro='hoje';
@@ -2427,8 +2458,8 @@ function showToast(msg,duration){
 // ── MODAL HISTÓRICO ───────────────────────────────────────────────────────
 function showHistoricoModal(apt, hospedagem){
   const hist=getHistorico(apt);
-  const tLabel={checkin:'Check-in',saida_passeio:'Saída para Passeio',retorno_passeio:'Retorno do Passeio',checkout:'Check-out',edicao:'Edição'};
-  const tColor={checkin:'#0F6E56',saida_passeio:'#854F0B',retorno_passeio:'#185FA5',checkout:'#A32D2D',edicao:'#555'};
+  const tLabel={checkin:'Check-in',saida_passeio:'Saída para Passeio',retorno_passeio:'Retorno do Passeio',checkout:'Check-out',edicao:'Edição',movimentacao_vaga:'Mudança de Vaga',tornar_grande:'Expandido para Carro Grande',tornar_pequeno:'Reduzido para Carro Pequeno',merge_lateral:'Mesclagem Lateral',desfaz_merge_lateral:'Mesclagem Lateral Desfeita'};
+  const tColor={checkin:'#0F6E56',saida_passeio:'#854F0B',retorno_passeio:'#185FA5',checkout:'#A32D2D',edicao:'#555',movimentacao_vaga:'#5C35B0',tornar_grande:'#185FA5',tornar_pequeno:'#0F6E56',merge_lateral:'#854F0B',desfaz_merge_lateral:'#888'};
   const titulo=hospedagem?`Histórico — Apt. ${apt} · ${hospedagem}`:`Histórico — Apt. ${apt}`;
   const cardsHTML=hist.length===0
     ?'<span style="font-size:12px;color:#bbb;font-style:italic">Sem eventos registrados</span>'
@@ -2509,6 +2540,11 @@ function buildRegistroHTML(apt,dv,hist,anexos){
     retorno_passeio:'Retorno do Passeio',
     checkout:'Check-out (Saída)',
     edicao:'Edição de Dados',
+    movimentacao_vaga:'Mudança de Vaga',
+    tornar_grande:'Expandido para Carro Grande',
+    tornar_pequeno:'Reduzido para Carro Pequeno',
+    merge_lateral:'Mesclagem Lateral',
+    desfaz_merge_lateral:'Mesclagem Lateral Desfeita',
   };
   const tColor={
     checkin:'#0F6E56',
@@ -2516,6 +2552,11 @@ function buildRegistroHTML(apt,dv,hist,anexos){
     retorno_passeio:'#185FA5',
     checkout:'#A32D2D',
     edicao:'#555',
+    movimentacao_vaga:'#5C35B0',
+    tornar_grande:'#185FA5',
+    tornar_pequeno:'#0F6E56',
+    merge_lateral:'#854F0B',
+    desfaz_merge_lateral:'#888',
   };
   const hospedagemNum=dv.hospedagem||((hist||[]).find(e=>e.tipo==='checkin')?.hospedagem)||'';
   const campos=[
