@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
@@ -297,47 +297,6 @@ html.font-large{zoom:1.13}
 .vst-icon{font-size:10px;cursor:pointer;user-select:none;line-height:1;display:inline-block}
 .vst-icon:active{opacity:.7}
 .vst-warn-box{background:#FFF3CD;border:1.5px solid #E8A800;border-radius:8px;padding:8px 12px;margin-bottom:10px;font-size:11px;color:#7A5700;line-height:1.5}
-/* ── NOVO CHECK-IN INTEGRADO (NCI) ── */
-#nci-overlay{position:fixed;inset:0;background:#f0efea;z-index:9000;display:none;flex-direction:column;overflow:hidden}
-#nci-overlay.on{display:flex}
-.nci-hdr{background:#fff;border-bottom:1px solid #ddd;padding:8px 12px;display:flex;align-items:center;gap:8px;flex-shrink:0}
-.nci-hdr-title{font-weight:700;font-size:14px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.nci-steps{display:flex;gap:3px;align-items:center;flex-shrink:0}
-.nci-dot{width:22px;height:5px;border-radius:3px;background:#ddd;transition:background .2s}
-.nci-dot.done{background:#0F6E56}.nci-dot.active{background:var(--cp)}
-.nci-body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px}
-.nci-body.landscape-vst{display:flex;flex-direction:row;overflow:hidden;padding:0}
-.nci-dz{flex:0 0 55%;position:relative;overflow:hidden;background:#f7f8f9;border-right:1px solid #ddd;user-select:none;touch-action:none}
-.nci-iz{flex:1;display:flex;flex-direction:column;overflow-y:auto;padding:10px}
-.nci-dano-mk{position:absolute;transform:translate(-50%,-50%);cursor:pointer;font-size:17px;color:#A32D2D;text-shadow:0 0 2px #fff,0 0 4px #fff;pointer-events:auto;user-select:none;z-index:10;line-height:1;touch-action:none}
-.nci-mini-pop{position:absolute;background:#fff;border:1.5px solid #ccc;border-radius:8px;padding:5px 7px;z-index:30;box-shadow:0 2px 8px rgba(0,0,0,.2);display:flex;gap:5px;align-items:center;white-space:nowrap}
-.nci-mini-pop button{padding:3px 9px;border-radius:5px;font-size:11px;font-weight:700;cursor:pointer;border:none;font-family:inherit}
-.nci-ftr{background:#fff;border-top:1px solid #ddd;padding:8px 12px;display:flex;gap:8px;flex-shrink:0}
-.nci-bv{flex:1;padding:9px;border:1.5px solid #ccc;border-radius:8px;background:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit}
-.nci-bn{flex:2;padding:9px;border:none;border-radius:8px;background:var(--cp);color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit}
-.nci-bn:disabled{background:#aaa;cursor:not-allowed}
-.nci-fi{border:1.5px solid #ccc;border-radius:7px;padding:7px 10px;font-size:13px;width:100%;font-family:inherit;background:#fff;outline:none;margin-bottom:10px;box-sizing:border-box}
-.nci-fi:focus{border-color:var(--cp)}.nci-fi.err{border-color:#E24B4A;background:#fff5f5}
-.nci-lbl{font-size:11px;color:#666;font-weight:600;margin-bottom:3px;display:block}
-.nci-sz-row{display:flex;gap:8px;margin-bottom:10px}
-.nci-szb{flex:1;padding:8px;border:1.5px solid #ccc;border-radius:7px;text-align:center;cursor:pointer;font-size:12px;font-family:inherit;background:#fff;font-weight:600}
-.nci-szb.sel{border-color:var(--cp);background:var(--cp-lt);color:var(--cp)}
-.nci-avaria-strip{display:flex;align-items:center;justify-content:center;gap:6px;padding:6px 8px;border-radius:7px;margin-bottom:6px;font-size:11px;font-weight:700;flex-shrink:0}
-.nci-avaria-strip.com{background:#FCEBEB;color:#A32D2D}
-.nci-avaria-strip.sem{background:#EEF9F2;color:#0F6E56}
-.nci-sig-wrap{border:1px solid #ccc;border-radius:8px;overflow:hidden;background:#fff;flex-shrink:0}
-.nci-sig-canvas{display:block;width:100%;cursor:crosshair;touch-action:none}
-.nci-sig-phrase{font-size:9px;color:#555;font-style:italic;padding:4px 8px;text-align:center;border-top:1px solid #eee;line-height:1.3}
-.nci-confirm-box{background:#fff;border:1px solid #eee;border-radius:9px;padding:10px 12px;margin-bottom:8px}
-.nci-conf-row{display:flex;gap:6px;margin-bottom:4px;font-size:12px}
-.nci-conf-lbl{color:#888;flex-shrink:0;min-width:80px}
-.nci-conf-val{font-weight:700;color:#111}
-.nci-success{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 20px;text-align:center;gap:12px}
-.nci-gs-badge{font-size:22px;font-weight:700;color:var(--cp);background:var(--cp-lt);border-radius:12px;padding:10px 24px}
-.nci-pending-card{background:#fff;border:1.5px solid #E8C97A;border-radius:10px;padding:10px 12px;margin-bottom:8px}
-.nci-pending-card-hd{font-size:13px;font-weight:700;color:#111;margin-bottom:2px}
-.nci-pending-card-sub{font-size:11px;color:#888}
-.nci-highlight-btn{background:var(--cp-lt);color:var(--cp);border:1.5px solid var(--cp);border-radius:7px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;width:100%;margin-top:4px}
 </style>
 </head>
 <body>
@@ -375,13 +334,12 @@ html.font-large{zoom:1.13}
 
   <!-- NAVBAR -->
   <div class="navbar" id="navbar">
-    <button class="nav-btn nav-active" id="nav-painel" onclick="navTo('painel')">📊 Painel</button>
-    <button class="nav-btn" id="nav-mapa" onclick="navTo('mapa')">🗺 Mapa</button>
+    <button class="nav-btn nav-active" id="nav-mapa" onclick="navTo('mapa')">🗺 Mapa</button>
+    <button class="nav-btn" id="nav-painel" onclick="navTo('painel')">📊 Painel</button>
+    <button class="nav-btn" id="nav-vistorias" onclick="navTo('vistorias')">📋 Vistorias</button>
     <button class="nav-btn" id="nav-recarga" onclick="navTo('recarga')">⚡ Recarga</button>
     <button class="nav-btn" id="nav-gestao" onclick="navTo('gestao')">⚙ Gestão ▾</button>
   </div>
-  <!-- nav-vistorias mantido fora da navbar para compatibilidade com applyModulos -->
-  <button id="nav-vistorias" style="display:none"></button>
   <!-- BUSCA RÁPIDA -->
   <div class="busca-bar" id="busca-bar">
     <input class="fi" id="busca-input" placeholder="Buscar placa, apto, hóspede, modelo..." oninput="onBuscaInput(this.value)" autocomplete="off" style="margin:0;flex:1">
@@ -434,20 +392,6 @@ html.font-large{zoom:1.13}
     <div class="painel-wrap" id="painel-wrap" style="display:none"></div>
     <div class="painel-wrap" id="recarga-wrap" style="display:none;padding:10px"></div>
     <div class="painel-wrap" id="vistorias-wrap" style="display:none;padding:10px"></div>
-</div>
-<div id="nci-overlay">
-  <div class="nci-hdr">
-    <button id="nci-bk" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--cp);padding:0 8px 0 0;line-height:1">←</button>
-    <div class="nci-hdr-title" id="nci-hdr-txt">Novo Check-in</div>
-    <div class="nci-steps">
-      <div class="nci-dot" id="nci-d1"></div>
-      <div class="nci-dot" id="nci-d2"></div>
-      <div class="nci-dot" id="nci-d3"></div>
-      <div class="nci-dot" id="nci-d4"></div>
-    </div>
-  </div>
-  <div class="nci-body" id="nci-body"></div>
-  <div class="nci-ftr" id="nci-ftr"></div>
 </div>
 <div class="ovbg" id="ov"><div class="modal" id="mc"></div></div>
 
@@ -1561,123 +1505,9 @@ function perguntarHMerge(id, apt, model, color, plate, guest, obs, usuario){
 
 function clkV(id){
   if(!S[id]) return;
-  if(dragState) return;
+  if(dragState) return; // em drag, ignora cliques
   cur=id;
-  if(S[id].status==='free'){
-    _clkVDesignar(id);
-  } else {
-    showMenu(id);
-  }
-}
-
-let _clkVUsuario = null;
-
-function _clkVDesignar(id){
-  confirmarUsuario('designando a vaga '+id, function(usuario){
-    _clkVUsuario=usuario;
-    _clkVPedirApt(id, usuario);
-  });
-}
-
-function _clkVPedirApt(id, usuario){
-  const mc=document.getElementById('mc');
-  const uNome=usuario?.nome||'';
-  mc.innerHTML=`
-    <div class="mt" style="display:flex;align-items:center;gap:6px">
-      <span style="flex:1">🅿 Vaga ${id}</span>
-      ${uNome?`<span style="font-size:11px;color:#888;font-weight:400">${uNome}</span>`:''}
-    </div>
-    <label class="fl">Apartamento <span class="req">*</span></label>
-    <input class="fi" id="cv-apt" type="text" inputmode="numeric" placeholder="Ex: 301" autocomplete="off">
-    <div class="b2">
-      <button class="bcx" onclick="closeOv()">Cancelar</button>
-      <button class="bsv" id="cv-btn">Verificar →</button>
-    </div>`;
-  document.getElementById('ov').classList.add('on');
-  setTimeout(()=>document.getElementById('cv-apt')?.focus(), 80);
-  document.getElementById('cv-apt').addEventListener('keydown', e=>{ if(e.key==='Enter') document.getElementById('cv-btn')?.click(); });
-  document.getElementById('cv-btn').onclick=function(){
-    const apt=(document.getElementById('cv-apt')?.value||'').trim();
-    if(!apt){ const e=document.getElementById('cv-apt'); e.classList.add('err'); e.focus(); e.addEventListener('input',()=>e.classList.remove('err'),{once:true}); return; }
-    _clkVRotear(id, apt, usuario);
-  };
-}
-
-function _clkVRotear(id, apt, usuario){
-  const mc=document.getElementById('mc');
-
-  if(PASSEIO[apt]){
-    const dp=PASSEIO[apt];
-    const info=[dp.model,dp.color,dp.plate].filter(Boolean).join(' · ');
-    mc.innerHTML=`
-      <div class="mt">🚗 Carro retornando?</div>
-      <div class="warn-box">Apt. ${apt} está na lista de passeio${info?':<br><strong>'+info+'</strong>':'.'}
-      <br><br>Este carro está voltando do passeio?</div>
-      <div class="ag">
-        <button class="bsv" id="cv-ret-sim">✓ Sim, está voltando</button>
-        <button class="bcx" id="cv-ret-nao">Corrigir apartamento</button>
-        <button class="bcx" onclick="closeOv()">Cancelar</button>
-      </div>`;
-    document.getElementById('cv-ret-sim').onclick=function(){
-      const dd=PASSEIO[apt];
-      delete PASSEIO[apt];
-      const keyP='p_'+apt, keyV='v_'+id;
-      if(ANEXOS[keyP]&&ANEXOS[keyP].length){ ANEXOS[keyV]=[...ANEXOS[keyP]]; delete ANEXOS[keyP]; saveAnexos(); }
-      saveV(id,apt,dd.model,dd.color,dd.plate,dd.guest,dd.obs||'',false,usuario);
-      closeOv();
-    };
-    document.getElementById('cv-ret-nao').onclick=function(){
-      _clkVPedirApt(id,usuario);
-      setTimeout(()=>{const e=document.getElementById('cv-apt');if(e){e.value='';e.focus();}},80);
-    };
-    return;
-  }
-
-  const pend=typeof getPendentePorApt==='function'?getPendentePorApt(apt):null;
-  if(pend){
-    const info=[pend.model,pend.color,pend.plate].filter(Boolean).join(' · ')||'Sem detalhes';
-    const hrChk=pend.ts_inicio?new Date(pend.ts_inicio).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}):'—';
-    mc.innerHTML=`
-      <div class="mt">Check-in pendente — Vaga ${id}</div>
-      <div style="background:#EEF6FF;border:1px solid #378ADD;border-radius:9px;padding:10px 12px;margin-bottom:10px">
-        <div style="font-size:13px;font-weight:700">${pend.gs} · Apt. ${pend.apt}</div>
-        <div style="font-size:12px;color:#555;margin-top:2px">${info}</div>
-        <div style="font-size:11px;color:#888;margin-top:2px">Check-in hoje às ${hrChk} · ${pend.usuario||'—'}</div>
-      </div>
-      <div class="ms">Confirma designar este carro para a vaga <strong>${id}</strong>?</div>
-      <div class="ag">
-        <button class="bsv" id="cv-desig-sim">✓ Designar vaga ${id}</button>
-        <button class="bcx" id="cv-desig-nao">Corrigir apartamento</button>
-        <button class="bcx" onclick="closeOv()">Cancelar</button>
-      </div>`;
-    document.getElementById('cv-desig-sim').onclick=function(){
-      closeOv();
-      _aplicarDesignacao(id,pend.id,usuario);
-    };
-    document.getElementById('cv-desig-nao').onclick=function(){
-      _clkVPedirApt(id,usuario);
-      setTimeout(()=>{const e=document.getElementById('cv-apt');if(e){e.value='';e.focus();}},80);
-    };
-    return;
-  }
-
-  mc.innerHTML=`
-    <div class="mt">Apt. ${apt}</div>
-    <div class="warn-box">Apt. ${apt} não tem check-in registrado.<br><br>Deseja iniciar um novo check-in?</div>
-    <div class="ag">
-      <button class="bsv" id="cv-novo-sim">＋ Iniciar check-in</button>
-      <button class="bcx" id="cv-novo-nao">Corrigir apartamento</button>
-      <button class="bcx" onclick="closeOv()">Cancelar</button>
-    </div>`;
-  document.getElementById('cv-novo-sim').onclick=function(){
-    closeOv();
-    _nciD={usuario,apt,model:'',color:'',plate:'',guest:'',obs:'',size:'small',gs:nextNumHospedagem(),danos:[],com_avaria:false,assinatura:null,ts_inicio:Date.now(),fotos:[]};
-    _nciAbrir(2);
-  };
-  document.getElementById('cv-novo-nao').onclick=function(){
-    _clkVPedirApt(id,usuario);
-    setTimeout(()=>{const e=document.getElementById('cv-apt');if(e){e.value='';e.focus();}},80);
-  };
+  S[id].status==='free' ? showOcc(id) : showMenu(id);
 }
 
 function showOcc(id){
@@ -1773,31 +1603,6 @@ function showOcc(id){
         });
       };
       document.getElementById('f-nao').onclick=function(){
-        showOcc(cur);
-        setTimeout(()=>{const e=document.getElementById('f-apt');if(e){e.value='';e.focus();}},80);
-      };
-    } else if(typeof getPendentePorApt==='function' && getPendentePorApt(apt)){
-      const p=getPendentePorApt(apt);
-      const info=[p.model,p.color,p.plate].filter(Boolean).join(' · ')||'Sem detalhes';
-      mc.innerHTML=`
-        <div class="mt">Check-in pendente</div>
-        <div style="background:#EEF6FF;border:1px solid #378ADD;border-radius:8px;padding:9px 12px;font-size:12px;margin-bottom:10px">
-          <strong>${p.gs}</strong> · Apt. ${p.apt}${p.guest?' · '+p.guest:''}<br>
-          <span style="color:#888;font-size:11px">${info}</span>
-        </div>
-        <div class="ms">Apt. ${apt} tem check-in pendente. Designar esta vaga <strong>${cur}</strong>?</div>
-        <div class="ag">
-          <button class="bsv" id="f-desig-sim">✓ Designar vaga ${cur}</button>
-          <button class="bcx" id="f-desig-nao">Novo check-in (outro apto)</button>
-          <button class="bcx" onclick="closeOv()">Cancelar</button>
-        </div>`;
-      document.getElementById('f-desig-sim').onclick=function(){
-        confirmarUsuario('designando vaga '+cur,function(usuario){
-          _aplicarDesignacao(cur,p.id,usuario);
-          closeOv();
-        });
-      };
-      document.getElementById('f-desig-nao').onclick=function(){
         showOcc(cur);
         setTimeout(()=>{const e=document.getElementById('f-apt');if(e){e.value='';e.focus();}},80);
       };
@@ -2953,224 +2758,88 @@ function navTo(v){
   if(v==='mapa') setTimeout(positionPilares,100);
   fecharBusca();
 }
-function irParaVistorias(){ navTo('vistorias'); }
 
 function renderPainelDia(){
   const pw=document.getElementById('painel-wrap'); if(!pw) return;
   const now=new Date();
   const startDay=new Date(now.getFullYear(),now.getMonth(),now.getDate()).getTime();
 
-  // ── dados ──────────────────────────────────────────────────────────────
+  // Coleta eventos de hoje
   const allEvts=[];
   Object.entries(HISTORICO).forEach(([apt,evts])=>evts.forEach(ev=>allEvts.push({apt,...ev})));
   allEvts.sort((a,b)=>b.ts-a.ts);
-  const hoje=allEvts.filter(e=>e.ts>=startDay);
-  const movHoje=hoje.filter(e=>['checkin','checkout','saida_passeio','retorno_passeio'].includes(e.tipo));
 
-  let occ=0,free=0,tot=0,obOcc=0;
-  Object.entries(S).forEach(([,d])=>{
+  const hoje=allEvts.filter(e=>e.ts>=startDay);
+  const checkinsH=hoje.filter(e=>e.tipo==='checkin');
+  const checkoutsH=hoje.filter(e=>e.tipo==='checkout');
+  const last10=allEvts.slice(0,10);
+
+  // Ocupação atual
+  let occ=0,free=0,obOcc=0,obFree=0;
+  Object.entries(S).forEach(([id,d])=>{
     if(d.mergedSlave) return;
-    if(d.overbook){ if(d.status==='occupied') obOcc++; return; }
-    tot++;
-    d.status==='occupied'?occ++:free++;
+    if(d.overbook){ d.status==='occupied'?obOcc++:obFree++; }
+    else { d.status==='occupied'?occ++:free++; }
   });
   const out=Object.keys(PASSEIO).length;
-  const pct=tot>0?Math.round((occ+out)/tot*100):0;
 
-  const pendentesNCI=Object.values(CHECKINS_PENDENTES||{});
+  // Staff no plantão
   const noExp=USUARIOS.filter(u=>estaNoExpediente(u));
   const turnoAtual=getTurnoAtual();
 
-  // hospedagens ativas (sem checkout)
-  const hospsAtivas=Object.values(HOSPEDAGENS).filter(h=>!h.checkout_ts);
-
-  // recargas ativas
-  const recAtivas=MODULOS.recarga?Object.values(RECARGAS||{}).filter(r=>r&&r.ativo):[];
-  const filaRec=MODULOS.recarga?(FILA_RECARGA||[]):[];
-
-  // vistorias pendentes
-  const vstPend=MODULOS.vistorias?Object.values(VISTORIAS||{}).filter(v=>!v.ts_assinada):[];
-
-  // backup status
-  const lastBkp=DRIVE_STATUS?.ultimo_backup;
-
-  const tLabel={checkin:'Check-in',saida_passeio:'Saída Passeio',retorno_passeio:'Retorno',checkout:'Check-out',edicao:'Edição',movimentacao_vaga:'Muda Vaga',tornar_grande:'Grande',tornar_pequeno:'Pequeno',merge_lateral:'Merge',desfaz_merge_lateral:'Desfaz Merge'};
+  const tLabel={checkin:'Check-in',saida_passeio:'Saída Passeio',retorno_passeio:'Retorno',checkout:'Check-out',edicao:'Edição',movimentacao_vaga:'Mudança de Vaga',tornar_grande:'Carro Grande',tornar_pequeno:'Carro Pequeno',merge_lateral:'Mesclagem Lateral',desfaz_merge_lateral:'Merge Desfeito'};
   const tColor={checkin:'#0F6E56',saida_passeio:'#854F0B',retorno_passeio:'#185FA5',checkout:'#A32D2D',edicao:'#555',movimentacao_vaga:'#5C35B0',tornar_grande:'#185FA5',tornar_pequeno:'#0F6E56',merge_lateral:'#854F0B',desfaz_merge_lateral:'#888'};
 
-  function fmtHr(ts){ if(!ts) return '—'; const d=new Date(ts); return d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}); }
-  function fmtDataCurta(ts){ if(!ts) return '—'; const d=new Date(ts); return d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'}); }
-
-  // ── seção 5 — últimas 3 movimentações do dia ───────────────────────────
-  const mov3=movHoje.slice(0,3);
-  const movMais=movHoje.length>3;
-
-  // ── seção 4 — hospedados (sem data prevista; listar ativos) ─────────────
-  const hospsVer=hospsAtivas.slice(0,3);
-  const hospsMais=hospsAtivas.length>3;
-
   pw.innerHTML=`
-
-  <!-- SEÇ1: OCUPAÇÃO ATUAL -->
-  <div class="painel-sec" style="margin-bottom:10px">
-    <div class="painel-sec-title">🏢 Garagem agora — ${now.toLocaleDateString('pt-BR',{weekday:'short',day:'numeric',month:'short'})}</div>
-    <div class="painel-stat-row" style="gap:6px">
-      <div class="painel-stat-card" style="background:#EEF6FF;border:1.5px solid #378ADD;flex:1.3">
-        <div class="painel-stat-val" style="color:#185FA5">${occ+out}</div>
-        <div class="painel-stat-lbl" style="color:#185FA5">Na garagem</div>
+    <div class="painel-sec">
+      <div class="painel-sec-title">📊 Hoje — ${now.toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long'})}</div>
+      <div class="painel-stat-row">
+        <div class="painel-stat-card"><div class="painel-stat-val" style="color:#0F6E56">${checkinsH.length}</div><div class="painel-stat-lbl">Check-ins hoje</div></div>
+        <div class="painel-stat-card"><div class="painel-stat-val" style="color:#A32D2D">${checkoutsH.length}</div><div class="painel-stat-lbl">Check-outs hoje</div></div>
+        <div class="painel-stat-card"><div class="painel-stat-val" style="color:#185FA5">${occ}</div><div class="painel-stat-lbl">Ocupadas</div></div>
+        <div class="painel-stat-card"><div class="painel-stat-val" style="color:#0F6E56">${free}</div><div class="painel-stat-lbl">Livres</div></div>
       </div>
-      <div class="painel-stat-card" style="background:#FAEEDA;border:1.5px solid #E8C97A;flex:1">
-        <div class="painel-stat-val" style="color:#854F0B">${out}</div>
-        <div class="painel-stat-lbl" style="color:#854F0B">A passeio</div>
-      </div>
-      <div class="painel-stat-card" style="background:#EEF9F2;border:1.5px solid #b0dbc0;flex:1">
-        <div class="painel-stat-val" style="color:#0F6E56">${free}</div>
-        <div class="painel-stat-lbl" style="color:#0F6E56">Livres</div>
-      </div>
-      <div class="painel-stat-card" style="background:#f5f4f0;border:1.5px solid #ddd;flex:0.9">
-        <div class="painel-stat-val" style="color:#555">${pct}%</div>
-        <div class="painel-stat-lbl">Ocup.</div>
+      <div class="painel-stat-row">
+        <div class="painel-stat-card"><div class="painel-stat-val" style="color:#854F0B">${out}</div><div class="painel-stat-lbl">A passeio</div></div>
+        <div class="painel-stat-card"><div class="painel-stat-val" style="color:#A32D2D">${obOcc}</div><div class="painel-stat-lbl">OB ocupadas</div></div>
+        <div class="painel-stat-card" style="flex:2"><div class="painel-stat-val" style="color:#185FA5;font-size:14px">${turnoAtual||'—'}</div><div class="painel-stat-lbl">Turno atual</div></div>
       </div>
     </div>
-  </div>
 
-  <!-- SEÇ2: NOVO CHECK-IN -->
-  <div style="margin-bottom:12px">
-    <button onclick="novoCheckin()" style="width:100%;padding:13px;border:none;border-radius:10px;background:var(--cp);color:#fff;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;letter-spacing:.3px;display:flex;align-items:center;justify-content:center;gap:8px">
-      <span style="font-size:20px">＋</span> Novo Check-in
-    </button>
-  </div>
-
-  <!-- SEÇ3: AGUARDANDO VAGA -->
-  ${pendentesNCI.length>0?`
-  <div class="painel-sec">
-    <div class="painel-sec-title">🚗 Aguardando vaga (${pendentesNCI.length})</div>
-    ${pendentesNCI.map(p=>{
-      const hrChk=fmtHr(p.ts_inicio);
-      const info=[p.model,p.color].filter(Boolean).join(' · ')||'—';
-      return `<div class="nci-pending-card" style="display:flex;align-items:center;gap:8px;cursor:pointer" onclick="navTo('mapa');_nciHighlightLivres();showToast('Toque em vaga livre — Apt. ${p.apt}',3500)">
-        <div style="flex:1">
-          <div class="nci-pending-card-hd">${p.gs} · Apt. ${p.apt}${p.guest?' · '+p.guest:''}</div>
-          <div class="nci-pending-card-sub">${info} · check-in ${hrChk}</div>
-        </div>
-        <button onclick="event.stopPropagation();navTo('mapa');_nciHighlightLivres()" style="font-size:11px;padding:4px 10px;border:1.5px solid var(--cp);border-radius:6px;background:var(--cp-lt);color:var(--cp);cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0">🗺 Vagas</button>
-      </div>`;
-    }).join('')}
-  </div>`:''}
-
-  <!-- SEÇ4: HOSPEDADOS HOJE (CARROS ATIVOS) -->
-  <div class="painel-sec" id="pd-sec-hospedados">
-    <div class="painel-sec-title" style="display:flex;align-items:center;gap:4px">
-      <span style="flex:1">🏨 Hospedados (${hospsAtivas.length})</span>
-      ${hospsMais?`<button onclick="_painelToggleHosps()" style="font-size:10px;color:var(--cp);background:none;border:none;cursor:pointer;font-family:inherit" id="pd-hosps-btn">ver mais ▾</button>`:''}
-    </div>
-    ${hospsAtivas.length===0?'<span style="font-size:12px;color:#bbb">Nenhuma hospedagem ativa</span>':''}
-    ${hospsVer.map(h=>{
-      const vagaAtual=Object.entries(S).find(([,d])=>d.hospedagem===h.numero&&d.status==='occupied')?.[0]||'—';
-      return `<div class="painel-event-row" style="cursor:pointer" onclick="navTo('mapa');executarBusca('${h.numero}')">
-        <span class="painel-badge" style="background:var(--cp)">${h.numero}</span>
-        <div style="flex:1;min-width:0">
-          <div style="font-weight:700">Apt. ${h.apt}${h.guest?' · '+h.guest:''}</div>
-          <div style="color:#888;font-size:10px">${[h.model,h.color,h.plate].filter(Boolean).join(' · ')||'—'} · Vaga ${vagaAtual} · CI ${fmtDataCurta(h.checkin_ts)}</div>
-        </div>
-      </div>`;
-    }).join('')}
-    <div id="pd-hosps-extra" style="display:none">
-      ${hospsAtivas.slice(3).map(h=>{
-        const vagaAtual=Object.entries(S).find(([,d])=>d.hospedagem===h.numero&&d.status==='occupied')?.[0]||'—';
-        return `<div class="painel-event-row" style="cursor:pointer" onclick="navTo('mapa');executarBusca('${h.numero}')">
-          <span class="painel-badge" style="background:var(--cp)">${h.numero}</span>
+    <div class="painel-sec">
+      <div class="painel-sec-title">⏱ Últimas movimentações</div>
+      ${last10.length===0?'<span style="font-size:12px;color:#bbb">Nenhuma movimentação registrada</span>':
+        last10.map(ev=>`<div class="painel-event-row">
+          <span class="painel-badge" style="background:${tColor[ev.tipo]||'#888'}">${tLabel[ev.tipo]||ev.tipo}</span>
           <div style="flex:1;min-width:0">
-            <div style="font-weight:700">Apt. ${h.apt}${h.guest?' · '+h.guest:''}</div>
-            <div style="color:#888;font-size:10px">${[h.model,h.color,h.plate].filter(Boolean).join(' · ')||'—'} · Vaga ${vagaAtual}</div>
+            <div style="font-weight:700">Apt. ${ev.apt}${ev.hospedagem?' · '+ev.hospedagem:''}</div>
+            <div style="color:#888;font-size:10px">${fmtDt(ev.ts)}${ev.usuario?' · '+ev.usuario:''}</div>
           </div>
-        </div>`;
-      }).join('')}
+        </div>`).join('')}
     </div>
-  </div>
 
-  <!-- SEÇ5: MOVIMENTAÇÕES RECENTES -->
-  <div class="painel-sec">
-    <div class="painel-sec-title" style="display:flex;align-items:center;gap:4px">
-      <span style="flex:1">⏱ Movimentações hoje</span>
-      ${movMais?`<button onclick="_painelToggleMov()" style="font-size:10px;color:var(--cp);background:none;border:none;cursor:pointer;font-family:inherit" id="pd-mov-btn">ver mais ▾</button>`:''}
+    <div class="painel-sec">
+      <div class="painel-sec-title">👥 Plantão agora${turnoAtual?' — '+turnoAtual:''}</div>
+      ${(noExp.length===0&&PLANTAO_MANUAL.length===0)
+        ?'<span style="font-size:12px;color:#bbb">Nenhum usuário no plantão</span>'
+        :noExp.map(u=>`<div class="painel-staff-item">
+          <span style="font-size:18px">👤</span>
+          <div><div style="font-weight:700">${u.nome}</div><div style="color:#888;font-size:10px">${u.cargo}${u.horaInicio?' · '+u.horaInicio+'–'+u.horaFim:''}</div></div>
+        </div>`).join('')+PLANTAO_MANUAL.map(e=>`<div class="painel-staff-item">
+          <span style="font-size:18px">👤</span>
+          <div><div style="font-weight:700">${e.nome}</div>${e.obs?`<div style="color:#888;font-size:10px">${e.obs}</div>`:''}</div>
+        </div>`).join('')}
     </div>
-    ${mov3.length===0?'<span style="font-size:12px;color:#bbb">Nenhuma movimentação hoje</span>':''}
-    ${mov3.map(ev=>`<div class="painel-event-row">
-      <span class="painel-badge" style="background:${tColor[ev.tipo]||'#888'}">${tLabel[ev.tipo]||ev.tipo}</span>
-      <div style="flex:1;min-width:0">
-        <div style="font-weight:700">Apt. ${ev.apt}${ev.hospedagem?' · '+ev.hospedagem:''}</div>
-        <div style="color:#888;font-size:10px">${fmtHr(ev.ts)}${ev.usuario?' · '+ev.usuario:''}</div>
-      </div>
-    </div>`).join('')}
-    <div id="pd-mov-extra" style="display:none">
-      ${movHoje.slice(3).map(ev=>`<div class="painel-event-row">
-        <span class="painel-badge" style="background:${tColor[ev.tipo]||'#888'}">${tLabel[ev.tipo]||ev.tipo}</span>
-        <div style="flex:1;min-width:0">
-          <div style="font-weight:700">Apt. ${ev.apt}${ev.hospedagem?' · '+ev.hospedagem:''}</div>
-          <div style="color:#888;font-size:10px">${fmtHr(ev.ts)}${ev.usuario?' · '+ev.usuario:''}</div>
-        </div>
-      </div>`).join('')}
-    </div>
-  </div>
 
-  <!-- SEÇ6: RECARGA (só se módulo ativo) -->
-  ${MODULOS.recarga&&(recAtivas.length>0||filaRec.length>0)?`
-  <div class="painel-sec" style="cursor:pointer" onclick="navTo('recarga')">
-    <div class="painel-sec-title">⚡ Recarga — ${recAtivas.length} carregando${filaRec.length>0?' · '+filaRec.length+' na fila':''}</div>
-    ${recAtivas.slice(0,2).map(r=>{
-      const elapsed=r.inicio_ts?Math.floor((Date.now()-r.inicio_ts)/60000):0;
-      return `<div style="font-size:12px;display:flex;align-items:center;gap:6px;padding:4px 0;border-bottom:1px solid #f0f0ec">
-        <span style="color:#27AE60;font-size:14px">⚡</span>
-        <div><div style="font-weight:700">Apt. ${r.apt||'—'}</div><div style="font-size:10px;color:#888">${elapsed}min · ${r.usuario||'—'}</div></div>
-      </div>`;
-    }).join('')}
-    ${filaRec.length>0?`<div style="font-size:11px;color:#854F0B;margin-top:4px">Fila: ${filaRec.map(f=>'Apt.'+f.apt).join(', ')}</div>`:''}
-  </div>`:''}
-
-  <!-- SEÇ7: VISTORIA PENDENTE (só se módulo ativo) -->
-  ${MODULOS.vistorias&&vstPend.length>0?`
-  <div class="painel-sec" style="cursor:pointer" onclick="navTo('vistorias')" >
-    <div class="painel-sec-title" style="color:#A32D2D">❗ Vistorias sem assinatura (${vstPend.length})</div>
-    ${vstPend.slice(0,2).map(v=>`<div style="font-size:12px;display:flex;align-items:center;gap:6px;padding:4px 0;border-bottom:1px solid #f0f0ec">
-      <span style="color:#A32D2D">❗</span>
-      <div><div style="font-weight:700">${v.numero}${v.apt?' · Apt.'+v.apt:''}</div><div style="font-size:10px;color:#888">${v.modelo||'—'} · ${v.placa||'—'}</div></div>
-    </div>`).join('')}
-    ${vstPend.length>2?`<div style="font-size:11px;color:#A32D2D;margin-top:4px">+${vstPend.length-2} outras → toque para ver</div>`:''}
-  </div>`:''}
-
-  <!-- SEÇ8: PLANTÃO + BACKUP (rodapé) -->
-  <div class="painel-sec" style="border-top:1px solid #eee;padding-top:10px;margin-top:4px">
-    <div style="display:flex;align-items:flex-start;gap:8px;flex-wrap:wrap">
-      <div style="flex:1;min-width:120px">
-        <div style="font-size:10px;font-weight:700;color:#888;text-transform:uppercase;margin-bottom:4px">👥 Plantão${turnoAtual?' — '+turnoAtual:''}</div>
-        ${(noExp.length===0&&(!PLANTAO_MANUAL||PLANTAO_MANUAL.length===0))
-          ?'<span style="font-size:11px;color:#bbb">Nenhum no plantão</span>'
-          :[...noExp.map(u=>`<div style="font-size:12px;font-weight:700">${u.nome} <span style="font-weight:400;color:#888">${u.cargo||''}</span></div>`),
-            ...(PLANTAO_MANUAL||[]).map(e=>`<div style="font-size:12px;font-weight:700">${e.nome}</div>`)].join('')}
-      </div>
-      <div style="flex:1;min-width:100px;text-align:right">
-        <div style="font-size:10px;font-weight:700;color:#888;text-transform:uppercase;margin-bottom:4px">☁️ Backup</div>
-        <div style="font-size:11px;color:${lastBkp?'#0F6E56':'#A32D2D'};font-weight:700">${lastBkp?'Hoje às '+fmtHr(lastBkp):'Sem backup'}</div>
-      </div>
-    </div>
-  </div>`;
-}
-
-function _painelToggleHosps(){
-  const ex=document.getElementById('pd-hosps-extra');
-  const btn=document.getElementById('pd-hosps-btn');
-  if(!ex||!btn) return;
-  const open=ex.style.display!=='none';
-  ex.style.display=open?'none':'';
-  btn.textContent=open?'ver mais ▾':'ocultar ▴';
-}
-function _painelToggleMov(){
-  const ex=document.getElementById('pd-mov-extra');
-  const btn=document.getElementById('pd-mov-btn');
-  if(!ex||!btn) return;
-  const open=ex.style.display!=='none';
-  ex.style.display=open?'none':'';
-  btn.textContent=open?'ver mais ▾':'ocultar ▴';
+    <div class="painel-sec">
+      <div class="painel-sec-title">✅ Check-ins hoje (${checkinsH.length})</div>
+      ${checkinsH.length===0?'<span style="font-size:12px;color:#bbb">Nenhum check-in hoje</span>':
+        checkinsH.map(ev=>`<div class="painel-event-row">
+          <span class="painel-badge" style="background:#0F6E56">CI</span>
+          <div style="flex:1"><div style="font-weight:700">Apt. ${ev.apt}${ev.hospedagem?' · '+ev.hospedagem:''}</div>
+          <div style="color:#888;font-size:10px">${fmtDt(ev.ts)}${ev.usuario?' · '+ev.usuario:''}</div></div>
+        </div>`).join('')}
+    </div>`;
 }
 
 // ── GESTÃO COM PIN ────────────────────────────────────────────────────────
@@ -3190,7 +2859,6 @@ function _mostrarMenuGestao(){
     <div class="gestao-menu-item" onclick="closeOv();showModalTurnos()">🕒 <span>Cadastro de turnos</span></div>
     <div class="gestao-menu-sep">Relatórios e análises</div>
     <div class="gestao-menu-item" onclick="closeOv();showRelatorios()">📊 <span>Relatórios</span></div>
-    ${MODULOS.vistorias?`<div class="gestao-menu-item" onclick="closeOv();irParaVistorias()">📋 <span>Vistorias</span></div>`:''}
     <div class="gestao-menu-sep">Configurações</div>
     <div class="gestao-menu-item" onclick="closeOv();showConfiguracoesSistema()">⚙ <span>Configurações do Sistema</span></div>
     <div class="gestao-menu-item" onclick="closeOv();showConexoes()">🔗 <span>Backup e Conexões</span></div>
@@ -3351,10 +3019,12 @@ function loadModulos(){ try{const m=localStorage.getItem(MODULOS_LS);if(m) MODUL
 function saveModulos(){ try{localStorage.setItem(MODULOS_LS,JSON.stringify(MODULOS));}catch(e){} }
 function applyModulos(){
   const btnR=document.getElementById('nav-recarga');
+  const btnV=document.getElementById('nav-vistorias');
   if(btnR) btnR.style.display=MODULOS.recarga?'':'none';
-  // Se estiver na tela desativada, volta para painel
-  if(!MODULOS.recarga && document.getElementById('recarga-wrap')?.style?.display!=='none') navTo('painel');
-  if(!MODULOS.vistorias && document.getElementById('vistorias-wrap')?.style?.display!=='none') navTo('painel');
+  if(btnV) btnV.style.display=MODULOS.vistorias?'':'none';
+  // Se estiver na tela desativada, volta para o mapa
+  if(!MODULOS.recarga && document.getElementById('recarga-wrap')?.style?.display!=='none') navTo('mapa');
+  if(!MODULOS.vistorias && document.getElementById('vistorias-wrap')?.style?.display!=='none') navTo('mapa');
   // Atualiza ícones de recarga nas vagas
   Object.keys(VAGAS_RECARGA).forEach(id=>refRecarga(id));
 }
@@ -3404,89 +3074,47 @@ const VST_VIEWS_META=[
 // ── Tela principal de vistorias ───────────────────────────────────────────
 function renderTelaVistorias(){
   const vw=document.getElementById('vistorias-wrap'); if(!vw) return;
-
-  // Preserve filter state between renders
+  const list=Object.values(VISTORIAS).sort((a,b)=>b.ts_criada-a.ts_criada);
   const q=(document.getElementById('vst-search-inp')?.value||'').trim().toLowerCase();
-  const stFilt=document.getElementById('vst-st-filt')?.value||'todas';
-  const deVal=document.getElementById('vst-de')?.value||'';
-  const ateVal=document.getElementById('vst-ate')?.value||'';
-
-  let list=Object.values(VISTORIAS).sort((a,b)=>b.ts_criada-a.ts_criada);
-
-  // Text search
-  if(q) list=list.filter(v=>
+  const filtered=q?list.filter(v=>
     (v.apt||'').toLowerCase().includes(q)||
     (v.numero||'').toLowerCase().includes(q)||
     (v.hospede||'').toLowerCase().includes(q)||
     (v.modelo||'').toLowerCase().includes(q)||
-    (v.placa||'').toLowerCase().includes(q)||
-    new Date(v.ts_criada).toLocaleDateString('pt-BR').includes(q)
-  );
-
-  // Status filter
-  if(stFilt==='assinada') list=list.filter(v=>!!v.ts_assinada);
-  else if(stFilt==='sem') list=list.filter(v=>!v.ts_assinada);
-
-  // Date range filter
-  if(deVal){ const t=new Date(deVal+'T00:00:00').getTime(); list=list.filter(v=>v.ts_criada>=t); }
-  if(ateVal){ const t=new Date(ateVal+'T23:59:59').getTime(); list=list.filter(v=>v.ts_criada<=t); }
-
-  const lixQtd=Object.keys(VISTORIAS_LIXEIRA).length;
+    (v.placa||'').toLowerCase().includes(q)
+  ):list;
 
   vw.innerHTML=`
-    <div style="padding:10px 0 4px">
-      <!-- Linha 1: busca + botões -->
-      <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
-        <input id="vst-search-inp" type="text" placeholder="Buscar apt, VIST, placa, hóspede..." value="${q}" oninput="renderTelaVistorias()" style="flex:1;padding:7px 10px;border:1.5px solid #ddd;border-radius:8px;font-size:13px;outline:none;min-width:0">
-        ${lixQtd>0?`<button onclick="showLixeiraVistorias()" style="font-size:12px;padding:7px 10px;border:1.5px solid #ddd;border-radius:8px;background:#FFF5F5;color:#A32D2D;cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0">🗑 ${lixQtd}</button>`:''}
-        <button class="bsv" style="padding:7px 12px;font-size:13px;white-space:nowrap;flex-shrink:0" onclick="novaVistoria()">＋ Nova</button>
-      </div>
-      <!-- Linha 2: filtros -->
-      <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
-        <select id="vst-st-filt" onchange="renderTelaVistorias()" style="padding:5px 8px;border:1.5px solid #ddd;border-radius:8px;font-size:12px;font-family:inherit;background:#fff;cursor:pointer;flex-shrink:0">
-          <option value="todas"${stFilt==='todas'?' selected':''}>Todas</option>
-          <option value="assinada"${stFilt==='assinada'?' selected':''}>✅ Assinada</option>
-          <option value="sem"${stFilt==='sem'?' selected':''}>❗ Sem assinatura</option>
-        </select>
-        <div style="display:flex;align-items:center;gap:4px;flex-shrink:0">
-          <span style="font-size:11px;color:#888">De</span>
-          <input type="date" id="vst-de" value="${deVal}" onchange="renderTelaVistorias()" style="padding:4px 6px;border:1.5px solid #ddd;border-radius:8px;font-size:12px;font-family:inherit">
-        </div>
-        <div style="display:flex;align-items:center;gap:4px;flex-shrink:0">
-          <span style="font-size:11px;color:#888">Até</span>
-          <input type="date" id="vst-ate" value="${ateVal}" onchange="renderTelaVistorias()" style="padding:4px 6px;border:1.5px solid #ddd;border-radius:8px;font-size:12px;font-family:inherit">
-        </div>
-        ${(deVal||ateVal)?`<button onclick="document.getElementById('vst-de').value='';document.getElementById('vst-ate').value='';renderTelaVistorias()" style="font-size:11px;padding:4px 8px;border:1px solid #ddd;border-radius:6px;background:#f5f5f5;cursor:pointer;font-family:inherit;flex-shrink:0">✕ Limpar</button>`:''}
-        <span style="margin-left:auto;font-size:11px;color:#aaa;flex-shrink:0">${list.length} resultado${list.length!==1?'s':''}</span>
-      </div>
+    <div style="padding:10px 0 6px;display:flex;gap:8px;align-items:center">
+      <input id="vst-search-inp" type="text" placeholder="Buscar vistoria..." value="${q}" oninput="renderTelaVistorias()" style="flex:1;padding:7px 10px;border:1.5px solid #ddd;border-radius:8px;font-size:13px;outline:none">
+      ${Object.keys(VISTORIAS_LIXEIRA).length>0?`<button onclick="showLixeiraVistorias()" style="font-size:12px;padding:7px 10px;border:1.5px solid #ddd;border-radius:8px;background:#FFF5F5;color:#A32D2D;cursor:pointer;font-family:inherit;white-space:nowrap">🗑 ${Object.keys(VISTORIAS_LIXEIRA).length}</button>`:''}
+      <button class="bsv" style="padding:7px 12px;font-size:13px;white-space:nowrap" onclick="novaVistoria()">+ Nova</button>
     </div>
-    ${list.length===0?`<div style="text-align:center;padding:40px 20px;color:#aaa;font-size:13px">${q||stFilt!=='todas'||deVal||ateVal?'Nenhuma vistoria encontrada':'Nenhuma vistoria registrada ainda'}</div>`:''}
-    ${list.map(v=>{
+    ${filtered.length===0?`<div style="text-align:center;padding:40px 20px;color:#aaa;font-size:13px">${q?'Nenhuma vistoria encontrada':'Nenhuma vistoria registrada'}</div>`:''}
+    ${filtered.map(v=>{
       const assinada=!!v.ts_assinada;
       const vinculada=!!v.hospedagem;
       const nd=(v.danos||[]).length;
-      const hospStr=v.hospedagem?`<span style="font-size:11px;color:#888;font-weight:600">${v.hospedagem}</span> · `:'';
-      const stIcon=assinada?'✅':'❗';
-      const stLabel=assinada?'Assinada':'Sem assinatura';
-      const stBg=assinada?'#EEF9F2':'#FFF5F5';
-      const stClr=assinada?'#0F6E56':'#A32D2D';
-      const bdColor=assinada?'#b0dbc0':'#f0c0c0';
-      const dt=new Date(v.ts_criada).toLocaleDateString('pt-BR');
-      const hr=new Date(v.ts_criada).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
-      return `<div onclick="verVistoria('${v.id}')" style="background:#fff;border-radius:10px;border:1.5px solid ${bdColor};margin-bottom:8px;padding:10px 12px;cursor:pointer;transition:box-shadow .15s" onmousedown="this.style.boxShadow='0 0 0 2px var(--cp)'" onmouseup="this.style.boxShadow=''" ontouchstart="this.style.boxShadow='0 0 0 2px var(--cp)'" ontouchend="this.style.boxShadow=''">
+      const hospStr=v.hospedagem?`<span style="color:#888">${v.hospedagem}</span> · `:'';
+      const stIcon=vinculada&&assinada?'✅':vinculada?'⚠️':'○';
+      const stLabel=vinculada&&assinada?'Vinc.+Assinada':vinculada?'Vinculada':'Não vinculada';
+      const stBg=vinculada&&assinada?'#EEF9F2':vinculada?'#FFF9E6':'#F5F5F5';
+      const stClr=vinculada&&assinada?'#0F6E56':vinculada?'#8B6200':'#888';
+      const bdColor=vinculada&&assinada?'#b0dbc0':vinculada?'#e0b84a':'#ddd';
+      return `<div style="background:#fff;border-radius:10px;border:1.5px solid ${bdColor};margin-bottom:8px;padding:10px 12px">
         <div style="display:flex;align-items:center;gap:6px;margin-bottom:5px">
-          <span style="font-size:13px;font-weight:700;color:#222">${v.numero}</span>
-          <span style="font-size:10px;background:${stBg};color:${stClr};border-radius:10px;padding:1px 8px;font-weight:700">${stIcon} ${stLabel}</span>
+          <span style="font-size:13px;font-weight:700">${v.numero}</span>
+          <span style="font-size:10px;background:${stBg};color:${stClr};border-radius:10px;padding:1px 7px;font-weight:700">${stIcon} ${stLabel}</span>
           ${nd>0?`<span style="font-size:10px;background:#FFF2F2;color:#A32D2D;border-radius:10px;padding:1px 7px;font-weight:700">${nd} avaria${nd>1?'s':''}</span>`:''}
-          <span style="margin-left:auto;font-size:11px;color:#aaa;flex-shrink:0">${dt} ${hr}</span>
+          <span style="margin-left:auto;font-size:11px;color:#aaa">${new Date(v.ts_criada).toLocaleDateString('pt-BR')}</span>
         </div>
-        <div style="font-size:12px;color:#555;margin-bottom:8px">${hospStr}<strong>Apt. ${v.apt||'—'}</strong> · ${v.modelo||'—'} · ${v.cor||'—'}${v.placa?' · <span style="font-family:monospace">'+v.placa+'</span>':''}${v.hospede?' · '+v.hospede:''}</div>
-        <div style="display:flex;gap:6px;flex-wrap:wrap" onclick="event.stopPropagation()">
-          <button onclick="verVistoria('${v.id}')" style="font-size:11px;padding:4px 10px;border:1.5px solid #ccc;border-radius:6px;background:#fff;cursor:pointer;font-family:inherit">👁 Ver</button>
-          ${!assinada?`<button onclick="assinarVistoria('${v.id}')" style="font-size:11px;padding:4px 10px;border:1.5px solid #27AE60;border-radius:6px;background:#EEF9F2;color:#27AE60;cursor:pointer;font-weight:700;font-family:inherit">✍ Assinar</button>`:''}
-          <button onclick="editarVistoria('${v.id}')" style="font-size:11px;padding:4px 10px;border:1.5px solid #ccc;border-radius:6px;background:#fff;cursor:pointer;font-family:inherit">✏️ Editar</button>
-          <button onclick="gerarPDFVistoria('${v.id}')" style="font-size:11px;padding:4px 10px;border:1.5px solid var(--cp);border-radius:6px;background:var(--cp-lt);color:var(--cp);cursor:pointer;font-family:inherit">📤 PDF</button>
-          <button onclick="deletarVistoria('${v.id}')" style="font-size:11px;padding:4px 10px;border:1.5px solid #ddd;border-radius:6px;background:#fff;color:#A32D2D;cursor:pointer;font-family:inherit">🗑</button>
+        <div style="font-size:12px;color:#555;margin-bottom:7px">${hospStr}<strong>Apt. ${v.apt||'—'}</strong> · ${v.modelo||'—'} · ${v.cor||'—'}${v.placa?' · '+v.placa:''}</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <button onclick="verVistoria('${v.id}')" style="font-size:11px;padding:4px 10px;border:1.5px solid #ccc;border-radius:6px;background:#fff;cursor:pointer">👁 Ver</button>
+          ${!assinada?`<button onclick="assinarVistoria('${v.id}')" style="font-size:11px;padding:4px 10px;border:1.5px solid #27AE60;border-radius:6px;background:#EEF9F2;color:#27AE60;cursor:pointer;font-weight:700">✍ Assinar</button>`:''}
+          <button onclick="editarVistoria('${v.id}')" style="font-size:11px;padding:4px 10px;border:1.5px solid #ccc;border-radius:6px;background:#fff;cursor:pointer">✏️</button>
+          <button onclick="gerarPDFVistoria('${v.id}')" style="font-size:11px;padding:4px 10px;border:1.5px solid var(--cp);border-radius:6px;background:var(--cp-lt);color:var(--cp);cursor:pointer">📤 PDF</button>
+          <button onclick="deletarVistoria('${v.id}')" style="font-size:11px;padding:4px 10px;border:1.5px solid #ddd;border-radius:6px;background:#fff;color:#A32D2D;cursor:pointer">🗑</button>
         </div>
       </div>`;
     }).join('')}`;
@@ -4053,10 +3681,7 @@ function gerarPDFVistoria(id){
   </body></html>`;
   const d=new Date();
   const ds=String(d.getDate()).padStart(2,'0')+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getFullYear()).slice(-2);
-  const MESES_PT=['Janeiro','Fevereiro','Marco','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
-  const subpasta='Vistorias/'+MESES_PT[d.getMonth()]+' '+d.getFullYear()+'/';
-  const nomeArq=subpasta+`${v.apt||'000'}_${v.numero}_${ds}_Vistoria_GarageSpot`;
-  gerarECompartilharPDF(`Vistoria ${v.numero}`,html,nomeArq);
+  gerarECompartilharPDF(`Vistoria ${v.numero}`,html,`${v.numero}_Apt${v.apt}_${ds}_Vistoria_GarageSpot`);
 }
 
 // ── Ícone ❗ no mapa ────────────────────────────────────────────────────────
@@ -4081,413 +3706,6 @@ function refVistoria(id){
   iw.innerHTML=getVistoriaIconForApt(d.apt);
 }
 
-// ── NOVO CHECK-IN INTEGRADO (NCI) ─────────────────────────────────────────
-let CHECKINS_PENDENTES = {};
-const CHECKINS_PENDENTES_LS = 'garagespot_checkins_pendentes';
-const VISTORIA_RASCUNHO_LS = 'garagespot_vistoria_rascunho';
-let _nciD = null;
-let _nciStep = 0;
-
-function saveCheckinsPendentes(){
-  try{ localStorage.setItem(CHECKINS_PENDENTES_LS,JSON.stringify(CHECKINS_PENDENTES)); }catch(e){}
-}
-function loadCheckinsPendentes(){
-  try{ const d=localStorage.getItem(CHECKINS_PENDENTES_LS); if(d) CHECKINS_PENDENTES=JSON.parse(d)||{}; }catch(e){}
-}
-function getPendentePorApt(apt){
-  if(!apt) return null;
-  return Object.values(CHECKINS_PENDENTES).find(c=>c.apt===apt)||null;
-}
-
-async function _nciLockLandscape(){
-  try{
-    if(window.Capacitor?.Plugins?.ScreenOrientation){
-      await window.Capacitor.Plugins.ScreenOrientation.lock({orientation:'landscape'});
-    } else {
-      try{ await screen.orientation?.lock?.('landscape'); }catch(e){}
-    }
-  }catch(e){}
-}
-async function _nciUnlockOrientation(){
-  try{
-    if(window.Capacitor?.Plugins?.ScreenOrientation){
-      await window.Capacitor.Plugins.ScreenOrientation.unlock();
-    } else {
-      try{ screen.orientation?.unlock?.(); }catch(e){}
-    }
-  }catch(e){}
-}
-
-function _nciSalvarRascunho(){
-  if(!_nciD) return;
-  try{ localStorage.setItem(VISTORIA_RASCUNHO_LS,JSON.stringify({_type:'nci',..._nciD})); }catch(e){}
-}
-function _nciContinuarRascunho(){
-  try{
-    const dr=JSON.parse(localStorage.getItem(VISTORIA_RASCUNHO_LS)||'null');
-    if(!dr||dr._type!=='nci') return;
-    const {_type,...data}=dr;
-    _nciD={...data};
-    _nciAbrir(3);
-  }catch(e){}
-}
-function _nciDescartarRascunho(){
-  try{ localStorage.removeItem(VISTORIA_RASCUNHO_LS); }catch(e){}
-}
-
-function novoCheckin(){
-  try{
-    const dr=JSON.parse(localStorage.getItem(VISTORIA_RASCUNHO_LS)||'null');
-    if(dr&&dr._type==='nci'){
-      const mc=document.getElementById('mc');
-      mc.innerHTML=`
-        <div class="mt">Rascunho encontrado</div>
-        <div class="warn-box">Há um check-in em andamento para Apt. <strong>${dr.apt||'—'}</strong>. Deseja continuar?</div>
-        <div class="ag">
-          <button class="bsv" onclick="closeOv();_nciContinuarRascunho()">Continuar</button>
-          <button class="bcx" onclick="closeOv();_nciDescartarRascunho();novoCheckin()">Descartar e novo</button>
-          <button class="bcx" onclick="closeOv()">Cancelar</button>
-        </div>`;
-      document.getElementById('ov').classList.add('on');
-      return;
-    }
-  }catch(e){}
-  confirmarUsuario('iniciando novo check-in',function(usuario){
-    _nciD={usuario,apt:'',model:'',color:'',plate:'',guest:'',obs:'',size:'small',gs:'',danos:[],com_avaria:false,assinatura:null,ts_inicio:Date.now(),fotos:[]};
-    _nciAbrir(2);
-  });
-}
-
-function _nciAbrir(step){
-  _nciStep=step;
-  document.getElementById('nci-overlay').classList.add('on');
-  _nciRenderStep(step);
-}
-
-function _nciFechar(){
-  _nciUnlockOrientation();
-  document.getElementById('nci-overlay').classList.remove('on');
-  _nciD=null; _nciStep=0;
-}
-
-function _nciSetDots(active){
-  for(let i=1;i<=4;i++){
-    const el=document.getElementById('nci-d'+i);
-    if(!el) continue;
-    el.className='nci-dot'+(i<active?' done':i===active?' active':'');
-  }
-}
-
-function _nciRenderStep(step){
-  _nciStep=step;
-  const body=document.getElementById('nci-body');
-  const ftr=document.getElementById('nci-ftr');
-  const title=document.getElementById('nci-hdr-txt');
-  const bk=document.getElementById('nci-bk');
-  if(!body||!ftr||!title) return;
-  body.className='nci-body';
-  ftr.style.display='flex';
-  _nciSetDots(step-1);
-  switch(step){
-    case 2: _nciStep2(body,title,ftr,bk); break;
-    case 3: _nciStep3(body,title,ftr,bk); break;
-    case 4: _nciStep4(body,title,ftr,bk); break;
-    case 5: _nciStep5(body,title,ftr,bk); break;
-  }
-}
-
-function _nciStep2(body,title,ftr,bk){
-  title.textContent='Dados do Veículo';
-  ftr.innerHTML=`<button class="nci-bv" onclick="_nciFechar()">✕ Cancelar</button><button class="nci-bn" onclick="_nciNext2()">Próximo →</button>`;
-  bk.onclick=function(){ _nciFechar(); };
-  const d=_nciD;
-  body.innerHTML=`
-    <label class="nci-lbl">Apartamento <span style="color:#E24B4A">*</span></label>
-    <input class="nci-fi" id="nci-apt" type="text" inputmode="numeric" placeholder="Ex: 301" value="${d.apt||''}">
-    <label class="nci-lbl">Tamanho do veículo</label>
-    <div class="nci-sz-row">
-      <button class="nci-szb${(!d.size||d.size==='small')?' sel':''}" id="nci-sz-s" onclick="_nciSetSz('small')">🚗 Pequeno</button>
-      <button class="nci-szb${d.size==='large'?' sel':''}" id="nci-sz-l" onclick="_nciSetSz('large')">🚐 Grande</button>
-    </div>
-    <label class="nci-lbl">Modelo</label>
-    <input class="nci-fi" id="nci-mod" type="text" placeholder="Ex: Civic, HB20..." value="${d.model||''}">
-    <label class="nci-lbl">Cor</label>
-    <input class="nci-fi" id="nci-cor" type="text" placeholder="Ex: Prata, Preto..." value="${d.color||''}">
-    <label class="nci-lbl">Placa</label>
-    <input class="nci-fi" id="nci-pla" type="text" placeholder="ABC1D23" style="text-transform:uppercase" value="${d.plate||''}">
-    <label class="nci-lbl">Hóspede</label>
-    <input class="nci-fi" id="nci-gst" type="text" placeholder="Nome completo" value="${d.guest||''}">
-    <label class="nci-lbl">Observações</label>
-    <input class="nci-fi" id="nci-obs" type="text" placeholder="Obs..." value="${d.obs||''}">`;
-  setTimeout(()=>document.getElementById('nci-apt')?.focus(),80);
-}
-function _nciSetSz(sz){
-  if(_nciD) _nciD.size=sz;
-  document.getElementById('nci-sz-s')?.classList.toggle('sel',sz==='small');
-  document.getElementById('nci-sz-l')?.classList.toggle('sel',sz==='large');
-}
-function _nciNext2(){
-  const apt=(document.getElementById('nci-apt')?.value||'').trim();
-  if(!apt){ const e=document.getElementById('nci-apt');e.classList.add('err');e.focus();e.addEventListener('input',()=>e.classList.remove('err'),{once:true});return; }
-  _nciD.apt=apt;
-  _nciD.model=(document.getElementById('nci-mod')?.value||'').trim();
-  _nciD.color=(document.getElementById('nci-cor')?.value||'').trim();
-  _nciD.plate=(document.getElementById('nci-pla')?.value||'').trim().toUpperCase();
-  _nciD.guest=(document.getElementById('nci-gst')?.value||'').trim();
-  _nciD.obs=(document.getElementById('nci-obs')?.value||'').trim();
-  if(!_nciD.gs) _nciD.gs=nextNumHospedagem();
-  _nciSalvarRascunho();
-  _nciLockLandscape().then(()=>_nciRenderStep(3));
-}
-
-function _nciStep3(body,title,ftr,bk){
-  title.textContent=`Vistoria — ${_nciD.gs} · Apt. ${_nciD.apt}`;
-  body.className='nci-body landscape-vst';
-  ftr.innerHTML=`<button class="nci-bv" onclick="_nciUnlockOrientation();_nciRenderStep(2)">← Voltar</button><button class="nci-bn" onclick="_nciNext3()">Confirmar →</button>`;
-  bk.onclick=function(){ _nciUnlockOrientation(); _nciRenderStep(2); };
-  const d=_nciD;
-  const suSvg=VST_SVG.su.replace(/style="[^"]*"/,'style="width:100%;height:100%;max-width:none;display:block"');
-  body.innerHTML=`
-    <div class="nci-dz" id="nci-dz-wrap">
-      <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none">${suSvg}</div>
-    </div>
-    <div class="nci-iz" id="nci-info-zone">
-      <div style="font-size:10px;font-weight:700;color:var(--cp);text-transform:uppercase;margin-bottom:6px;flex-shrink:0">Informações</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:3px 8px;margin-bottom:8px;font-size:11px;flex-shrink:0">
-        <div><span style="color:#888">Apto:</span> <strong>${d.apt}</strong></div>
-        <div><span style="color:#888">Func.:</span> <strong>${(d.usuario||'').split(' ')[0]||'—'}</strong></div>
-        <div><span style="color:#888">Placa:</span> <strong>${d.plate||'—'}</strong></div>
-        <div><span style="color:#888">Data:</span> <strong>${new Date().toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'2-digit'})}</strong></div>
-        <div style="grid-column:1/-1"><span style="color:#888">Modelo/Cor:</span> <strong>${[d.model,d.color].filter(Boolean).join(' · ')||'—'}</strong></div>
-        <div style="grid-column:1/-1"><span style="color:#888">Cód.:</span> <strong>${d.gs}</strong></div>
-      </div>
-      <div id="nci-avaria-strip" class="nci-avaria-strip ${(d.danos||[]).length>0?'com':'sem'}" style="flex-shrink:0">
-        ${(d.danos||[]).length>0?`❗ COM AVARIA (${d.danos.length})`:'✅ SEM AVARIA'}
-      </div>
-      <div style="font-size:9px;color:#888;margin-bottom:6px;flex-shrink:0">Toque no carro para marcar avaria</div>
-      <div style="font-size:10px;font-weight:700;color:var(--cp);text-transform:uppercase;margin-bottom:4px;flex-shrink:0">Assinatura</div>
-      <div class="nci-sig-wrap" style="flex-shrink:0">
-        <canvas id="nci-sig-canvas" class="nci-sig-canvas" height="70"></canvas>
-        <div class="nci-sig-phrase">"O veículo de minha posse foi entregue com as condições acima descritas."</div>
-      </div>
-      <button onclick="_nciLimparSig()" style="font-size:10px;padding:3px 8px;border:1px solid #ddd;border-radius:5px;background:#fff;cursor:pointer;margin-top:4px;font-family:inherit;flex-shrink:0">↺ Limpar</button>
-    </div>`;
-  _nciRenderDanos();
-  const dzWrap=document.getElementById('nci-dz-wrap');
-  if(dzWrap) dzWrap.addEventListener('pointerdown',_nciDzTap,{passive:false});
-  _nciSetupSigCanvas();
-}
-
-function _nciDzTap(e){
-  e.preventDefault();
-  if(e.target.classList.contains('nci-dano-mk')||e.target.closest?.('.nci-mini-pop')) return;
-  const dz=document.getElementById('nci-dz-wrap'); if(!dz) return;
-  const rect=dz.getBoundingClientRect();
-  const x=((e.clientX-rect.left)/rect.width)*100;
-  const y=((e.clientY-rect.top)/rect.height)*100;
-  _nciD.danos.push({x,y});
-  _nciD.com_avaria=true;
-  _nciSalvarRascunho();
-  _nciRenderDanos();
-  _nciUpdateAvariaStrip();
-}
-
-function _nciRenderDanos(){
-  const dz=document.getElementById('nci-dz-wrap'); if(!dz) return;
-  dz.querySelectorAll('.nci-dano-mk,.nci-mini-pop').forEach(el=>el.remove());
-  (_nciD.danos||[]).forEach((d,i)=>{
-    const mk=document.createElement('div');
-    mk.className='nci-dano-mk';
-    mk.style.cssText=`left:${d.x}%;top:${d.y}%`;
-    mk.textContent='✕';
-    mk.dataset.idx=i;
-    mk.addEventListener('pointerdown',function(e){ e.stopPropagation(); e.preventDefault(); _nciShowMiniPop(mk,i); },{passive:false});
-    dz.appendChild(mk);
-  });
-}
-
-function _nciShowMiniPop(mkEl,idx){
-  document.querySelectorAll('.nci-mini-pop').forEach(el=>el.remove());
-  const pop=document.createElement('div');
-  pop.className='nci-mini-pop';
-  const lft=Math.min(parseFloat(mkEl.style.left)+2,70);
-  const top=Math.max(parseFloat(mkEl.style.top)-12,2);
-  pop.style.cssText=`left:${lft}%;top:${top}%`;
-  pop.innerHTML=`<button style="background:#A32D2D;color:#fff" onclick="_nciRemoveDano(${idx})">Excluir</button><button style="background:#eee;color:#333" onclick="this.closest('.nci-mini-pop').remove()">Manter</button>`;
-  const dz=document.getElementById('nci-dz-wrap'); if(dz) dz.appendChild(pop);
-  setTimeout(()=>{ const fn=ev=>{ if(!pop.contains(ev.target)){ pop.remove(); document.removeEventListener('pointerdown',fn); } }; document.addEventListener('pointerdown',fn); },100);
-}
-
-function _nciRemoveDano(idx){
-  document.querySelectorAll('.nci-mini-pop').forEach(el=>el.remove());
-  _nciD.danos.splice(idx,1);
-  if(_nciD.danos.length===0) _nciD.com_avaria=false;
-  _nciSalvarRascunho();
-  _nciRenderDanos();
-  _nciUpdateAvariaStrip();
-}
-
-function _nciUpdateAvariaStrip(){
-  const s=document.getElementById('nci-avaria-strip'); if(!s) return;
-  const nd=(_nciD.danos||[]).length;
-  s.className='nci-avaria-strip '+(nd>0?'com':'sem');
-  s.textContent=nd>0?`❗ COM AVARIA (${nd})`:'✅ SEM AVARIA';
-}
-
-function _nciSetupSigCanvas(){
-  const canvas=document.getElementById('nci-sig-canvas'); if(!canvas) return;
-  const dpr=window.devicePixelRatio||1;
-  const w=canvas.parentElement.getBoundingClientRect().width||180;
-  const h=70;
-  canvas.width=Math.round(w*dpr); canvas.height=Math.round(h*dpr);
-  canvas.style.width=w+'px'; canvas.style.height=h+'px';
-  const ctx=canvas.getContext('2d');
-  ctx.scale(dpr,dpr);
-  ctx.strokeStyle='#111'; ctx.lineWidth=1.5; ctx.lineCap='round'; ctx.lineJoin='round';
-  if(_nciD.assinatura){ const img=new Image(); img.onload=()=>ctx.drawImage(img,0,0,w,h); img.src=_nciD.assinatura; }
-  let drawing=false,lx=0,ly=0;
-  function getPos(e){ const r=canvas.getBoundingClientRect(); return e.touches?{x:e.touches[0].clientX-r.left,y:e.touches[0].clientY-r.top}:{x:e.clientX-r.left,y:e.clientY-r.top}; }
-  canvas.addEventListener('pointerdown',function(e){ e.preventDefault(); drawing=true; const {x,y}=getPos(e); lx=x;ly=y; ctx.beginPath(); ctx.moveTo(x,y); canvas.setPointerCapture?.(e.pointerId); },{passive:false});
-  canvas.addEventListener('pointermove',function(e){ if(!drawing) return; e.preventDefault(); const {x,y}=getPos(e); ctx.beginPath(); ctx.moveTo(lx,ly); ctx.lineTo(x,y); ctx.stroke(); lx=x;ly=y; },{passive:false});
-  ['pointerup','pointercancel'].forEach(ev=>canvas.addEventListener(ev,function(){ if(!drawing) return; drawing=false; _nciCaptureSig(canvas); }));
-}
-
-function _nciCaptureSig(canvas){
-  if(!canvas) canvas=document.getElementById('nci-sig-canvas'); if(!canvas) return;
-  const data=canvas.getContext('2d').getImageData(0,0,canvas.width,canvas.height).data;
-  if(data.some(v=>v!==0)){ _nciD.assinatura=canvas.toDataURL('image/png'); _nciSalvarRascunho(); }
-}
-
-function _nciLimparSig(){
-  const canvas=document.getElementById('nci-sig-canvas'); if(!canvas) return;
-  const dpr=window.devicePixelRatio||1;
-  canvas.getContext('2d').clearRect(0,0,canvas.width/dpr,canvas.height/dpr);
-  _nciD.assinatura=null;
-}
-
-function _nciNext3(){
-  _nciCaptureSig();
-  _nciUnlockOrientation();
-  _nciSalvarRascunho();
-  _nciRenderStep(4);
-}
-
-function _nciStep4(body,title,ftr,bk){
-  title.textContent='Confirmar Check-in';
-  ftr.innerHTML=`<button class="nci-bv" onclick="_nciLockLandscape().then(()=>_nciRenderStep(3))">← Vistoria</button><button class="nci-bn" onclick="_nciSalvarCheckin()">✓ Registrar</button>`;
-  bk.onclick=function(){ _nciLockLandscape().then(()=>_nciRenderStep(3)); };
-  const d=_nciD;
-  const nd=(d.danos||[]).length;
-  body.innerHTML=`
-    <div class="nci-confirm-box">
-      <div style="font-size:11px;font-weight:700;color:var(--cp);margin-bottom:8px;text-transform:uppercase">Dados do Veículo</div>
-      ${[['Apto',d.apt],['Hóspede',d.guest||'—'],['Modelo',d.model||'—'],['Cor',d.color||'—'],['Placa',d.plate||'—'],['Tamanho',d.size==='large'?'Grande':'Pequeno'],['Código',d.gs],['Funcionário',d.usuario||'—']]
-        .map(([l,v])=>`<div class="nci-conf-row"><span class="nci-conf-lbl">${l}</span><span class="nci-conf-val">${v}</span></div>`).join('')}
-    </div>
-    <div class="nci-confirm-box">
-      <div style="font-size:11px;font-weight:700;color:var(--cp);margin-bottom:6px;text-transform:uppercase">Vistoria</div>
-      <div style="font-size:12px;margin-bottom:4px">${nd>0?`<span style="color:#A32D2D;font-weight:700">❗ ${nd} avaria${nd>1?'s':''}</span>`:'<span style="color:#0F6E56;font-weight:700">✅ Sem avarias</span>'}</div>
-      <div style="font-size:12px">Assinatura: ${d.assinatura?'<span style="color:#0F6E56;font-weight:700">✅ Coletada</span>':'<span style="color:#854F0B;font-weight:700">⚠️ Pendente</span>'}</div>
-      ${d.assinatura?`<img src="${d.assinatura}" style="max-width:140px;border:1px solid #ccc;border-radius:4px;margin-top:6px">`:''}
-    </div>
-    <div style="background:#EEF6FF;border:1px solid #378ADD;border-radius:8px;padding:8px 12px;font-size:11px;color:#185FA5">
-      Após registrar, toque em uma vaga livre no mapa para designar.
-    </div>`;
-}
-
-function _nciSalvarCheckin(){
-  if(!_nciD) return;
-  const d=_nciD;
-  const id='nci_'+Date.now()+'_'+Math.random().toString(36).slice(2,6);
-  CHECKINS_PENDENTES[id]={id,gs:d.gs,apt:d.apt,model:d.model,color:d.color,plate:d.plate,guest:d.guest,obs:d.obs,size:d.size||'small',usuario:d.usuario||'',ts_inicio:d.ts_inicio||Date.now(),danos:[...(d.danos||[])],com_avaria:(d.danos||[]).length>0,assinatura:d.assinatura||null,fotos:[],status:'checkin_pendente'};
-  saveCheckinsPendentes();
-  _nciDescartarRascunho();
-  _nciRenderStep(5);
-}
-
-function _nciStep5(body,title,ftr,bk){
-  title.textContent='Check-in Registrado';
-  bk.style.display='none';
-  ftr.innerHTML=`<button class="nci-bv" onclick="_nciFechar();renderPainelDia?.()">Fechar</button><button class="nci-bn" onclick="_nciFechar();navTo('mapa')">Ver Mapa</button>`;
-  const d=_nciD;
-  body.innerHTML=`
-    <div class="nci-success">
-      <div style="font-size:44px">✅</div>
-      <div style="font-size:17px;font-weight:700;color:#111">Check-in registrado!</div>
-      <div class="nci-gs-badge">${d.gs}</div>
-      <div style="font-size:13px;color:#555">Apt. ${d.apt}${d.guest?' · '+d.guest:''}</div>
-      <div style="font-size:12px;color:#888;text-align:center;line-height:1.5">Aguardando designação de vaga.<br>Toque em uma vaga livre no mapa para designar.</div>
-      ${(d.danos||[]).length>0&&!d.assinatura?`<div style="background:#FFF3CD;border:1px solid #E8A800;border-radius:7px;padding:8px 12px;font-size:11px;color:#7A5700">⚠️ Vistoria sem assinatura — colete antes do checkout.</div>`:''}
-    </div>`;
-  upd();
-  if(document.getElementById('painel-wrap')?.style?.display!=='none') renderPainelDia();
-}
-
-function _nciHighlightLivres(){
-  const livres=Object.entries(S).filter(([id,d])=>d.status==='free'&&!d.mergedSlave&&!d.overbook);
-  livres.forEach(([id])=>{ const td=getTd(id); if(td){ td.style.outline='3px solid var(--cp)'; td.style.outlineOffset='2px'; } });
-  if(livres.length===0){ showToast('Nenhuma vaga livre disponível',2500); return; }
-  showToast(`${livres.length} vaga${livres.length>1?'s':''} livre${livres.length>1?'s':''} destacada${livres.length>1?'s':''}`,3000);
-  setTimeout(()=>{ livres.forEach(([id])=>{ const td=getTd(id); if(td){ td.style.outline=''; td.style.outlineOffset=''; } }); },5000);
-}
-
-function showDesignarVaga(vagaId,pendenteId){
-  const p=CHECKINS_PENDENTES[pendenteId]; if(!p) return;
-  const info=[p.model,p.color,p.plate].filter(Boolean).join(' · ')||'Sem detalhes';
-  const mc=document.getElementById('mc');
-  mc.innerHTML=`
-    <div class="mt">Designar Vaga ${vagaId}</div>
-    <div style="background:#EEF6FF;border:1px solid #378ADD;border-radius:8px;padding:9px 12px;font-size:12px;margin-bottom:10px">
-      <strong>${p.gs}</strong> · Apt. ${p.apt}${p.guest?' · '+p.guest:''}<br>
-      <span style="color:#888;font-size:11px">${info}</span>
-    </div>
-    <div class="ag">
-      <button class="bsv" onclick="confirmarUsuario('designando vaga ${vagaId}',function(u){closeOv();_aplicarDesignacao('${vagaId}','${pendenteId}',u)})">✓ Designar vaga ${vagaId}</button>
-      <button class="bcx" onclick="closeOv()">Cancelar</button>
-    </div>`;
-  document.getElementById('ov').classList.add('on');
-}
-
-function _aplicarDesignacao(vagaId,pendenteId,usuario){
-  const p=CHECKINS_PENDENTES[pendenteId];
-  if(!p){ showToast('Check-in pendente não encontrado',3000); return; }
-  const v=S[vagaId];
-  if(!v||v.status!=='free'){ showToast('Vaga não disponível',3000); return; }
-
-  v.status='occupied'; v.apt=p.apt; v.model=p.model; v.color=p.color;
-  v.plate=p.plate; v.guest=p.guest; v.obs=p.obs; v.size=p.size; v.hospedagem=p.gs;
-
-  if(p.size==='large'&&vagaId.endsWith('A')){
-    const bId=vagaId.slice(0,-1)+'B';
-    if(S[bId]&&S[bId].status==='free'){ S[bId].status='occupied'; S[bId].mergedSlave=vagaId; v.mergedMaster=true; }
-  }
-
-  HOSPEDAGENS[p.gs]={numero:p.gs,apt:p.apt,checkin_ts:p.ts_inicio,vaga_inicial:vagaId,model:p.model,color:p.color,plate:p.plate,guest:p.guest,obs:p.obs,size:p.size,usuario_checkin:p.usuario,checkout_ts:null,usuario_checkout:null};
-
-  iniciarHistorico(p.apt,vagaId,p.gs,p.usuario);
-  addHistorico(p.apt,'checkin',vagaId,'Check-in via NCI',usuario,p.gs);
-
-  if(MODULOS.vistorias&&(p.danos?.length>0||p.assinatura)){
-    const vstId=_nciCriarVistoria(p);
-    v.vistoria_id=vstId;
-  }
-
-  delete CHECKINS_PENDENTES[pendenteId];
-  saveCheckinsPendentes();
-  saveData(); saveHospedagens(); saveHistorico();
-  ref(vagaId); refVistoria(vagaId); upd();
-  if(document.getElementById('painel-wrap')?.style?.display!=='none') renderPainelDia();
-  showToast(`✅ ${p.gs} · Apt. ${p.apt} → vaga ${vagaId}`,3500);
-  logSistema(`NCI designação: ${p.gs} → ${vagaId} por ${usuario}`);
-}
-
-function _nciCriarVistoria(p){
-  const id=nextNumVistoria();
-  VISTORIAS[id]={id,numero:id,apt:p.apt,hospedagem:p.gs,modelo:p.model,cor:p.color,placa:p.plate,hospede:p.guest,danos:p.danos||[],com_avaria:(p.danos||[]).length>0,assinatura:p.assinatura||null,ts_criada:p.ts_inicio,ts_assinada:p.assinatura?p.ts_inicio:null,usuario_criou:p.usuario,usuario_assinou:p.assinatura?p.guest:'',origem:'nci'};
-  saveVistorias();
-  return id;
-}
-
 // ── BACKUP LOCAL ──────────────────────────────────────────────────────────
 let DRIVE_STATUS = {conectado:false,email:'',ultimo_backup:null,falha_backup:false};
 const DRIVE_STATUS_LS = 'garagespot_drive_status';
@@ -4503,8 +3721,7 @@ async function fazerBackupLocal(motivo){
       historico_recargas:HISTORICO_RECARGAS||[],
       vistorias:VISTORIAS||{},
       vistorias_lixeira:VISTORIAS_LIXEIRA||{},
-      vistoria_counter:localStorage.getItem(VISTORIA_COUNTER_KEY)||'0',
-      checkins_pendentes:CHECKINS_PENDENTES||{}};
+      vistoria_counter:localStorage.getItem(VISTORIA_COUNTER_KEY)||'0'};
     const json=JSON.stringify(dados);
     const hoje=new Date();
     const ds=String(hoje.getDate()).padStart(2,'0')+'-'+String(hoje.getMonth()+1).padStart(2,'0')+'-'+String(hoje.getFullYear()).slice(-2)+'_'+String(hoje.getHours()).padStart(2,'0')+'h'+String(hoje.getMinutes()).padStart(2,'0');
@@ -4906,7 +4123,6 @@ async function exportarZip(){
       vistorias:VISTORIAS||{},
       vistorias_lixeira:VISTORIAS_LIXEIRA||{},
       vistoria_counter:localStorage.getItem(VISTORIA_COUNTER_KEY)||'0',
-      checkins_pendentes:CHECKINS_PENDENTES||{},
     };
     zip.file('dados.json', JSON.stringify(dados, null, 2));
     // Adicionar relatório de movimentações como texto
@@ -5735,17 +4951,20 @@ function aptJaFezCheckout(apt){
 // converte para PDF via menu nativo (Imprimir → Salvar como PDF).
 
 function fmtNomeArquivo(apt, guest, tsEntrada, tsSaida, hospNum){
-  const limpa=s=>(s||'').replace(/[^a-zA-Z0-9À-ú]/g,'_').replace(/_+/g,'_').replace(/^_|_$/g,'').trim();
+  const limpa=s=>(s||'').replace(/[^a-zA-Z0-9À-ú]/g,'').trim().replace(/\s+/g,'_');
   function dtCurta(ts){
     if(!ts) return '';
     const d=new Date(ts);
     return String(d.getDate()).padStart(2,'0')+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getFullYear()).slice(-2);
   }
+  const dtE=dtCurta(tsEntrada);
+  const dtS=dtCurta(tsSaida);
   const p=[];
-  if(apt) p.push(String(apt));
-  if(hospNum) p.push(hospNum);
-  if(guest){ const g=limpa(guest); if(g) p.push(g); }
-  p.push(dtCurta(tsSaida||tsEntrada||Date.now()));
+  if(hospNum) p.push(hospNum); else p.push('GarageSpot');
+  p.push('Apt'+apt);
+  if(guest) p.push(limpa(guest));
+  if(dtE && dtS && dtS!==dtE) p.push(dtE+' a '+dtS);
+  else if(dtE) p.push(dtE);
   p.push('Registro-Movimentacao_GarageSpot');
   return p.join('_');
 }
@@ -6436,7 +5655,6 @@ window.addEventListener('contextmenu', forceCleanDrag);
 document.addEventListener('visibilitychange', ()=>{
   if(document.hidden){
     forceCleanDrag();
-    if(typeof _nciD!=='undefined'&&_nciD) _nciSalvarRascunho();
   } else {
     // App voltou ao foco — força verificação de licença ignorando cache
     try{ localStorage.removeItem(LICENSE_CACHE_KEY); }catch(e){}
@@ -6544,7 +5762,6 @@ checkLicense().then(async (ativo)=>{
       loadPlantaoManual();
       loadRecargas();
       loadVistorias();
-      loadCheckinsPendentes();
       agendarLimparPlantao();
       loadModulos();
       loadDriveStatus();
@@ -6554,7 +5771,6 @@ checkLicense().then(async (ativo)=>{
       if(restored) Object.keys(S).forEach(id=>ref(id));
       attachDrag();
       applyModulos();
-      navTo('painel');
       upd(); tick(); setInterval(tick,15000);
       requestAnimationFrame(()=>setTimeout(positionPilares, 150));
     });
