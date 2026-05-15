@@ -6,6 +6,7 @@
 <title>GarageSpot</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
+:root{--cp:#185FA5;--cp-lt:#EEF6FF;--cp-dk:#0C447C}
 html,body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f0efea;height:100%;overflow:hidden}
 html.font-small{zoom:0.87}
 html.font-large{zoom:1.13}
@@ -25,7 +26,7 @@ html.font-large{zoom:1.13}
 .tb-lbl{font-size:8px;color:#888;line-height:1.2;white-space:nowrap}
 .tv-total{color:#111}
 .tv-free{color:#0F6E56}
-.tv-occ{color:#185FA5}
+.tv-occ{color:var(--cp)}
 .tv-out{color:#854F0B}
 /* Bloco overbooking */
 .tb-ob{display:flex;gap:0;flex-shrink:0;padding:0 12px;border-right:1px solid #e0e0da}
@@ -214,8 +215,8 @@ html.font-large{zoom:1.13}
 .b2{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:5px}
 .bcx{padding:9px;border:1.5px solid #ddd;border-radius:7px;background:#fff;color:#777;font-size:12px;cursor:pointer;font-family:inherit;font-weight:600}
 .bcx:active{background:#f5f5f5}
-.bsv{padding:9px;border:none;border-radius:7px;background:#185FA5;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit}
-.bsv:active{background:#0C447C}
+.bsv{padding:9px;border:none;border-radius:7px;background:var(--cp);color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit}
+.bsv:active{filter:brightness(.82)}
 .ag{display:flex;flex-direction:column;gap:7px;margin-top:4px}
 .ab{padding:12px 14px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;border:none;text-align:left;display:flex;align-items:center;gap:9px;font-family:inherit}
 .ab:active{filter:brightness(.92)}
@@ -228,12 +229,12 @@ html.font-large{zoom:1.13}
 .navbar{display:flex;gap:4px;flex-shrink:0;background:#fff;border:1px solid #ddd;border-radius:9px;padding:4px;overflow:hidden}
 .nav-btn{flex:1;padding:7px 4px;font-size:11px;font-weight:700;border:none;border-radius:6px;background:none;color:#555;cursor:pointer;font-family:inherit;transition:background .15s,color .15s;white-space:nowrap}
 .nav-btn:active{background:#f5f4f0}
-.nav-btn.nav-active{background:#185FA5;color:#fff}
+.nav-btn.nav-active{background:var(--cp);color:#fff}
 
 /* ── PAINEL DO DIA ── */
 .painel-wrap{flex:1;min-height:0;overflow-y:auto;background:#fff;border:1px solid #ccc;border-radius:9px;padding:10px}
 .painel-sec{margin-bottom:16px}
-.painel-sec-title{font-size:10px;font-weight:700;color:#185FA5;border-bottom:2px solid #e8eef8;padding-bottom:3px;margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px}
+.painel-sec-title{font-size:10px;font-weight:700;color:var(--cp);border-bottom:2px solid var(--cp-lt);padding-bottom:3px;margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px}
 .painel-stat-row{display:flex;gap:6px;margin-bottom:8px}
 .painel-stat-card{flex:1;background:#f5f4f0;border-radius:8px;padding:8px 6px;text-align:center}
 .painel-stat-val{font-size:20px;font-weight:700}
@@ -249,8 +250,8 @@ html.font-large{zoom:1.13}
 .busca-bar.on{display:flex}
 .busca-btn{background:none;border:1px solid #e0ddd8;border-radius:5px;padding:3px 8px;font-size:13px;cursor:pointer;font-family:inherit;line-height:1.4;color:#555}
 .busca-btn:active{background:#f5f4f0}
-@keyframes pulse-search{0%,100%{outline-color:#185FA5;background:rgba(24,95,165,.09)}50%{outline-color:#A32D2D;background:rgba(163,45,45,.09)}}
-.search-hit{outline:3px solid #185FA5 !important;outline-offset:-2px;animation:pulse-search 1.2s ease-in-out 3}
+@keyframes pulse-search{0%,100%{outline-color:var(--cp);background:rgba(24,95,165,.09)}50%{outline-color:#A32D2D;background:rgba(163,45,45,.09)}}
+.search-hit{outline:3px solid var(--cp) !important;outline-offset:-2px;animation:pulse-search 1.2s ease-in-out 3}
 
 /* ── PLANTÃO INDICATOR ── */
 .plantao-ind{font-size:10px;color:#0F6E56;font-weight:700;background:#EEF9F2;border:1px solid #A6D8B6;border-radius:4px;padding:2px 5px;cursor:pointer;white-space:nowrap;user-select:none}
@@ -259,12 +260,12 @@ html.font-large{zoom:1.13}
 /* ── PIN / GESTÃO ── */
 .pin-display{display:flex;gap:10px;justify-content:center;margin:14px 0}
 .pin-dot{width:14px;height:14px;border-radius:50%;border:2px solid #ddd;background:#fff;transition:background .12s,border-color .12s}
-.pin-dot.filled{background:#185FA5;border-color:#185FA5}
+.pin-dot.filled{background:var(--cp);border-color:var(--cp)}
 .pin-keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:6px 0}
 .pin-key{padding:13px;font-size:18px;font-weight:700;border:1.5px solid #ddd;border-radius:9px;background:#fff;color:#111;cursor:pointer;font-family:inherit;text-align:center;line-height:1}
 .pin-key:active{background:#f0efea}
 .pin-key.del{font-size:13px;color:#A32D2D;border-color:#FCEBEB}
-.pin-key.ok{background:#EEF6FF;color:#185FA5;border-color:#378ADD;font-size:13px}
+.pin-key.ok{background:var(--cp-lt);color:var(--cp);border-color:var(--cp);font-size:13px}
 .gestao-menu-item{display:flex;align-items:center;gap:10px;padding:11px 14px;border:1px solid #eee;border-radius:8px;margin-bottom:6px;cursor:pointer;background:#fafafa;font-size:13px;font-weight:600;color:#333}
 .gestao-menu-item:active{background:#f0efea}
 .gestao-menu-sep{font-size:9px;color:#aaa;text-transform:uppercase;letter-spacing:.5px;margin:10px 0 6px;padding:0 2px}
@@ -272,7 +273,7 @@ html.font-large{zoom:1.13}
 /* ── RELATÓRIOS ── */
 .rel-row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #f0efea;font-size:12px}
 .rel-row:last-child{border-bottom:none}
-.rel-badge{background:#EEF6FF;color:#185FA5;border-radius:4px;padding:1px 6px;font-size:10px;font-weight:700}
+.rel-badge{background:var(--cp-lt);color:var(--cp);border-radius:4px;padding:1px 6px;font-size:10px;font-weight:700}
 
 /* ── BUSCA ROXO ── */
 .vaga-highlight{background:#5C35B0 !important;color:#fff !important;transition:background 0.3s}
@@ -292,6 +293,10 @@ html.font-large{zoom:1.13}
   .apt-lbl{font-size:2.5vw}
   .id-lbl{font-size:1.2vw}
 }
+/* ── VISTORIA ── */
+.vst-icon{font-size:10px;cursor:pointer;user-select:none;line-height:1;display:inline-block}
+.vst-icon:active{opacity:.7}
+.vst-warn-box{background:#FFF3CD;border:1.5px solid #E8A800;border-radius:8px;padding:8px 12px;margin-bottom:10px;font-size:11px;color:#7A5700;line-height:1.5}
 </style>
 </head>
 <body>
@@ -958,6 +963,7 @@ function ref(id){
     const aptCls=isDup(d.apt)?'dup':(OB.has(id)?'ob':'');
     td.innerHTML=`<span class="id-lbl">${id}</span><span class="apt-lbl${aptCls?' '+aptCls:''}">${d.apt}</span>`;
   }
+  if(d.status==='occupied'){refRecarga(id);refVistoria(id);}
 }
 
 // Atualiza todas as vagas que têm um determinado apt (para pintar/despintar duplicidade)
@@ -1935,12 +1941,15 @@ function doChk(id){
     obs:d.obs||'',size:d.size||'small',vaga:id
   };
 
+  const _vstChk=getVistoriaByHosp(d.hospedagem||'')||getVistoriaByApt(aptKey);
+  const _temVstPend=MODULOS.vistorias&&_vstChk&&!_vstChk.ts_assinada;
   mc.innerHTML=`
     <div class="mt">🚪 Check-out — Apt. ${aptKey}</div>
     <div class="ms">${[d.model,d.color,d.plate].filter(Boolean).join(' · ')||'Sem detalhes'}</div>
-    <div class="warn-box" style="font-size:12px">Confirma o check-out deste veículo?</div>
+    ${_temVstPend?`<div class="vst-warn-box">⚠️ Veículo sem vistoria assinada.<br><small style="color:#9B6800">${_vstChk.numero} — pendente de assinatura</small></div>`:`<div class="warn-box" style="font-size:12px">Confirma o check-out deste veículo?</div>`}
     <div class="ag">
-      <button class="ab ac" id="chk-sim">🚪 Confirmar check-out</button>
+      <button class="ab ac" id="chk-sim">🚪 ${_temVstPend?'Continuar mesmo assim':'Confirmar check-out'}</button>
+      ${_temVstPend?`<button class="ab ao" onclick="navTo('vistorias');closeOv()" style="margin-top:0">📋 Cancelar — ir para Vistorias</button>`:''}
       <button class="bcx" onclick="closeOv()" style="margin-top:4px">Cancelar</button>
     </div>`;
   document.getElementById('ov').classList.add('on');
@@ -2061,7 +2070,8 @@ function showDet(id, fromPasseio){
     <div class="mt" style="display:flex;align-items:center;gap:4px">
       <span style="white-space:nowrap;cursor:pointer;text-decoration:underline dotted" onclick="showHistoricoModal('${apt}','${hospedagemNum}','${id}',${fromPasseio?1:0})" title="Ver histórico">ℹ️ ${tituloTxt}${hospSufixo}</span>
       <button class="share-btn" onclick="doShare('${id}',${fromPasseio?1:0})" title="Compartilhar" style="flex-shrink:0"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" stroke-width="2" fill="none"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg></button>
-      <button class="attach-btn" onclick="toggleAnexosDet('${id}',${fromPasseio?1:0})" title="Vistoria / Fotos" style="margin-left:auto">${nAnexos>0?'📎<sup style="font-size:8px;color:#185FA5">'+nAnexos+'</sup>':'📎'}</button>
+      <button class="attach-btn" onclick="novaVistoria('${apt}','${hospedagemNum}')" title="Nova vistoria" style="margin-left:auto">📋</button>
+      <button class="attach-btn" onclick="toggleAnexosDet('${id}',${fromPasseio?1:0})" title="Fotos / Arquivos">${nAnexos>0?'📎<sup style="font-size:8px;color:#185FA5">'+nAnexos+'</sup>':'📎'}</button>
     </div>
     <div style="margin:8px 0 10px">${rows.map(([l,v])=>`<div class="dr"><span class="dl">${l}</span><span class="dv">${v}</span></div>`).join('')}</div>
     <div id="att-det-area"></div>
@@ -2144,11 +2154,15 @@ function showPasseioCheckout(apt){
   const d=PASSEIO[apt];
   if(!d)return;
   const info=[d.model,d.color,d.plate].filter(Boolean).join(' · ');
+  const _vstP=getVistoriaByHosp(d.hospedagem||'')||getVistoriaByApt(apt);
+  const _temVstPendP=MODULOS.vistorias&&_vstP&&!_vstP.ts_assinada;
   showM(`<div class="mt">Check-out — Apt. ${apt}</div>
     <div class="ms">${info||'Sem detalhes'} · 🛣️ A passeio</div>
+    ${_temVstPendP?`<div class="vst-warn-box">⚠️ Veículo sem vistoria assinada.<br><small style="color:#9B6800">${_vstP.numero} — pendente de assinatura</small></div>`:''}
     <div class="warn-box" style="font-size:11px">O hóspede fez check-out.<br>O carro será removido do sistema.</div>
     <div class="ag">
-      <button class="ab ac" id="pco-sim">🚪 Confirmar check-out</button>
+      <button class="ab ac" id="pco-sim">🚪 ${_temVstPendP?'Continuar mesmo assim':'Confirmar check-out'}</button>
+      ${_temVstPendP?`<button class="ab ao" onclick="navTo('vistorias');closeOv()" style="margin-top:0">📋 Cancelar — ir para Vistorias</button>`:''}
       <button class="bcx" onclick="closeOv()" style="margin-top:4px">Cancelar</button>
     </div>`);
   document.getElementById('pco-sim').onclick=function(){
@@ -2375,9 +2389,12 @@ function showModalUsuarios(){
     const listaHTML=lista.length===0
       ?'<span style="font-size:12px;color:#bbb;font-style:italic">Nenhum usuário cadastrado</span>'
       :lista.map(u=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;border:1px solid #eee;border-radius:7px;margin-bottom:5px">
-          <div><div style="font-size:13px;font-weight:700;color:#111">${u.nome}</div>
+          <div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:700;color:#111">${u.nome}</div>
           <div style="font-size:11px;color:#888">${u.cargo} · ${u.horaInicio||'—'}–${u.horaFim||'—'}</div></div>
-          <button onclick="window._editUsr('${u.id}')" style="background:none;border:1px solid #ddd;border-radius:5px;padding:3px 8px;font-size:11px;color:#555;cursor:pointer;font-family:inherit">✏️ Editar</button>
+          <div style="display:flex;gap:4px;flex-shrink:0">
+            <button onclick="showHistoricoUsuario('${u.id}')" style="background:none;border:1px solid #ddd;border-radius:5px;padding:3px 8px;font-size:11px;color:#555;cursor:pointer;font-family:inherit" title="Ver histórico de ações">📋</button>
+            <button onclick="window._editUsr('${u.id}')" style="background:none;border:1px solid #ddd;border-radius:5px;padding:3px 8px;font-size:11px;color:#555;cursor:pointer;font-family:inherit">✏️</button>
+          </div>
         </div>`).join('');
     const mc=document.getElementById('mc');
     mc.innerHTML=`<div class="mt">👥 Usuários</div>
@@ -2396,9 +2413,12 @@ function showModalUsuarios(){
       const el=document.getElementById('lista-usr'); if(!el) return;
       el.innerHTML=f.length===0?'<span style="font-size:12px;color:#bbb">Sem resultado</span>'
         :f.map(u=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;border:1px solid #eee;border-radius:7px;margin-bottom:5px">
-            <div><div style="font-size:13px;font-weight:700;color:#111">${u.nome}</div>
+            <div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:700;color:#111">${u.nome}</div>
             <div style="font-size:11px;color:#888">${u.cargo} · ${u.horaInicio||'—'}–${u.horaFim||'—'}</div></div>
-            <button onclick="window._editUsr('${u.id}')" style="background:none;border:1px solid #ddd;border-radius:5px;padding:3px 8px;font-size:11px;color:#555;cursor:pointer;font-family:inherit">✏️ Editar</button>
+            <div style="display:flex;gap:4px;flex-shrink:0">
+              <button onclick="showHistoricoUsuario('${u.id}')" style="background:none;border:1px solid #ddd;border-radius:5px;padding:3px 8px;font-size:11px;color:#555;cursor:pointer;font-family:inherit" title="Ver histórico">📋</button>
+              <button onclick="window._editUsr('${u.id}')" style="background:none;border:1px solid #ddd;border-radius:5px;padding:3px 8px;font-size:11px;color:#555;cursor:pointer;font-family:inherit">✏️</button>
+            </div>
           </div>`).join('');
     };
   }
@@ -2466,6 +2486,61 @@ function getTurnoDoEvento(ts){
   return '';
 }
 function getTurnoAtual(){ return getTurnoDoEvento(Date.now()); }
+
+function showHistoricoUsuario(userId){
+  const u=USUARIOS.find(x=>x.id===userId);
+  if(!u){ showToast('Usuário não encontrado'); return; }
+  const tLabel={checkin:'Check-in',saida_passeio:'Saída Passeio',retorno_passeio:'Retorno',checkout:'Check-out',edicao:'Edição',movimentacao_vaga:'Mudança de Vaga',tornar_grande:'Carro Grande',tornar_pequeno:'Carro Pequeno',merge_lateral:'Mesclagem',desfaz_merge_lateral:'Merge Desfeito',vistoria_criada:'Vistoria Criada',vistoria_vinculada:'Vistoria Vinculada',vistoria_assinada:'Vistoria Assinada'};
+  const tColor={checkin:'#0F6E56',saida_passeio:'#854F0B',retorno_passeio:'#185FA5',checkout:'#A32D2D',edicao:'#555',movimentacao_vaga:'#5C35B0',tornar_grande:'#185FA5',tornar_pequeno:'#0F6E56',merge_lateral:'#854F0B',desfaz_merge_lateral:'#888',vistoria_criada:'#0D3B6E',vistoria_vinculada:'#0F6E56',vistoria_assinada:'#27AE60'};
+  const nomeU=u.nome.toLowerCase();
+  const allEvts=[];
+  Object.entries(HISTORICO).forEach(([apt,evts])=>evts.forEach(ev=>{
+    const ev_usr=(ev.usuario||'').toLowerCase();
+    if(ev_usr.includes(nomeU)||nomeU.includes(ev_usr.split(' · ')[0]||ev_usr)) allEvts.push({apt,...ev});
+  }));
+  allEvts.sort((a,b)=>b.ts-a.ts);
+  function render(evtsFilt, filtroTipo, filtroDe, filtroAte){
+    const mc=document.getElementById('mc');
+    function dts(s){if(!s)return 0;const[y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d).getTime();}
+    function dte(s){if(!s)return Infinity;const[y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d,23,59,59,999).getTime();}
+    let evts=allEvts;
+    if(filtroDe) evts=evts.filter(e=>e.ts>=dts(filtroDe));
+    if(filtroAte) evts=evts.filter(e=>e.ts<=dte(filtroAte));
+    if(filtroTipo) evts=evts.filter(e=>e.tipo===filtroTipo);
+    const hoje=new Date(); const td=`${hoje.getFullYear()}-${String(hoje.getMonth()+1).padStart(2,'0')}-${String(hoje.getDate()).padStart(2,'0')}`;
+    const tipos=[...new Set(allEvts.map(e=>e.tipo))];
+    mc.innerHTML=`<div class="mt">📋 Histórico — ${u.nome}</div>
+      <div style="font-size:11px;color:#888;margin-bottom:8px">${u.cargo} · ${allEvts.length} ação(ões) total</div>
+      <div style="display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap">
+        <input type="date" id="huf-de" value="${filtroDe||td}" style="border:1px solid #ddd;border-radius:6px;padding:4px 8px;font-size:11px;font-family:inherit" onchange="window._hufFilter()">
+        <input type="date" id="huf-ate" value="${filtroAte||td}" style="border:1px solid #ddd;border-radius:6px;padding:4px 8px;font-size:11px;font-family:inherit" onchange="window._hufFilter()">
+        <select id="huf-tipo" style="border:1px solid #ddd;border-radius:6px;padding:4px 8px;font-size:11px;font-family:inherit;flex:1" onchange="window._hufFilter()">
+          <option value="">Todos os tipos</option>
+          ${tipos.map(t=>`<option value="${t}" ${filtroTipo===t?'selected':''}>${tLabel[t]||t}</option>`).join('')}
+        </select>
+      </div>
+      <div style="max-height:45vh;overflow-y:auto">
+        ${evts.length===0?'<div style="color:#bbb;font-size:12px;text-align:center;padding:20px">Nenhuma ação no período</div>'
+          :evts.slice(0,100).map(ev=>`<div style="display:flex;gap:8px;align-items:flex-start;padding:6px 0;border-bottom:1px solid #f0efea">
+            <span style="background:${tColor[ev.tipo]||'#888'};color:#fff;border-radius:4px;padding:2px 5px;font-size:9px;font-weight:700;white-space:nowrap;flex-shrink:0;margin-top:2px">${tLabel[ev.tipo]||ev.tipo}</span>
+            <div style="flex:1;min-width:0">
+              <div style="font-size:12px;color:#111">Apt. ${ev.apt}${ev.hospedagem?' · '+ev.hospedagem:''} · Vaga ${ev.vaga||'—'}</div>
+              <div style="font-size:10px;color:#888">${fmtDt(ev.ts)}${ev.extra?' · '+ev.extra:''}</div>
+            </div>
+          </div>`).join('')}
+      </div>
+      <button class="bcx" onclick="showModalUsuarios()" style="width:100%;margin-top:10px">← Voltar</button>`;
+    document.getElementById('ov').classList.add('on');
+    window._hufFilter=()=>{
+      const de=document.getElementById('huf-de')?.value||'';
+      const ate=document.getElementById('huf-ate')?.value||'';
+      const tipo=document.getElementById('huf-tipo')?.value||'';
+      render(allEvts, tipo, de, ate);
+    };
+  }
+  const hoje2=new Date(); const td2=`${hoje2.getFullYear()}-${String(hoje2.getMonth()+1).padStart(2,'0')}-${String(hoje2.getDate()).padStart(2,'0')}`;
+  render(allEvts, '', td2, td2);
+}
 
 function showModalTurnos(){
   function render(){
@@ -2952,15 +3027,461 @@ function applyModulos(){
   Object.keys(VAGAS_RECARGA).forEach(id=>refRecarga(id));
 }
 
-// ── VISTORIAS (placeholder) ───────────────────────────────────────────────
+// ── VISTORIAS ─────────────────────────────────────────────────────────────
 let VISTORIAS = {};
+const VISTORIA_COUNTER_KEY = 'garagespot_vistoria_counter';
+const VISTORIAS_LS = 'garagespot_vistorias';
+function saveVistorias(){try{localStorage.setItem(VISTORIAS_LS,JSON.stringify(VISTORIAS));}catch(e){}}
+function loadVistorias(){try{const d=localStorage.getItem(VISTORIAS_LS);if(d)VISTORIAS=JSON.parse(d)||{};}catch(e){}}
+function nextNumVistoria(){
+  let n=parseInt(localStorage.getItem(VISTORIA_COUNTER_KEY)||'0')+1;
+  localStorage.setItem(VISTORIA_COUNTER_KEY,String(n));
+  return 'VIST'+String(n).padStart(3,'0');
+}
+function getVistoriaByHosp(hospNum){
+  if(!hospNum) return null;
+  return Object.values(VISTORIAS).find(v=>v.hospedagem===hospNum)||null;
+}
+function getVistoriaByApt(apt){
+  const list=Object.values(VISTORIAS).filter(v=>v.apt===apt).sort((a,b)=>b.ts_criada-a.ts_criada);
+  return list[0]||null;
+}
+
+// SVG views para marcação de danos (5 ângulos de sedã genérico)
+const VST_SVG = {
+  le:`<svg viewBox="0 0 280 130" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block"><ellipse cx="76" cy="127" rx="44" ry="4" fill="#ccc"/><ellipse cx="200" cy="127" rx="44" ry="4" fill="#ccc"/><path d="M15,90 L18,66 C22,48 38,28 60,24 L100,21 L155,21 C167,21 180,27 190,38 L215,74 L264,77 L264,90 Z" fill="#E0E1E3" stroke="#666" stroke-width="2"/><path d="M62,24 L59,66 L178,66 L175,27 L130,22 Z" fill="#C0D8F0" stroke="#888" stroke-width="1"/><line x1="92" y1="23" x2="89" y2="66" stroke="#777" stroke-width="1.5"/><line x1="128" y1="21" x2="126" y2="88" stroke="#bbb" stroke-width="1"/><path d="M18,66 C22,48 38,28 60,24 L59,66 Z" fill="#D2D3D6" stroke="none"/><path d="M175,27 C182,33 195,48 215,74 L178,66 Z" fill="#D2D3D6" stroke="none"/><path d="M28,90 Q30,63 76,61 Q122,59 111,90 Z" fill="#C8C9CB" stroke="#666" stroke-width="1.5"/><path d="M162,90 Q160,63 200,61 Q240,59 238,90 Z" fill="#C8C9CB" stroke="#666" stroke-width="1.5"/><circle cx="76" cy="103" r="19" fill="#444" stroke="#222" stroke-width="2"/><circle cx="76" cy="103" r="10" fill="#777"/><circle cx="76" cy="103" r="4" fill="#555"/><circle cx="200" cy="103" r="19" fill="#444" stroke="#222" stroke-width="2"/><circle cx="200" cy="103" r="10" fill="#777"/><circle cx="200" cy="103" r="4" fill="#555"/><line x1="15" y1="90" x2="264" y2="90" stroke="#666" stroke-width="1.5"/></svg>`,
+  ld:`<svg viewBox="0 0 280 130" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block"><ellipse cx="76" cy="127" rx="44" ry="4" fill="#ccc"/><ellipse cx="200" cy="127" rx="44" ry="4" fill="#ccc"/><g transform="scale(-1,1) translate(-280,0)"><path d="M15,90 L18,66 C22,48 38,28 60,24 L100,21 L155,21 C167,21 180,27 190,38 L215,74 L264,77 L264,90 Z" fill="#E0E1E3" stroke="#666" stroke-width="2"/><path d="M62,24 L59,66 L178,66 L175,27 L130,22 Z" fill="#C0D8F0" stroke="#888" stroke-width="1"/><line x1="92" y1="23" x2="89" y2="66" stroke="#777" stroke-width="1.5"/><line x1="128" y1="21" x2="126" y2="88" stroke="#bbb" stroke-width="1"/><path d="M18,66 C22,48 38,28 60,24 L59,66 Z" fill="#D2D3D6" stroke="none"/><path d="M175,27 C182,33 195,48 215,74 L178,66 Z" fill="#D2D3D6" stroke="none"/><path d="M28,90 Q30,63 76,61 Q122,59 111,90 Z" fill="#C8C9CB" stroke="#666" stroke-width="1.5"/><path d="M162,90 Q160,63 200,61 Q240,59 238,90 Z" fill="#C8C9CB" stroke="#666" stroke-width="1.5"/><circle cx="76" cy="103" r="19" fill="#444" stroke="#222" stroke-width="2"/><circle cx="76" cy="103" r="10" fill="#777"/><circle cx="76" cy="103" r="4" fill="#555"/><circle cx="200" cy="103" r="19" fill="#444" stroke="#222" stroke-width="2"/><circle cx="200" cy="103" r="10" fill="#777"/><circle cx="200" cy="103" r="4" fill="#555"/><line x1="15" y1="90" x2="264" y2="90" stroke="#666" stroke-width="1.5"/></g></svg>`,
+  di:`<svg viewBox="0 0 200 155" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block"><path d="M22,148 L22,68 L36,34 L84,22 L116,22 L164,34 L178,68 L178,148 Z" fill="#E0E1E3" stroke="#666" stroke-width="2"/><path d="M38,36 L52,23 L148,23 L162,36 L157,72 L43,72 Z" fill="#C0D8F0" stroke="#888" stroke-width="1"/><line x1="52" y1="23" x2="148" y2="23" stroke="#666" stroke-width="2.5"/><path d="M22,92 L22,116 Q22,121 54,119 L54,92 Z" fill="#FFFDE0" stroke="#999" stroke-width="1.5"/><path d="M178,92 L178,116 Q178,121 146,119 L146,92 Z" fill="#FFFDE0" stroke="#999" stroke-width="1.5"/><rect x="65" y="119" width="70" height="13" rx="4" fill="#999" stroke="#666" stroke-width="1"/><rect x="22" y="130" width="156" height="10" rx="4" fill="#CACBCE" stroke="#aaa" stroke-width="1"/><rect x="6" y="66" width="16" height="9" rx="3" fill="#C8C9CC" stroke="#aaa" stroke-width="1"/><rect x="178" y="66" width="16" height="9" rx="3" fill="#C8C9CC" stroke="#aaa" stroke-width="1"/></svg>`,
+  tr:`<svg viewBox="0 0 200 155" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block"><path d="M22,148 L22,68 L36,34 L84,22 L116,22 L164,34 L178,68 L178,148 Z" fill="#E0E1E3" stroke="#666" stroke-width="2"/><path d="M38,36 L52,23 L148,23 L162,36 L157,72 L43,72 Z" fill="#C0D8F0" stroke="#888" stroke-width="1"/><line x1="43" y1="36" x2="157" y2="36" stroke="#aaa" stroke-width="1.5"/><path d="M22,92 L22,116 Q22,121 54,119 L54,92 Z" fill="#FFD0D0" stroke="#CC0000" stroke-width="1.5"/><path d="M178,92 L178,116 Q178,121 146,119 L146,92 Z" fill="#FFD0D0" stroke="#CC0000" stroke-width="1.5"/><rect x="72" y="119" width="56" height="14" rx="2" fill="#fff" stroke="#888" stroke-width="1"/><rect x="22" y="130" width="156" height="10" rx="4" fill="#CACBCE" stroke="#aaa" stroke-width="1"/><rect x="6" y="66" width="16" height="9" rx="3" fill="#C8C9CC" stroke="#aaa" stroke-width="1"/><rect x="178" y="66" width="16" height="9" rx="3" fill="#C8C9CC" stroke="#aaa" stroke-width="1"/></svg>`,
+  su:`<svg viewBox="0 0 160 260" xmlns="http://www.w3.org/2000/svg" style="width:55%;max-width:160px;margin:0 auto;display:block"><rect x="20" y="18" width="120" height="224" rx="28" fill="#E0E1E3" stroke="#666" stroke-width="2"/><path d="M38,46 L122,46 L116,26 L44,26 Z" fill="#C0D8F0" stroke="#888" stroke-width="1"/><path d="M38,214 L122,214 L116,234 L44,234 Z" fill="#C0D8F0" stroke="#888" stroke-width="1"/><line x1="20" y1="102" x2="140" y2="102" stroke="#bbb" stroke-width="1"/><line x1="20" y1="158" x2="140" y2="158" stroke="#bbb" stroke-width="1"/><line x1="80" y1="18" x2="80" y2="242" stroke="#ccc" stroke-width="0.5" stroke-dasharray="4,3"/><rect x="3" y="62" width="18" height="34" rx="6" fill="#C8C9CC" stroke="#aaa" stroke-width="1"/><rect x="139" y="62" width="18" height="34" rx="6" fill="#C8C9CC" stroke="#aaa" stroke-width="1"/><ellipse cx="11" cy="72" rx="10" ry="18" fill="#555" stroke="#333" stroke-width="1.5"/><ellipse cx="149" cy="72" rx="10" ry="18" fill="#555" stroke="#333" stroke-width="1.5"/><ellipse cx="11" cy="190" rx="10" ry="18" fill="#555" stroke="#333" stroke-width="1.5"/><ellipse cx="149" cy="190" rx="10" ry="18" fill="#555" stroke="#333" stroke-width="1.5"/></svg>`
+};
+const VST_VIEWS_META=[
+  {id:'le',label:'Lateral Esquerda'},
+  {id:'di',label:'Dianteira'},
+  {id:'tr',label:'Traseira'},
+  {id:'ld',label:'Lateral Direita'},
+  {id:'su',label:'Superior'},
+];
+
+// ── Tela principal de vistorias ───────────────────────────────────────────
 function renderTelaVistorias(){
   const vw=document.getElementById('vistorias-wrap'); if(!vw) return;
-  vw.innerHTML=`<div style="text-align:center;padding:40px 20px;color:#888">
-    <div style="font-size:48px;margin-bottom:16px">📋</div>
-    <div style="font-size:15px;font-weight:600;color:#555;margin-bottom:8px">Vistorias</div>
-    <div style="font-size:13px;color:#aaa;line-height:1.6">Módulo em desenvolvimento</div>
+  const list=Object.values(VISTORIAS).sort((a,b)=>b.ts_criada-a.ts_criada);
+  const q=(document.getElementById('vst-search-inp')?.value||'').trim().toLowerCase();
+  const filtered=q?list.filter(v=>
+    (v.apt||'').toLowerCase().includes(q)||
+    (v.numero||'').toLowerCase().includes(q)||
+    (v.hospede||'').toLowerCase().includes(q)||
+    (v.modelo||'').toLowerCase().includes(q)||
+    (v.placa||'').toLowerCase().includes(q)
+  ):list;
+
+  vw.innerHTML=`
+    <div style="padding:10px 0 6px;display:flex;gap:8px;align-items:center">
+      <input id="vst-search-inp" type="text" placeholder="Buscar vistoria..." value="${q}" oninput="renderTelaVistorias()" style="flex:1;padding:7px 10px;border:1.5px solid #ddd;border-radius:8px;font-size:13px;outline:none">
+      <button class="bsv" style="padding:7px 12px;font-size:13px;white-space:nowrap" onclick="novaVistoria()">+ Nova</button>
+    </div>
+    ${filtered.length===0?`<div style="text-align:center;padding:40px 20px;color:#aaa;font-size:13px">${q?'Nenhuma vistoria encontrada':'Nenhuma vistoria registrada'}</div>`:''}
+    ${filtered.map(v=>{
+      const assinada=!!v.ts_assinada;
+      const nd=(v.danos||[]).length;
+      const hospStr=v.hospedagem?`<span style="color:#888">${v.hospedagem}</span> · `:'';
+      return `<div style="background:#fff;border-radius:10px;border:1.5px solid ${assinada?'#b0dbc0':'#e0b84a'};margin-bottom:8px;padding:10px 12px">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:5px">
+          <span style="font-size:13px;font-weight:700">${v.numero}</span>
+          <span style="font-size:10px;background:${assinada?'#EEF9F2':'#FFF9E6'};color:${assinada?'#0F6E56':'#8B6200'};border-radius:10px;padding:1px 7px;font-weight:700">${assinada?'Assinada':'Pendente'}</span>
+          ${nd>0?`<span style="font-size:10px;background:#FFF2F2;color:#A32D2D;border-radius:10px;padding:1px 7px;font-weight:700">${nd} avaria${nd>1?'s':''}</span>`:''}
+          <span style="margin-left:auto;font-size:11px;color:#aaa">${new Date(v.ts_criada).toLocaleDateString('pt-BR')}</span>
+        </div>
+        <div style="font-size:12px;color:#555;margin-bottom:7px">${hospStr}<strong>Apt. ${v.apt||'—'}</strong> · ${v.modelo||'—'} · ${v.cor||'—'}${v.placa?' · '+v.placa:''}</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <button onclick="verVistoria('${v.id}')" style="font-size:11px;padding:4px 10px;border:1.5px solid #ccc;border-radius:6px;background:#fff;cursor:pointer">👁 Ver</button>
+          ${!assinada?`<button onclick="assinarVistoria('${v.id}')" style="font-size:11px;padding:4px 10px;border:1.5px solid #27AE60;border-radius:6px;background:#EEF9F2;color:#27AE60;cursor:pointer;font-weight:700">✍ Assinar</button>`:''}
+          <button onclick="gerarPDFVistoria('${v.id}')" style="font-size:11px;padding:4px 10px;border:1.5px solid var(--cp);border-radius:6px;background:var(--cp-lt);color:var(--cp);cursor:pointer">📤 PDF</button>
+          <button onclick="deletarVistoria('${v.id}')" style="font-size:11px;padding:4px 10px;border:1.5px solid #ddd;border-radius:6px;background:#fff;color:#A32D2D;cursor:pointer">🗑</button>
+        </div>
+      </div>`;
+    }).join('')}`;
+}
+
+// ── Criar nova vistoria — fluxo 4 etapas ─────────────────────────────────
+let _vstD = null;
+let _vstDanos = [];
+
+function novaVistoria(preApt, preHosp){
+  _vstD={apt:preApt||'', hospedagem:preHosp||''};
+  _vstDanos=[];
+  _vstStep1();
+}
+
+function _vstStep1(){
+  const apt=_vstD.apt;
+  let preMod='',preCor='',prePla='',preGst='';
+  if(apt){
+    const vagaId=Object.keys(S).find(k=>S[k].apt===apt&&S[k].status==='occupied');
+    if(vagaId){preMod=S[vagaId].model||'';preCor=S[vagaId].color||'';prePla=S[vagaId].plate||'';preGst=S[vagaId].guest||'';}
+    else if(PASSEIO[apt]){preMod=PASSEIO[apt].model||'';preCor=PASSEIO[apt].color||'';prePla=PASSEIO[apt].plate||'';preGst=PASSEIO[apt].guest||'';}
+  }
+  showM(`<div class="mt">📋 Nova Vistoria</div>
+    <div class="ms" style="margin-bottom:10px">Dados do veículo</div>
+    <label class="fl">Apartamento *</label>
+    <input class="fi" id="vst-apt" value="${apt}" placeholder="Ex: 101, 205...">
+    <label class="fl">Modelo *</label>
+    <input class="fi" id="vst-mod" value="${preMod}" placeholder="Ex: Civic, HB20...">
+    <label class="fl">Cor *</label>
+    <input class="fi" id="vst-cor" value="${preCor}" placeholder="Ex: Prata, Preto...">
+    <label class="fl">Placa</label>
+    <input class="fi" id="vst-pla" value="${prePla}" placeholder="ABC1D23" style="text-transform:uppercase">
+    <label class="fl">Hóspede</label>
+    <input class="fi" id="vst-gst" value="${preGst}" placeholder="Nome completo">
+    <div class="b2">
+      <button class="bcx" onclick="closeOv()">Cancelar</button>
+      <button class="bsv" id="vst-s1-next">Próximo →</button>
+    </div>`);
+  document.getElementById('vst-s1-next').onclick=function(){
+    const aptV=document.getElementById('vst-apt').value.trim();
+    const modV=document.getElementById('vst-mod').value.trim();
+    const corV=document.getElementById('vst-cor').value.trim();
+    if(!aptV||!modV||!corV){showToast('Preencha Apt., Modelo e Cor');return;}
+    _vstD.apt=aptV;_vstD.modelo=modV;_vstD.cor=corV;
+    _vstD.placa=document.getElementById('vst-pla').value.trim().toUpperCase();
+    _vstD.hospede=document.getElementById('vst-gst').value.trim();
+    if(!_vstD.hospedagem){
+      const vagaId=Object.keys(S).find(k=>S[k].apt===aptV&&S[k].status==='occupied');
+      if(vagaId&&S[vagaId].hospedagem) _vstD.hospedagem=S[vagaId].hospedagem;
+      else if(PASSEIO[aptV]?.hospedagem) _vstD.hospedagem=PASSEIO[aptV].hospedagem;
+    }
+    _vstStep2();
+  };
+}
+
+function _vstStep2(){
+  showM(`<div class="mt">📋 Avarias</div>
+    <div class="ms" style="margin-bottom:14px">O veículo possui avarias visíveis?</div>
+    <div class="ag" style="gap:10px">
+      <button class="bsv" style="background:#0F6E56" onclick="_vstStep3()">✅ Sem avaria</button>
+      <button class="bsv" style="background:#A32D2D" onclick="_vstStep2b()">❗ Com avaria — Marcar</button>
+    </div>
+    <button class="bcx" style="margin-top:8px;width:100%" onclick="_vstStep1()">← Voltar</button>`);
+}
+
+function _vstMkView(vm){
+  return `<div>
+    <div style="font-size:9px;font-weight:700;color:#666;margin-bottom:3px;text-align:center;text-transform:uppercase;letter-spacing:.3px">${vm.label}</div>
+    <div style="position:relative;border:1.5px solid #ddd;border-radius:6px;overflow:hidden;background:#f7f8f9;cursor:crosshair">
+      ${VST_SVG[vm.id]}
+      <div class="vst-ol" data-view="${vm.id}" style="position:absolute;inset:0;z-index:3" onclick="_vstAddDano(this,event)"></div>
+    </div>
   </div>`;
+}
+function _vstStep2b(){
+  const mc=document.getElementById('mc');
+  const nd=_vstDanos.length;
+  mc.innerHTML=`<div class="mt" style="font-size:14px">📋 Marcar Avarias</div>
+    <div style="font-size:11px;color:#888;margin-bottom:8px">Toque no local da avaria. Toque no ✕ para remover.</div>
+    <div style="display:grid;grid-template-columns:3fr 2fr;gap:6px;margin-bottom:6px">
+      ${_vstMkView({id:'le',label:'Lateral Esq.'})}&nbsp;
+      ${_vstMkView({id:'di',label:'Dianteira'})}
+    </div>
+    <div style="display:grid;grid-template-columns:3fr 2fr;gap:6px;margin-bottom:6px">
+      ${_vstMkView({id:'ld',label:'Lateral Dir.'})}&nbsp;
+      ${_vstMkView({id:'tr',label:'Traseira'})}
+    </div>
+    <div style="display:flex;justify-content:center;margin-bottom:8px">
+      <div style="width:48%">${_vstMkView({id:'su',label:'Superior'})}</div>
+    </div>
+    <div id="vst-nd-badge" style="font-size:11px;text-align:center;margin-bottom:8px;color:${nd>0?'#0F6E56':'#888'}">${nd>0?nd+' avaria'+(nd>1?'s':'')+' marcada'+(nd>1?'s':''):'Nenhuma avaria marcada ainda'}</div>
+    <div class="b2">
+      <button class="bcx" onclick="_vstStep2()">← Voltar</button>
+      <button class="bsv" id="vst-2b-next">Próximo →</button>
+    </div>`;
+  document.getElementById('ov').classList.add('on');
+  _vstDanos.forEach((d,i)=>_vstPlaceDanoMark(d.view,d.x,d.y,i));
+  document.getElementById('vst-2b-next').onclick=function(){
+    if(_vstDanos.length===0){showToast('Marque ao menos 1 avaria, ou volte e escolha "Sem avaria"');return;}
+    _vstStep3();
+  };
+}
+
+window._vstAddDano=function(el,event){
+  const rect=el.getBoundingClientRect();
+  const x=(event.clientX-rect.left)/rect.width*100;
+  const y=(event.clientY-rect.top)/rect.height*100;
+  const view=el.dataset.view;
+  const idx=_vstDanos.length;
+  _vstDanos.push({view,x,y});
+  _vstPlaceDanoMark(view,x,y,idx);
+};
+
+function _vstPlaceDanoMark(viewId,x,y,idx){
+  const ol=document.querySelector('.vst-ol[data-view="'+viewId+'"]');
+  if(!ol) return;
+  const mk=document.createElement('div');
+  mk.style.cssText=`position:absolute;left:${x}%;top:${y}%;transform:translate(-50%,-50%);width:20px;height:20px;border-radius:50%;background:rgba(163,45,45,.88);color:#fff;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:4;border:1.5px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.4)`;
+  mk.textContent='×';
+  mk.dataset.idx=String(idx);
+  mk.onclick=function(e){
+    e.stopPropagation();
+    _vstDanos.splice(parseInt(this.dataset.idx),1);
+    document.querySelectorAll('.vst-ol').forEach(o=>o.innerHTML='');
+    _vstDanos.forEach((d,i)=>_vstPlaceDanoMark(d.view,d.x,d.y,i));
+    const badge=document.getElementById('vst-nd-badge');
+    if(badge){const nd2=_vstDanos.length;badge.style.color=nd2>0?'#0F6E56':'#888';badge.textContent=nd2>0?nd2+' avaria'+(nd2>1?'s':'')+' marcada'+(nd2>1?'s':''):'Nenhuma avaria marcada ainda';}
+  };
+  ol.appendChild(mk);
+}
+
+function _vstStep3(){
+  const nd=_vstDanos.length;
+  const hospStr=_vstD.hospedagem?`<div class="dr"><span class="dl">Hospedagem</span><span class="dv">${_vstD.hospedagem}</span></div>`:'';
+  showM(`<div class="mt">📋 Revisão</div>
+    <div style="background:#f8f8f8;border-radius:8px;padding:10px;margin-bottom:10px">
+      <div class="dr"><span class="dl">Apartamento</span><span class="dv">${_vstD.apt}</span></div>
+      <div class="dr"><span class="dl">Modelo</span><span class="dv">${_vstD.modelo}</span></div>
+      <div class="dr"><span class="dl">Cor</span><span class="dv">${_vstD.cor}</span></div>
+      ${_vstD.placa?`<div class="dr"><span class="dl">Placa</span><span class="dv">${_vstD.placa}</span></div>`:''}
+      ${_vstD.hospede?`<div class="dr"><span class="dl">Hóspede</span><span class="dv">${_vstD.hospede}</span></div>`:''}
+      ${hospStr}
+      <div class="dr"><span class="dl">Avarias</span><span class="dv" style="color:${nd>0?'#A32D2D':'#0F6E56'}">${nd>0?nd+' marcada'+(nd>1?'s':''):'Nenhuma'}</span></div>
+    </div>
+    <div class="ag" style="gap:8px">
+      <button class="bsv" style="background:#0F6E56" onclick="_vstStep4()">✍ Assinar agora</button>
+      <button class="bcx" style="border-color:var(--cp);color:var(--cp)" onclick="_vstConfirmar(null)">Confirmar sem assinatura</button>
+      <button class="bcx" onclick="${nd>0?'_vstStep2b()':'_vstStep2()'}">← Corrigir</button>
+    </div>`);
+}
+
+function _vstSetupCanvas(canvasId){
+  const canvas=document.getElementById(canvasId);
+  if(!canvas) return null;
+  const ctx=canvas.getContext('2d');
+  ctx.strokeStyle='#222';ctx.lineWidth=2.5;ctx.lineCap='round';ctx.lineJoin='round';
+  let drawing=false,lastX=0,lastY=0;
+  function getPos(e){
+    const r=canvas.getBoundingClientRect(),sx=canvas.width/r.width,sy=canvas.height/r.height;
+    if(e.touches) return {x:(e.touches[0].clientX-r.left)*sx,y:(e.touches[0].clientY-r.top)*sy};
+    return {x:(e.clientX-r.left)*sx,y:(e.clientY-r.top)*sy};
+  }
+  canvas.addEventListener('mousedown',e=>{drawing=true;const p=getPos(e);lastX=p.x;lastY=p.y;});
+  canvas.addEventListener('mousemove',e=>{if(!drawing)return;const p=getPos(e);ctx.beginPath();ctx.moveTo(lastX,lastY);ctx.lineTo(p.x,p.y);ctx.stroke();lastX=p.x;lastY=p.y;});
+  canvas.addEventListener('mouseup',()=>{drawing=false;});
+  canvas.addEventListener('touchstart',e=>{e.preventDefault();drawing=true;const p=getPos(e);lastX=p.x;lastY=p.y;},{passive:false});
+  canvas.addEventListener('touchmove',e=>{e.preventDefault();if(!drawing)return;const p=getPos(e);ctx.beginPath();ctx.moveTo(lastX,lastY);ctx.lineTo(p.x,p.y);ctx.stroke();lastX=p.x;lastY=p.y;},{passive:false});
+  canvas.addEventListener('touchend',()=>{drawing=false;});
+  window._vstLimparSig=function(){ctx.clearRect(0,0,canvas.width,canvas.height);};
+  return canvas;
+}
+
+function _vstStep4(){
+  const mc=document.getElementById('mc');
+  mc.innerHTML=`
+    <div class="mt" style="font-size:14px">✍ Assinatura do Hóspede</div>
+    <div style="font-size:11px;color:#888;margin-bottom:8px">Assine no campo abaixo</div>
+    <canvas id="vst-sig-canvas" width="320" height="150" style="border:2px solid #ddd;border-radius:8px;background:#fff;touch-action:none;width:100%;max-width:320px;display:block;margin:0 auto"></canvas>
+    <div class="b2" style="margin-top:8px">
+      <button class="bcx" onclick="_vstLimparSig()">🗑 Limpar</button>
+      <button class="bsv" id="vst-sig-ok">✅ Confirmar</button>
+    </div>
+    <button class="bcx" style="margin-top:6px;width:100%" onclick="_vstStep3()">← Voltar</button>`;
+  document.getElementById('ov').classList.add('on');
+  const canvas=_vstSetupCanvas('vst-sig-canvas');
+  document.getElementById('vst-sig-ok').onclick=function(){
+    const sig=canvas.toDataURL('image/png');
+    _vstConfirmar(sig);
+  };
+}
+
+function _vstConfirmar(assinatura){
+  confirmarUsuario('registrando vistoria',function(usuario){
+    const usuarioStr=usuario?(usuario.nome+' · '+usuario.cargo):'';
+    const id=nextNumVistoria();
+    const now=Date.now();
+    VISTORIAS[id]={
+      id,numero:id,
+      apt:_vstD.apt,modelo:_vstD.modelo,cor:_vstD.cor,
+      placa:_vstD.placa||'',hospede:_vstD.hospede||'',
+      hospedagem:_vstD.hospedagem||'',
+      ts_criada:now,ts_assinada:assinatura?now:null,
+      danos:[..._vstDanos],
+      assinatura:assinatura||null,
+      usuario_criou:usuarioStr,
+      usuario_assinou:assinatura?usuarioStr:null,
+    };
+    saveVistorias();
+    if(_vstD.apt){
+      const extra=`${id} — ${_vstD.modelo} ${_vstD.cor}${_vstDanos.length?' · '+_vstDanos.length+' avaria(s)':''}`;
+      addHistorico(_vstD.apt,'vistoria_criada','',extra,usuarioStr,_vstD.hospedagem||'');
+      if(assinatura) addHistorico(_vstD.apt,'vistoria_assinada','',id,usuarioStr,_vstD.hospedagem||'');
+    }
+    const vagaId=Object.keys(S).find(k=>S[k].apt===_vstD.apt&&S[k].status==='occupied');
+    if(vagaId) refVistoria(vagaId);
+    if(document.getElementById('vistorias-wrap')?.style?.display!=='none') renderTelaVistorias();
+    _vstD=null;_vstDanos=[];
+    // Mostrar resultado com opção de PDF
+    showM(`<div class="mt">${assinatura?'✅':'📋'} Vistoria ${id}</div>
+      <div class="ms" style="margin-bottom:10px">${assinatura?'Registrada e assinada':'Registrada — pendente de assinatura'}</div>
+      <div style="background:#f8f8f8;border-radius:8px;padding:8px 10px;font-size:12px;margin-bottom:12px">
+        <div class="dr"><span class="dl">Número</span><span class="dv">${id}</span></div>
+        <div class="dr"><span class="dl">Apartamento</span><span class="dv">${VISTORIAS[id]?.apt||'—'}</span></div>
+        <div class="dr"><span class="dl">Modelo</span><span class="dv">${VISTORIAS[id]?.modelo||'—'} ${VISTORIAS[id]?.cor||''}</span></div>
+      </div>
+      <div class="ag" style="gap:8px">
+        <button class="bsv" onclick="gerarPDFVistoria('${id}')">📤 Compartilhar PDF</button>
+        <button class="bcx" onclick="closeOv()">Fechar</button>
+      </div>`);
+  });
+}
+
+// ── Ver / Assinar / Deletar ────────────────────────────────────────────────
+function verVistoria(id){
+  const v=VISTORIAS[id]; if(!v) return;
+  const nd=(v.danos||[]).length;
+  const assinada=!!v.ts_assinada;
+  const rows=[
+    ['Número',v.numero],['Apartamento',v.apt||'—'],['Hospedagem',v.hospedagem||'—'],
+    ['Modelo',v.modelo||'—'],['Cor',v.cor||'—'],
+    ...(v.placa?[['Placa',v.placa]]:[]),
+    ...(v.hospede?[['Hóspede',v.hospede]]:[]),
+    ['Avarias',nd>0?`<span style="color:#A32D2D">${nd} marcada${nd>1?'s':''}</span>`:'<span style="color:#0F6E56">Nenhuma</span>'],
+    ['Criada em',fmtTs(v.ts_criada)],['Criada por',v.usuario_criou||'—'],
+    ['Assinatura',assinada?`<span style="color:#0F6E56">✅ Assinada em ${fmtTs(v.ts_assinada)}</span>`:'<span style="color:#8B6200">⏳ Pendente</span>'],
+    ...(v.usuario_assinou?[['Assinou',v.usuario_assinou]]:[]),
+  ];
+  showM(`<div class="mt">📋 ${v.numero}</div>
+    <div style="margin:6px 0 10px">${rows.map(([l,val])=>`<div class="dr"><span class="dl">${l}</span><span class="dv">${val}</span></div>`).join('')}</div>
+    ${v.assinatura?`<div style="margin:8px 0;text-align:center"><img src="${v.assinatura}" style="max-width:200px;border:1px solid #ddd;border-radius:6px"/></div>`:''}
+    <div class="ag" style="gap:8px;flex-wrap:wrap">
+      ${!assinada?`<button class="bsv" style="background:#0F6E56" onclick="assinarVistoria('${id}')">✍ Assinar</button>`:''}
+      <button class="bsv" onclick="gerarPDFVistoria('${id}')">📤 PDF</button>
+      <button class="bcx" onclick="closeOv()">Fechar</button>
+    </div>`);
+}
+
+function assinarVistoria(id){
+  const v=VISTORIAS[id]; if(!v) return;
+  const mc=document.getElementById('mc');
+  mc.innerHTML=`
+    <div class="mt" style="font-size:14px">✍ Assinar Vistoria</div>
+    <div style="font-size:12px;color:#888;margin-bottom:4px">${v.numero} — Apt. ${v.apt} · ${v.modelo}</div>
+    <div style="font-size:11px;color:#888;margin-bottom:8px">Assine no campo abaixo</div>
+    <canvas id="vst-sig2-canvas" width="320" height="150" style="border:2px solid #ddd;border-radius:8px;background:#fff;touch-action:none;width:100%;max-width:320px;display:block;margin:0 auto"></canvas>
+    <div class="b2" style="margin-top:8px">
+      <button class="bcx" onclick="_vstLimparSig()">🗑 Limpar</button>
+      <button class="bsv" id="vst-sig-ok2">✅ Confirmar Assinatura</button>
+    </div>
+    <button class="bcx" style="margin-top:6px;width:100%" onclick="verVistoria('${id}')">← Voltar</button>`;
+  document.getElementById('ov').classList.add('on');
+  const canvas=_vstSetupCanvas('vst-sig2-canvas');
+  document.getElementById('vst-sig-ok2').onclick=function(){
+    confirmarUsuario('assinando a vistoria',function(usuario){
+      const usuarioStr=usuario?(usuario.nome+' · '+usuario.cargo):'';
+      VISTORIAS[id].assinatura=canvas.toDataURL('image/png');
+      VISTORIAS[id].ts_assinada=Date.now();
+      VISTORIAS[id].usuario_assinou=usuarioStr;
+      saveVistorias();
+      if(v.apt){
+        addHistorico(v.apt,'vistoria_assinada','',v.numero,usuarioStr,v.hospedagem||'');
+        const vagaId2=Object.keys(S).find(k=>S[k].apt===v.apt&&S[k].status==='occupied');
+        if(vagaId2) refVistoria(vagaId2);
+      }
+      closeOv();
+      showToast('Vistoria '+id+' assinada');
+      if(document.getElementById('vistorias-wrap')?.style?.display!=='none') renderTelaVistorias();
+    });
+  };
+}
+
+function deletarVistoria(id){
+  const v=VISTORIAS[id]; if(!v) return;
+  showM(`<div class="mt">🗑 Excluir Vistoria</div>
+    <div class="ms">${v.numero} — Apt. ${v.apt} · ${v.modelo}</div>
+    <div class="warn-box">Esta vistoria será excluída permanentemente.</div>
+    <div class="ag">
+      <button class="ab ac" id="vst-del-ok">Excluir</button>
+      <button class="bcx" onclick="closeOv()" style="margin-top:4px">Cancelar</button>
+    </div>`);
+  document.getElementById('vst-del-ok').onclick=function(){
+    confirmarUsuario('excluindo vistoria',function(usuario){
+      const usuarioStr=usuario?(usuario.nome+' · '+usuario.cargo):'';
+      if(v.apt) addHistorico(v.apt,'vistoria_deletada','',v.numero,usuarioStr,v.hospedagem||'');
+      delete VISTORIAS[id];
+      saveVistorias();
+      const vagaId=Object.keys(S).find(k=>S[k].apt===v.apt&&S[k].status==='occupied');
+      if(vagaId) refVistoria(vagaId);
+      closeOv();
+      showToast('Vistoria excluída');
+      if(document.getElementById('vistorias-wrap')?.style?.display!=='none') renderTelaVistorias();
+    });
+  };
+}
+
+// ── PDF de vistoria ────────────────────────────────────────────────────────
+function gerarPDFVistoria(id){
+  const v=VISTORIAS[id]; if(!v) return;
+  const nd=(v.danos||[]).length;
+  const viewsComDano=VST_VIEWS_META.filter(vm=>(v.danos||[]).some(d=>d.view===vm.id));
+  let danosHtml='';
+  if(nd>0){
+    danosHtml=`<table style="width:100%;border-collapse:collapse;font-size:11px;margin-top:8px">
+      <tr style="background:#f0f0f0"><th style="padding:4px 8px;text-align:left;border:1px solid #ddd">Vista</th><th style="padding:4px 8px;border:1px solid #ddd">Localizações</th></tr>
+      ${viewsComDano.map(vm=>{
+        const pts=v.danos.filter(d=>d.view===vm.id);
+        return `<tr><td style="padding:4px 8px;border:1px solid #ddd">${vm.label}</td><td style="padding:4px 8px;border:1px solid #ddd">${pts.map(p=>`(${p.x.toFixed(0)}%, ${p.y.toFixed(0)}%)`).join(' | ')}</td></tr>`;
+      }).join('')}
+    </table>`;
+  }
+  const html=`<!DOCTYPE html><html><head><meta charset="utf-8"><style>
+    body{font-family:Arial,sans-serif;font-size:12px;color:#222;margin:20px}
+    .hdr{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #185FA5;padding-bottom:10px;margin-bottom:16px}
+    .hdr-l{font-size:16px;font-weight:700;color:#185FA5}
+    .row{display:flex;gap:8px;margin:4px 0}.lbl{font-weight:700;min-width:120px;color:#555}
+    .badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700}
+    .signed{background:#d4f0e0;color:#0F6E56}.pending{background:#fff0c0;color:#8B6200}
+    .sec{font-size:13px;font-weight:700;color:#185FA5;border-bottom:1px solid #ddd;margin:14px 0 6px;padding-bottom:4px}
+    img.sig{max-width:200px;border:1px solid #ccc;border-radius:4px;margin-top:8px}
+  </style></head><body>
+  <div class="hdr">
+    <div><div class="hdr-l">🅿 GarageSpot</div><div style="font-size:10px;color:#888">Hotel Gumz — Controle de Garagem</div></div>
+    <div style="text-align:right">
+      <div style="font-size:14px;font-weight:700">Vistoria de Veículo</div>
+      <div style="font-size:11px;color:#888">${v.numero} · ${new Date(v.ts_criada).toLocaleDateString('pt-BR')}</div>
+      <span class="badge ${v.ts_assinada?'signed':'pending'}">${v.ts_assinada?'Assinada':'Pendente assinatura'}</span>
+    </div>
+  </div>
+  <div class="sec">Dados do Veículo</div>
+  ${[['Apartamento',v.apt||'—'],['Hospedagem',v.hospedagem||'—'],['Modelo',v.modelo||'—'],['Cor',v.cor||'—'],['Placa',v.placa||'—'],['Hóspede',v.hospede||'—']].map(([l,val])=>`<div class="row"><span class="lbl">${l}:</span><span>${val}</span></div>`).join('')}
+  <div class="sec">Avarias</div>
+  ${nd===0?'<div style="color:#0F6E56;font-weight:600">✅ Sem avarias registradas</div>':`<div style="color:#A32D2D;font-weight:600">❗ ${nd} avaria${nd>1?'s':''} marcada${nd>1?'s':''}</div>${danosHtml}`}
+  <div class="sec">Registro</div>
+  ${[['Criada em',fmtTs(v.ts_criada)],['Criada por',v.usuario_criou||'—'],['Assinada em',v.ts_assinada?fmtTs(v.ts_assinada):'—'],['Assinada por',v.usuario_assinou||'—']].map(([l,val])=>`<div class="row"><span class="lbl">${l}:</span><span>${val}</span></div>`).join('')}
+  ${v.assinatura?`<div class="sec">Assinatura</div><img class="sig" src="${v.assinatura}"/>`:''}
+  <div style="margin-top:24px;font-size:10px;color:#aaa;text-align:center;border-top:1px solid #eee;padding-top:8px">GarageSpot · Hotel Gumz · ${new Date().toLocaleDateString('pt-BR')}</div>
+  </body></html>`;
+  const d=new Date();
+  const ds=String(d.getDate()).padStart(2,'0')+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getFullYear()).slice(-2);
+  gerarECompartilharPDF(`Vistoria ${v.numero}`,html,`${v.numero}_Apt${v.apt}_${ds}_Vistoria_GarageSpot`);
+}
+
+// ── Ícone ❗ no mapa ────────────────────────────────────────────────────────
+function getVistoriaIconForApt(apt){
+  if(!MODULOS.vistorias||!apt) return '';
+  const vst=getVistoriaByApt(apt);
+  if(!vst||vst.ts_assinada) return '';
+  return `<span class="vst-icon" title="Vistoria ${vst.id} — pendente de assinatura" onclick="event.stopPropagation();verVistoria('${vst.id}')">❗</span>`;
+}
+
+function refVistoria(id){
+  const d=S[id]; if(!d||d.status!=='occupied') return;
+  const td=getTd(id); if(!td) return;
+  td.style.position='relative';
+  let iw=td.querySelector('.vst-icon-wrap');
+  if(!iw){
+    iw=document.createElement('div');
+    iw.className='vst-icon-wrap';
+    iw.style.cssText='position:absolute;bottom:2px;left:2px;z-index:5;pointer-events:auto;line-height:1';
+    td.appendChild(iw);
+  }
+  iw.innerHTML=getVistoriaIconForApt(d.apt);
 }
 
 // ── BACKUP LOCAL ──────────────────────────────────────────────────────────
@@ -2971,11 +3492,13 @@ function saveDriveStatus(){ try{localStorage.setItem(DRIVE_STATUS_LS,JSON.string
 
 async function fazerBackupLocal(motivo){
   try{
-    const dados={exportado_em:fmtDt(Date.now()),ts:Date.now(),versao:'1.5',
+    const dados={exportado_em:fmtDt(Date.now()),ts:Date.now(),versao:'1.7',
       vagas:S,passeio:PASSEIO,hospedagens:HOSPEDAGENS,usuarios:USUARIOS,
       historico:HISTORICO,turnos:TURNOS,plantao_manual:PLANTAO_MANUAL,
       recarga_config:RECARGA_CONFIG||{},recargas:RECARGAS||{},
-      historico_recargas:HISTORICO_RECARGAS||[]};
+      historico_recargas:HISTORICO_RECARGAS||[],
+      vistorias:VISTORIAS||{},
+      vistoria_counter:localStorage.getItem(VISTORIA_COUNTER_KEY)||'0'};
     const json=JSON.stringify(dados);
     const hoje=new Date();
     const ds=String(hoje.getDate()).padStart(2,'0')+'-'+String(hoje.getMonth()+1).padStart(2,'0')+'-'+String(hoje.getFullYear()).slice(-2)+'_'+String(hoje.getHours()).padStart(2,'0')+'h'+String(hoje.getMinutes()).padStart(2,'0');
@@ -3375,6 +3898,7 @@ async function exportarZip(){
       recargas:RECARGAS||{},
       historico_recargas:HISTORICO_RECARGAS||[],
       vistorias:VISTORIAS||{},
+      vistoria_counter:localStorage.getItem(VISTORIA_COUNTER_KEY)||'0',
     };
     zip.file('dados.json', JSON.stringify(dados, null, 2));
     // Adicionar relatório de movimentações como texto
@@ -3436,6 +3960,8 @@ function showConfiguracoesSistema(){
       ${_togSwitch('tog-vistorias', MODULOS.vistorias, "MODULOS.vistorias=this.checked;saveModulos();applyModulos();const sp=this.nextElementSibling;sp.style.background=this.checked?'#0F6E56':'#ccc';sp.children[0].style.left=this.checked?'23px':'3px';showToast('Vistorias '+(this.checked?'ativadas':'desativadas'))")}
     </div>
     <div style="font-size:11px;color:#aaa;margin-top:10px;padding:0 2px;line-height:1.5">Módulos desativados ocultam os botões da barra. Os dados são preservados.</div>
+    <div class="gestao-menu-sep" style="margin-top:14px">Aparência</div>
+    <div class="gestao-menu-item" onclick="closeOv();showTema()">🎨 <span>Cor do tema</span></div>
     <button class="bcx" onclick="closeOv()" style="width:100%;margin-top:12px">Fechar</button>`;
   document.getElementById('ov').classList.add('on');
 }
@@ -3618,12 +4144,63 @@ function initExibicao(){
   else if(v==='large') document.documentElement.classList.add('font-large');
 }
 
+// ── TEMA POR CLIENTE ──────────────────────────────────────────────────────
+const TEMAS = [
+  {id:'padrao', nome:'Padrão', cor:'#185FA5'},
+  {id:'azul-esc', nome:'Azul escuro', cor:'#0D3B6E'},
+  {id:'verde', nome:'Verde escuro', cor:'#0F6E56'},
+  {id:'bordo', nome:'Bordô', cor:'#7B1C1C'},
+  {id:'roxo', nome:'Roxo', cor:'#5C35B0'},
+  {id:'cinza', nome:'Cinza escuro', cor:'#2C2C2C'},
+  {id:'musgo', nome:'Verde musgo', cor:'#3D6B35'},
+  {id:'laranja', nome:'Laranja', cor:'#A64B00'},
+  {id:'teal', nome:'Teal', cor:'#0D6E6E'},
+  {id:'vinho', nome:'Vinho', cor:'#6B0F3A'},
+];
+
+function _lightenHex(hex, amt=0.85){
+  const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);
+  return '#'+[r,g,b].map(x=>Math.round(x*(1-amt)+255*amt).toString(16).padStart(2,'0')).join('');
+}
+function applyTema(cor){
+  const lt=_lightenHex(cor,0.88);
+  document.documentElement.style.setProperty('--cp', cor);
+  document.documentElement.style.setProperty('--cp-lt', lt);
+  document.documentElement.style.setProperty('--cp-dk', cor); // darker handled by filter
+}
+function loadTema(){
+  const cor=localStorage.getItem('garagespot_tema')||'#185FA5';
+  applyTema(cor);
+}
+function saveTema(cor){ try{localStorage.setItem('garagespot_tema',cor);}catch(e){} }
+
+function showTema(){
+  const corAtual=localStorage.getItem('garagespot_tema')||'#185FA5';
+  const mc=document.getElementById('mc');
+  mc.innerHTML=`<div class="mt">🎨 Aparência — Cor do tema</div>
+    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin:12px 0">
+      ${TEMAS.map(t=>{
+        const sel=t.cor===corAtual;
+        return `<div onclick="applyTema('${t.cor}');saveTema('${t.cor}');showToast('Tema: ${t.nome}')" style="display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer">
+          <div style="width:40px;height:40px;border-radius:50%;background:${t.cor};border:${sel?'3px solid #111':'2px solid transparent'};box-shadow:${sel?'0 0 0 2px #fff inset':'none'};display:flex;align-items:center;justify-content:center">
+            ${sel?'<span style="color:#fff;font-size:14px">✓</span>':''}
+          </div>
+          <span style="font-size:9px;color:#666;text-align:center;line-height:1.2">${t.nome}</span>
+        </div>`;
+      }).join('')}
+    </div>
+    <div style="font-size:11px;color:#aaa;text-align:center;margin-bottom:10px">Toque na cor para aplicar instantaneamente</div>
+    <button class="bcx" onclick="closeOv()" style="width:100%">Fechar</button>`;
+  document.getElementById('ov').classList.add('on');
+}
+
 function showRelatorios(){
   showM(`<div class="mt">📊 Relatórios</div>
     <div class="gestao-menu-item" onclick="showRelMovimentacoes()">📋 <span>Movimentações</span></div>
     <div class="gestao-menu-item" onclick="showRelOcupacao()">📈 <span>Ocupação</span></div>
     <div class="gestao-menu-item" onclick="showRelPorApto()">🏨 <span>Por apartamento</span></div>
     <div class="gestao-menu-item" onclick="showRelTurno()">🕐 <span>Por turno</span></div>
+    <div class="gestao-menu-item" onclick="showRelProdutividade()">👤 <span>Produtividade</span></div>
     <button class="bcx" onclick="closeOv()" style="width:100%;margin-top:8px">✕ Fechar</button>`);
 }
 
@@ -3911,6 +4488,108 @@ function showRelTurno(){
     else await gerarECompartilharPDF('Relatorio por Turno',buildRelTurnoHTML(evts,de,ate,turnos),nome);
   };
   render();
+}
+
+function showRelProdutividade(){
+  const mc=document.getElementById('mc');
+  const hoje=new Date();
+  const td=`${hoje.getFullYear()}-${String(hoje.getMonth()+1).padStart(2,'0')}-${String(hoje.getDate()).padStart(2,'0')}`;
+  const actionTypes=['checkin','checkout','saida_passeio','retorno_passeio','edicao','movimentacao_vaga','tornar_grande','tornar_pequeno','merge_lateral','desfaz_merge_lateral'];
+  const tLabel={checkin:'Check-in',checkout:'Check-out',saida_passeio:'Saída Passeio',retorno_passeio:'Retorno',edicao:'Edição',movimentacao_vaga:'Mudança Vaga',tornar_grande:'Carro Grande',tornar_pequeno:'Carro Pequeno',merge_lateral:'Mesclagem',desfaz_merge_lateral:'Merge Desfeito'};
+
+  function dts(s){if(!s)return 0;const[y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d).getTime();}
+  function dte(s){if(!s)return Infinity;const[y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d,23,59,59,999).getTime();}
+
+  function calcMetricas(de, ate, usrFiltro){
+    const tsI=dts(de), tsF=dte(ate);
+    const allEvts=[];
+    Object.entries(HISTORICO).forEach(([apt,evts])=>evts.forEach(ev=>{
+      if(ev.ts>=tsI&&ev.ts<=tsF) allEvts.push({apt,...ev});
+    }));
+    // Agrupa por usuário
+    const map={};
+    allEvts.forEach(ev=>{
+      const usr=ev.usuario||'Não identificado';
+      if(!map[usr]) map[usr]={nome:usr,total:0,tipos:{}};
+      map[usr].total++;
+      map[usr].tipos[ev.tipo]=(map[usr].tipos[ev.tipo]||0)+1;
+    });
+    // Filtra se específico
+    const lista=Object.values(map).sort((a,b)=>b.total-a.total);
+    return usrFiltro?lista.filter(x=>x.nome===usrFiltro):lista;
+  }
+
+  function render(de, ate, usrFiltro){
+    const metricas=calcMetricas(de, ate, usrFiltro);
+    const usuariosOpts=[...new Set((Object.values(HISTORICO).flat()).map(e=>e.usuario||'').filter(Boolean))];
+    const totalGeral=metricas.reduce((s,m)=>s+m.total,0);
+    const cardsHtml=metricas.length===0?'<div style="color:#bbb;font-size:12px;text-align:center;padding:20px">Nenhuma ação no período</div>'
+      :metricas.map(m=>{
+        const pct=totalGeral>0?Math.round(m.total/totalGeral*100):0;
+        const acoesDetalhe=actionTypes.filter(t=>m.tipos[t]).map(t=>`<span style="background:#f0efea;border-radius:3px;padding:1px 5px;font-size:9px;margin:1px">${tLabel[t]||t}: ${m.tipos[t]}</span>`).join('');
+        return `<div style="background:#fafafa;border:1px solid #eee;border-radius:8px;padding:10px 12px;margin-bottom:8px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+            <div style="font-size:13px;font-weight:700;color:#111">${m.nome}</div>
+            <div style="font-size:14px;font-weight:700;color:var(--cp)">${m.total} ações</div>
+          </div>
+          <div style="background:#e8e8e8;height:6px;border-radius:3px;margin-bottom:6px">
+            <div style="background:var(--cp);height:6px;border-radius:3px;width:${pct}%"></div>
+          </div>
+          <div style="display:flex;flex-wrap:wrap;gap:2px">${acoesDetalhe}</div>
+        </div>`;
+      }).join('');
+    mc.innerHTML=`<div class="mt">👤 Produtividade</div>
+      <div style="display:flex;gap:5px;margin-bottom:8px;flex-wrap:wrap;align-items:center">
+        <input type="date" id="rp-de" value="${de}" style="border:1px solid #ddd;border-radius:6px;padding:4px 6px;font-size:11px;font-family:inherit;flex:1" onchange="window._rpFilter()">
+        <span style="font-size:10px;color:#aaa">até</span>
+        <input type="date" id="rp-ate" value="${ate}" style="border:1px solid #ddd;border-radius:6px;padding:4px 6px;font-size:11px;font-family:inherit;flex:1" onchange="window._rpFilter()">
+        <button onclick="document.getElementById('rp-de').value='${td}';document.getElementById('rp-ate').value='${td}';window._rpFilter()" style="background:#f0efea;border:1px solid #e0ddd8;border-radius:6px;padding:4px 8px;font-size:11px;font-family:inherit;cursor:pointer">Hoje</button>
+      </div>
+      <select id="rp-usr" style="width:100%;border:1px solid #ddd;border-radius:6px;padding:6px 8px;font-size:12px;font-family:inherit;margin-bottom:8px" onchange="window._rpFilter()">
+        <option value="">Todos os funcionários</option>
+        ${usuariosOpts.map(u=>`<option value="${u}" ${usrFiltro===u?'selected':''}>${u}</option>`).join('')}
+      </select>
+      <div style="font-size:10px;color:#888;margin-bottom:8px">Total no período: <strong>${totalGeral} ações</strong></div>
+      <div style="max-height:40vh;overflow-y:auto">${cardsHtml}</div>
+      <div style="display:flex;gap:6px;margin-top:10px">
+        <button class="bcx" onclick="showRelatorios()" style="flex:1">← Voltar</button>
+        <button class="bsv" id="rp-pdf" style="flex:1">📤 PDF</button>
+      </div>`;
+    document.getElementById('ov').classList.add('on');
+    window._rpFilter=()=>{ const d=document.getElementById('rp-de')?.value||td; const a=document.getElementById('rp-ate')?.value||td; const u=document.getElementById('rp-usr')?.value||''; render(d,a,u); };
+    document.getElementById('rp-pdf').onclick=async()=>{
+      const de=document.getElementById('rp-de')?.value||td;
+      const ate=document.getElementById('rp-ate')?.value||td;
+      const usrF=document.getElementById('rp-usr')?.value||'';
+      const m2=calcMetricas(de,ate,usrF);
+      const html=buildRelProdutividadeHTML(m2,de,ate,usrF);
+      await gerarECompartilharPDF('Relatório de Produtividade',html,`Produtividade_${de}_a_${ate}`);
+    };
+  }
+  render(td, td, '');
+}
+
+function buildRelProdutividadeHTML(metricas, deVal, ateVal, usrFiltro){
+  const tLabel={checkin:'Check-in',checkout:'Check-out',saida_passeio:'Saída Passeio',retorno_passeio:'Retorno',edicao:'Edição',movimentacao_vaga:'Mudança Vaga',tornar_grande:'Carro Grande',tornar_pequeno:'Carro Pequeno',merge_lateral:'Mesclagem',desfaz_merge_lateral:'Merge Desfeito'};
+  const actionTypes=['checkin','checkout','saida_passeio','retorno_passeio','edicao','movimentacao_vaga','tornar_grande','tornar_pequeno','merge_lateral','desfaz_merge_lateral'];
+  const totalGeral=metricas.reduce((s,m)=>s+m.total,0);
+  const linhasTabela=metricas.map(m=>{
+    const cols=actionTypes.map(t=>`<td style="text-align:center;padding:5px 8px;border:1px solid #eee">${m.tipos[t]||0}</td>`).join('');
+    return `<tr><td style="padding:5px 10px;border:1px solid #eee;font-weight:600">${m.nome}</td>${cols}<td style="text-align:center;padding:5px 8px;border:1px solid #eee;font-weight:700;color:#185FA5">${m.total}</td></tr>`;
+  }).join('');
+  const headerCols=actionTypes.map(t=>`<th style="padding:5px 6px;font-size:10px;white-space:nowrap;border:1px solid #ccc;background:#f5f5f5">${tLabel[t]||t}</th>`).join('');
+  const subtit=(usrFiltro||'Todos os funcionários')+' · '+deVal+' a '+ateVal;
+  return `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Produtividade</title><style>body{font-family:Arial,sans-serif;color:#1a1a1a;background:#fff;font-size:12px}table{width:100%;border-collapse:collapse;margin-top:16px}th,td{border:1px solid #ddd;padding:6px 8px;font-size:11px}th{background:#f5f5f5;font-weight:700}.page{padding:20px 24px;max-width:900px;margin:0 auto}.rodape{margin-top:20px;font-size:10px;color:#bbb;text-align:center}</style></head>
+  <body><div class="page">
+    <div style="background:#185FA5;color:#fff;padding:16px 20px;border-radius:8px;margin-bottom:20px;display:flex;justify-content:space-between;align-items:center">
+      <div><div style="font-size:16px;font-weight:700">🅿 GarageSpot</div><div style="font-size:9px;opacity:.6">Developed by Douglas Nascimento</div></div>
+      <div style="text-align:right"><div style="font-size:15px;font-weight:700">Relatório de Produtividade</div><div style="font-size:11px;opacity:.85">${subtit}</div></div>
+    </div>
+    <div style="font-size:13px;margin-bottom:10px">Total de ações: <strong>${totalGeral}</strong></div>
+    <table><thead><tr><th style="text-align:left;padding:6px 10px">Funcionário</th>${headerCols}<th style="background:#e8eef8">Total</th></tr></thead>
+    <tbody>${linhasTabela}${metricas.length===0?'<tr><td colspan="${actionTypes.length+2}" style="text-align:center;color:#bbb;padding:20px">Nenhuma ação no período</td></tr>':''}</tbody></table>
+    <div class="rodape">GarageSpot · Gerado em ${fmtDt(Date.now())}</div>
+  </div></body></html>`;
 }
 
 function buildRelTurnoHTML(evts, deVal, ateVal, turnosSel){
@@ -4567,16 +5246,19 @@ function renderAnexosArea(id, fromPasseio, containerId){
   container.innerHTML=`
     <div class="attach-area">
       <div class="attach-header">
-        <span class="attach-label">📎 Vistoria / Fotos ${lista.length>0?'('+lista.length+'/'+MAX_ANEXOS+')':''}</span>
-        <div class="attach-actions" ${restante<=0?'style="opacity:.4;pointer-events:none"':''}>
-          <label class="attach-act" title="Tirar foto" style="cursor:pointer">
-            📷 Câmera
-            <input type="file" accept="image/*" capture="environment" style="display:none" id="att-cam-${containerId}">
-          </label>
-          <label class="attach-act" title="Anexar arquivo" style="cursor:pointer">
-            📁 Arquivo
-            <input type="file" accept="image/*,application/pdf,.doc,.docx" multiple style="display:none" id="att-file-${containerId}">
-          </label>
+        <span class="attach-label">📎 Fotos ${lista.length>0?'('+lista.length+'/'+MAX_ANEXOS+')':''}</span>
+        <div class="attach-actions">
+          ${(()=>{if(!MODULOS.vistorias) return '';const _ap=fromPasseio?id:(S[id]?.apt||'');const _vp=_ap?getVistoriaByApt(_ap):null;const _hasPend=_vp&&!_vp.ts_assinada;return `<button class="attach-act" title="${_hasPend?'Vistoria pendente de assinatura':'Abrir módulo de vistoria'}" onclick="navTo('vistorias')" style="cursor:pointer;border:none;background:none;font-size:12px;padding:2px 4px;${_hasPend?'color:#A32D2D;font-weight:700':''}">📋${_hasPend?' ❗':''}</button>`;})()}
+          <div ${restante<=0?'style="display:flex;gap:4px;opacity:.4;pointer-events:none"':'style="display:flex;gap:4px"'}>
+            <label class="attach-act" title="Tirar foto" style="cursor:pointer">
+              📷 Câmera
+              <input type="file" accept="image/*" capture="environment" style="display:none" id="att-cam-${containerId}">
+            </label>
+            <label class="attach-act" title="Anexar arquivo" style="cursor:pointer">
+              📁 Arquivo
+              <input type="file" accept="image/*,application/pdf,.doc,.docx" multiple style="display:none" id="att-file-${containerId}">
+            </label>
+          </div>
         </div>
       </div>
       <div class="attach-grid" id="att-grid-${containerId}">
@@ -4855,9 +5537,11 @@ checkLicense().then(async (ativo)=>{
       loadTurnos();
       loadPlantaoManual();
       loadRecargas();
+      loadVistorias();
       agendarLimparPlantao();
       loadModulos();
       loadDriveStatus();
+      loadTema();
       initExibicao();
       buildTable();
       if(restored) Object.keys(S).forEach(id=>ref(id));
