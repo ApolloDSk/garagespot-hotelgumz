@@ -375,12 +375,13 @@ html.font-large{zoom:1.13}
 
   <!-- NAVBAR -->
   <div class="navbar" id="navbar">
-    <button class="nav-btn nav-active" id="nav-mapa" onclick="navTo('mapa')">🗺 Mapa</button>
-    <button class="nav-btn" id="nav-painel" onclick="navTo('painel')">📊 Painel</button>
-    <button class="nav-btn" id="nav-vistorias" onclick="navTo('vistorias')">📋 Vistorias</button>
+    <button class="nav-btn nav-active" id="nav-painel" onclick="navTo('painel')">📊 Painel</button>
+    <button class="nav-btn" id="nav-mapa" onclick="navTo('mapa')">🗺 Mapa</button>
     <button class="nav-btn" id="nav-recarga" onclick="navTo('recarga')">⚡ Recarga</button>
     <button class="nav-btn" id="nav-gestao" onclick="navTo('gestao')">⚙ Gestão ▾</button>
   </div>
+  <!-- nav-vistorias mantido fora da navbar para compatibilidade com applyModulos -->
+  <button id="nav-vistorias" style="display:none"></button>
   <!-- BUSCA RÁPIDA -->
   <div class="busca-bar" id="busca-bar">
     <input class="fi" id="busca-input" placeholder="Buscar placa, apto, hóspede, modelo..." oninput="onBuscaInput(this.value)" autocomplete="off" style="margin:0;flex:1">
@@ -1560,9 +1561,123 @@ function perguntarHMerge(id, apt, model, color, plate, guest, obs, usuario){
 
 function clkV(id){
   if(!S[id]) return;
-  if(dragState) return; // em drag, ignora cliques
+  if(dragState) return;
   cur=id;
-  S[id].status==='free' ? showOcc(id) : showMenu(id);
+  if(S[id].status==='free'){
+    _clkVDesignar(id);
+  } else {
+    showMenu(id);
+  }
+}
+
+let _clkVUsuario = null;
+
+function _clkVDesignar(id){
+  confirmarUsuario('designando a vaga '+id, function(usuario){
+    _clkVUsuario=usuario;
+    _clkVPedirApt(id, usuario);
+  });
+}
+
+function _clkVPedirApt(id, usuario){
+  const mc=document.getElementById('mc');
+  const uNome=usuario?.nome||'';
+  mc.innerHTML=`
+    <div class="mt" style="display:flex;align-items:center;gap:6px">
+      <span style="flex:1">🅿 Vaga ${id}</span>
+      ${uNome?`<span style="font-size:11px;color:#888;font-weight:400">${uNome}</span>`:''}
+    </div>
+    <label class="fl">Apartamento <span class="req">*</span></label>
+    <input class="fi" id="cv-apt" type="text" inputmode="numeric" placeholder="Ex: 301" autocomplete="off">
+    <div class="b2">
+      <button class="bcx" onclick="closeOv()">Cancelar</button>
+      <button class="bsv" id="cv-btn">Verificar →</button>
+    </div>`;
+  document.getElementById('ov').classList.add('on');
+  setTimeout(()=>document.getElementById('cv-apt')?.focus(), 80);
+  document.getElementById('cv-apt').addEventListener('keydown', e=>{ if(e.key==='Enter') document.getElementById('cv-btn')?.click(); });
+  document.getElementById('cv-btn').onclick=function(){
+    const apt=(document.getElementById('cv-apt')?.value||'').trim();
+    if(!apt){ const e=document.getElementById('cv-apt'); e.classList.add('err'); e.focus(); e.addEventListener('input',()=>e.classList.remove('err'),{once:true}); return; }
+    _clkVRotear(id, apt, usuario);
+  };
+}
+
+function _clkVRotear(id, apt, usuario){
+  const mc=document.getElementById('mc');
+
+  if(PASSEIO[apt]){
+    const dp=PASSEIO[apt];
+    const info=[dp.model,dp.color,dp.plate].filter(Boolean).join(' · ');
+    mc.innerHTML=`
+      <div class="mt">🚗 Carro retornando?</div>
+      <div class="warn-box">Apt. ${apt} está na lista de passeio${info?':<br><strong>'+info+'</strong>':'.'}
+      <br><br>Este carro está voltando do passeio?</div>
+      <div class="ag">
+        <button class="bsv" id="cv-ret-sim">✓ Sim, está voltando</button>
+        <button class="bcx" id="cv-ret-nao">Corrigir apartamento</button>
+        <button class="bcx" onclick="closeOv()">Cancelar</button>
+      </div>`;
+    document.getElementById('cv-ret-sim').onclick=function(){
+      const dd=PASSEIO[apt];
+      delete PASSEIO[apt];
+      const keyP='p_'+apt, keyV='v_'+id;
+      if(ANEXOS[keyP]&&ANEXOS[keyP].length){ ANEXOS[keyV]=[...ANEXOS[keyP]]; delete ANEXOS[keyP]; saveAnexos(); }
+      saveV(id,apt,dd.model,dd.color,dd.plate,dd.guest,dd.obs||'',false,usuario);
+      closeOv();
+    };
+    document.getElementById('cv-ret-nao').onclick=function(){
+      _clkVPedirApt(id,usuario);
+      setTimeout(()=>{const e=document.getElementById('cv-apt');if(e){e.value='';e.focus();}},80);
+    };
+    return;
+  }
+
+  const pend=typeof getPendentePorApt==='function'?getPendentePorApt(apt):null;
+  if(pend){
+    const info=[pend.model,pend.color,pend.plate].filter(Boolean).join(' · ')||'Sem detalhes';
+    const hrChk=pend.ts_inicio?new Date(pend.ts_inicio).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}):'—';
+    mc.innerHTML=`
+      <div class="mt">Check-in pendente — Vaga ${id}</div>
+      <div style="background:#EEF6FF;border:1px solid #378ADD;border-radius:9px;padding:10px 12px;margin-bottom:10px">
+        <div style="font-size:13px;font-weight:700">${pend.gs} · Apt. ${pend.apt}</div>
+        <div style="font-size:12px;color:#555;margin-top:2px">${info}</div>
+        <div style="font-size:11px;color:#888;margin-top:2px">Check-in hoje às ${hrChk} · ${pend.usuario||'—'}</div>
+      </div>
+      <div class="ms">Confirma designar este carro para a vaga <strong>${id}</strong>?</div>
+      <div class="ag">
+        <button class="bsv" id="cv-desig-sim">✓ Designar vaga ${id}</button>
+        <button class="bcx" id="cv-desig-nao">Corrigir apartamento</button>
+        <button class="bcx" onclick="closeOv()">Cancelar</button>
+      </div>`;
+    document.getElementById('cv-desig-sim').onclick=function(){
+      closeOv();
+      _aplicarDesignacao(id,pend.id,usuario);
+    };
+    document.getElementById('cv-desig-nao').onclick=function(){
+      _clkVPedirApt(id,usuario);
+      setTimeout(()=>{const e=document.getElementById('cv-apt');if(e){e.value='';e.focus();}},80);
+    };
+    return;
+  }
+
+  mc.innerHTML=`
+    <div class="mt">Apt. ${apt}</div>
+    <div class="warn-box">Apt. ${apt} não tem check-in registrado.<br><br>Deseja iniciar um novo check-in?</div>
+    <div class="ag">
+      <button class="bsv" id="cv-novo-sim">＋ Iniciar check-in</button>
+      <button class="bcx" id="cv-novo-nao">Corrigir apartamento</button>
+      <button class="bcx" onclick="closeOv()">Cancelar</button>
+    </div>`;
+  document.getElementById('cv-novo-sim').onclick=function(){
+    closeOv();
+    _nciD={usuario,apt,model:'',color:'',plate:'',guest:'',obs:'',size:'small',gs:nextNumHospedagem(),danos:[],com_avaria:false,assinatura:null,ts_inicio:Date.now(),fotos:[]};
+    _nciAbrir(2);
+  };
+  document.getElementById('cv-novo-nao').onclick=function(){
+    _clkVPedirApt(id,usuario);
+    setTimeout(()=>{const e=document.getElementById('cv-apt');if(e){e.value='';e.focus();}},80);
+  };
 }
 
 function showOcc(id){
@@ -2838,101 +2953,224 @@ function navTo(v){
   if(v==='mapa') setTimeout(positionPilares,100);
   fecharBusca();
 }
+function irParaVistorias(){ navTo('vistorias'); }
 
 function renderPainelDia(){
   const pw=document.getElementById('painel-wrap'); if(!pw) return;
   const now=new Date();
   const startDay=new Date(now.getFullYear(),now.getMonth(),now.getDate()).getTime();
 
-  // Coleta eventos de hoje
+  // ── dados ──────────────────────────────────────────────────────────────
   const allEvts=[];
   Object.entries(HISTORICO).forEach(([apt,evts])=>evts.forEach(ev=>allEvts.push({apt,...ev})));
   allEvts.sort((a,b)=>b.ts-a.ts);
-
   const hoje=allEvts.filter(e=>e.ts>=startDay);
-  const checkinsH=hoje.filter(e=>e.tipo==='checkin');
-  const checkoutsH=hoje.filter(e=>e.tipo==='checkout');
-  const last10=allEvts.slice(0,10);
+  const movHoje=hoje.filter(e=>['checkin','checkout','saida_passeio','retorno_passeio'].includes(e.tipo));
 
-  // Ocupação atual
-  let occ=0,free=0,obOcc=0,obFree=0;
-  Object.entries(S).forEach(([id,d])=>{
+  let occ=0,free=0,tot=0,obOcc=0;
+  Object.entries(S).forEach(([,d])=>{
     if(d.mergedSlave) return;
-    if(d.overbook){ d.status==='occupied'?obOcc++:obFree++; }
-    else { d.status==='occupied'?occ++:free++; }
+    if(d.overbook){ if(d.status==='occupied') obOcc++; return; }
+    tot++;
+    d.status==='occupied'?occ++:free++;
   });
   const out=Object.keys(PASSEIO).length;
+  const pct=tot>0?Math.round((occ+out)/tot*100):0;
 
-  // Staff no plantão
+  const pendentesNCI=Object.values(CHECKINS_PENDENTES||{});
   const noExp=USUARIOS.filter(u=>estaNoExpediente(u));
   const turnoAtual=getTurnoAtual();
 
-  const tLabel={checkin:'Check-in',saida_passeio:'Saída Passeio',retorno_passeio:'Retorno',checkout:'Check-out',edicao:'Edição',movimentacao_vaga:'Mudança de Vaga',tornar_grande:'Carro Grande',tornar_pequeno:'Carro Pequeno',merge_lateral:'Mesclagem Lateral',desfaz_merge_lateral:'Merge Desfeito'};
+  // hospedagens ativas (sem checkout)
+  const hospsAtivas=Object.values(HOSPEDAGENS).filter(h=>!h.checkout_ts);
+
+  // recargas ativas
+  const recAtivas=MODULOS.recarga?Object.values(RECARGAS||{}).filter(r=>r&&r.ativo):[];
+  const filaRec=MODULOS.recarga?(FILA_RECARGA||[]):[];
+
+  // vistorias pendentes
+  const vstPend=MODULOS.vistorias?Object.values(VISTORIAS||{}).filter(v=>!v.ts_assinada):[];
+
+  // backup status
+  const lastBkp=DRIVE_STATUS?.ultimo_backup;
+
+  const tLabel={checkin:'Check-in',saida_passeio:'Saída Passeio',retorno_passeio:'Retorno',checkout:'Check-out',edicao:'Edição',movimentacao_vaga:'Muda Vaga',tornar_grande:'Grande',tornar_pequeno:'Pequeno',merge_lateral:'Merge',desfaz_merge_lateral:'Desfaz Merge'};
   const tColor={checkin:'#0F6E56',saida_passeio:'#854F0B',retorno_passeio:'#185FA5',checkout:'#A32D2D',edicao:'#555',movimentacao_vaga:'#5C35B0',tornar_grande:'#185FA5',tornar_pequeno:'#0F6E56',merge_lateral:'#854F0B',desfaz_merge_lateral:'#888'};
 
-  const pendentesNCI=Object.values(CHECKINS_PENDENTES||{});
+  function fmtHr(ts){ if(!ts) return '—'; const d=new Date(ts); return d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}); }
+  function fmtDataCurta(ts){ if(!ts) return '—'; const d=new Date(ts); return d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'}); }
+
+  // ── seção 5 — últimas 3 movimentações do dia ───────────────────────────
+  const mov3=movHoje.slice(0,3);
+  const movMais=movHoje.length>3;
+
+  // ── seção 4 — hospedados (sem data prevista; listar ativos) ─────────────
+  const hospsVer=hospsAtivas.slice(0,3);
+  const hospsMais=hospsAtivas.length>3;
+
   pw.innerHTML=`
-    <div style="margin-bottom:12px">
-      <button onclick="novoCheckin()" style="width:100%;padding:12px;border:none;border-radius:10px;background:var(--cp);color:#fff;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;letter-spacing:.3px">＋ Novo Check-in</button>
-    </div>
-    ${pendentesNCI.length>0?`
-    <div class="painel-sec">
-      <div class="painel-sec-title">🚗 Aguardando vaga (${pendentesNCI.length})</div>
-      ${pendentesNCI.map(p=>`<div class="nci-pending-card" onclick="navTo('mapa');showToast('Toque em uma vaga livre para designar Apt. ${p.apt}',3500)">
-        <div class="nci-pending-card-hd">${p.gs} · Apt. ${p.apt}${p.guest?' · '+p.guest:''}</div>
-        <div class="nci-pending-card-sub">${[p.model,p.color,p.plate].filter(Boolean).join(' · ')||'—'}</div>
-      </div>`).join('')}
-      <button class="nci-highlight-btn" onclick="navTo('mapa');_nciHighlightLivres()">🗺 Destacar vagas livres</button>
-    </div>`:''}
-    <div class="painel-sec">
-      <div class="painel-sec-title">📊 Hoje — ${now.toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long'})}</div>
-      <div class="painel-stat-row">
-        <div class="painel-stat-card"><div class="painel-stat-val" style="color:#0F6E56">${checkinsH.length}</div><div class="painel-stat-lbl">Check-ins hoje</div></div>
-        <div class="painel-stat-card"><div class="painel-stat-val" style="color:#A32D2D">${checkoutsH.length}</div><div class="painel-stat-lbl">Check-outs hoje</div></div>
-        <div class="painel-stat-card"><div class="painel-stat-val" style="color:#185FA5">${occ}</div><div class="painel-stat-lbl">Ocupadas</div></div>
-        <div class="painel-stat-card"><div class="painel-stat-val" style="color:#0F6E56">${free}</div><div class="painel-stat-lbl">Livres</div></div>
-      </div>
-      <div class="painel-stat-row">
-        <div class="painel-stat-card"><div class="painel-stat-val" style="color:#854F0B">${out}</div><div class="painel-stat-lbl">A passeio</div></div>
-        <div class="painel-stat-card"><div class="painel-stat-val" style="color:#A32D2D">${obOcc}</div><div class="painel-stat-lbl">OB ocupadas</div></div>
-        <div class="painel-stat-card" style="flex:2"><div class="painel-stat-val" style="color:#185FA5;font-size:14px">${turnoAtual||'—'}</div><div class="painel-stat-lbl">Turno atual</div></div>
-      </div>
-    </div>
 
-    <div class="painel-sec">
-      <div class="painel-sec-title">⏱ Últimas movimentações</div>
-      ${last10.length===0?'<span style="font-size:12px;color:#bbb">Nenhuma movimentação registrada</span>':
-        last10.map(ev=>`<div class="painel-event-row">
-          <span class="painel-badge" style="background:${tColor[ev.tipo]||'#888'}">${tLabel[ev.tipo]||ev.tipo}</span>
+  <!-- SEÇ1: OCUPAÇÃO ATUAL -->
+  <div class="painel-sec" style="margin-bottom:10px">
+    <div class="painel-sec-title">🏢 Garagem agora — ${now.toLocaleDateString('pt-BR',{weekday:'short',day:'numeric',month:'short'})}</div>
+    <div class="painel-stat-row" style="gap:6px">
+      <div class="painel-stat-card" style="background:#EEF6FF;border:1.5px solid #378ADD;flex:1.3">
+        <div class="painel-stat-val" style="color:#185FA5">${occ+out}</div>
+        <div class="painel-stat-lbl" style="color:#185FA5">Na garagem</div>
+      </div>
+      <div class="painel-stat-card" style="background:#FAEEDA;border:1.5px solid #E8C97A;flex:1">
+        <div class="painel-stat-val" style="color:#854F0B">${out}</div>
+        <div class="painel-stat-lbl" style="color:#854F0B">A passeio</div>
+      </div>
+      <div class="painel-stat-card" style="background:#EEF9F2;border:1.5px solid #b0dbc0;flex:1">
+        <div class="painel-stat-val" style="color:#0F6E56">${free}</div>
+        <div class="painel-stat-lbl" style="color:#0F6E56">Livres</div>
+      </div>
+      <div class="painel-stat-card" style="background:#f5f4f0;border:1.5px solid #ddd;flex:0.9">
+        <div class="painel-stat-val" style="color:#555">${pct}%</div>
+        <div class="painel-stat-lbl">Ocup.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SEÇ2: NOVO CHECK-IN -->
+  <div style="margin-bottom:12px">
+    <button onclick="novoCheckin()" style="width:100%;padding:13px;border:none;border-radius:10px;background:var(--cp);color:#fff;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;letter-spacing:.3px;display:flex;align-items:center;justify-content:center;gap:8px">
+      <span style="font-size:20px">＋</span> Novo Check-in
+    </button>
+  </div>
+
+  <!-- SEÇ3: AGUARDANDO VAGA -->
+  ${pendentesNCI.length>0?`
+  <div class="painel-sec">
+    <div class="painel-sec-title">🚗 Aguardando vaga (${pendentesNCI.length})</div>
+    ${pendentesNCI.map(p=>{
+      const hrChk=fmtHr(p.ts_inicio);
+      const info=[p.model,p.color].filter(Boolean).join(' · ')||'—';
+      return `<div class="nci-pending-card" style="display:flex;align-items:center;gap:8px;cursor:pointer" onclick="navTo('mapa');_nciHighlightLivres();showToast('Toque em vaga livre — Apt. ${p.apt}',3500)">
+        <div style="flex:1">
+          <div class="nci-pending-card-hd">${p.gs} · Apt. ${p.apt}${p.guest?' · '+p.guest:''}</div>
+          <div class="nci-pending-card-sub">${info} · check-in ${hrChk}</div>
+        </div>
+        <button onclick="event.stopPropagation();navTo('mapa');_nciHighlightLivres()" style="font-size:11px;padding:4px 10px;border:1.5px solid var(--cp);border-radius:6px;background:var(--cp-lt);color:var(--cp);cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0">🗺 Vagas</button>
+      </div>`;
+    }).join('')}
+  </div>`:''}
+
+  <!-- SEÇ4: HOSPEDADOS HOJE (CARROS ATIVOS) -->
+  <div class="painel-sec" id="pd-sec-hospedados">
+    <div class="painel-sec-title" style="display:flex;align-items:center;gap:4px">
+      <span style="flex:1">🏨 Hospedados (${hospsAtivas.length})</span>
+      ${hospsMais?`<button onclick="_painelToggleHosps()" style="font-size:10px;color:var(--cp);background:none;border:none;cursor:pointer;font-family:inherit" id="pd-hosps-btn">ver mais ▾</button>`:''}
+    </div>
+    ${hospsAtivas.length===0?'<span style="font-size:12px;color:#bbb">Nenhuma hospedagem ativa</span>':''}
+    ${hospsVer.map(h=>{
+      const vagaAtual=Object.entries(S).find(([,d])=>d.hospedagem===h.numero&&d.status==='occupied')?.[0]||'—';
+      return `<div class="painel-event-row" style="cursor:pointer" onclick="navTo('mapa');executarBusca('${h.numero}')">
+        <span class="painel-badge" style="background:var(--cp)">${h.numero}</span>
+        <div style="flex:1;min-width:0">
+          <div style="font-weight:700">Apt. ${h.apt}${h.guest?' · '+h.guest:''}</div>
+          <div style="color:#888;font-size:10px">${[h.model,h.color,h.plate].filter(Boolean).join(' · ')||'—'} · Vaga ${vagaAtual} · CI ${fmtDataCurta(h.checkin_ts)}</div>
+        </div>
+      </div>`;
+    }).join('')}
+    <div id="pd-hosps-extra" style="display:none">
+      ${hospsAtivas.slice(3).map(h=>{
+        const vagaAtual=Object.entries(S).find(([,d])=>d.hospedagem===h.numero&&d.status==='occupied')?.[0]||'—';
+        return `<div class="painel-event-row" style="cursor:pointer" onclick="navTo('mapa');executarBusca('${h.numero}')">
+          <span class="painel-badge" style="background:var(--cp)">${h.numero}</span>
           <div style="flex:1;min-width:0">
-            <div style="font-weight:700">Apt. ${ev.apt}${ev.hospedagem?' · '+ev.hospedagem:''}</div>
-            <div style="color:#888;font-size:10px">${fmtDt(ev.ts)}${ev.usuario?' · '+ev.usuario:''}</div>
+            <div style="font-weight:700">Apt. ${h.apt}${h.guest?' · '+h.guest:''}</div>
+            <div style="color:#888;font-size:10px">${[h.model,h.color,h.plate].filter(Boolean).join(' · ')||'—'} · Vaga ${vagaAtual}</div>
           </div>
-        </div>`).join('')}
+        </div>`;
+      }).join('')}
     </div>
+  </div>
 
-    <div class="painel-sec">
-      <div class="painel-sec-title">👥 Plantão agora${turnoAtual?' — '+turnoAtual:''}</div>
-      ${(noExp.length===0&&PLANTAO_MANUAL.length===0)
-        ?'<span style="font-size:12px;color:#bbb">Nenhum usuário no plantão</span>'
-        :noExp.map(u=>`<div class="painel-staff-item">
-          <span style="font-size:18px">👤</span>
-          <div><div style="font-weight:700">${u.nome}</div><div style="color:#888;font-size:10px">${u.cargo}${u.horaInicio?' · '+u.horaInicio+'–'+u.horaFim:''}</div></div>
-        </div>`).join('')+PLANTAO_MANUAL.map(e=>`<div class="painel-staff-item">
-          <span style="font-size:18px">👤</span>
-          <div><div style="font-weight:700">${e.nome}</div>${e.obs?`<div style="color:#888;font-size:10px">${e.obs}</div>`:''}</div>
-        </div>`).join('')}
+  <!-- SEÇ5: MOVIMENTAÇÕES RECENTES -->
+  <div class="painel-sec">
+    <div class="painel-sec-title" style="display:flex;align-items:center;gap:4px">
+      <span style="flex:1">⏱ Movimentações hoje</span>
+      ${movMais?`<button onclick="_painelToggleMov()" style="font-size:10px;color:var(--cp);background:none;border:none;cursor:pointer;font-family:inherit" id="pd-mov-btn">ver mais ▾</button>`:''}
     </div>
+    ${mov3.length===0?'<span style="font-size:12px;color:#bbb">Nenhuma movimentação hoje</span>':''}
+    ${mov3.map(ev=>`<div class="painel-event-row">
+      <span class="painel-badge" style="background:${tColor[ev.tipo]||'#888'}">${tLabel[ev.tipo]||ev.tipo}</span>
+      <div style="flex:1;min-width:0">
+        <div style="font-weight:700">Apt. ${ev.apt}${ev.hospedagem?' · '+ev.hospedagem:''}</div>
+        <div style="color:#888;font-size:10px">${fmtHr(ev.ts)}${ev.usuario?' · '+ev.usuario:''}</div>
+      </div>
+    </div>`).join('')}
+    <div id="pd-mov-extra" style="display:none">
+      ${movHoje.slice(3).map(ev=>`<div class="painel-event-row">
+        <span class="painel-badge" style="background:${tColor[ev.tipo]||'#888'}">${tLabel[ev.tipo]||ev.tipo}</span>
+        <div style="flex:1;min-width:0">
+          <div style="font-weight:700">Apt. ${ev.apt}${ev.hospedagem?' · '+ev.hospedagem:''}</div>
+          <div style="color:#888;font-size:10px">${fmtHr(ev.ts)}${ev.usuario?' · '+ev.usuario:''}</div>
+        </div>
+      </div>`).join('')}
+    </div>
+  </div>
 
-    <div class="painel-sec">
-      <div class="painel-sec-title">✅ Check-ins hoje (${checkinsH.length})</div>
-      ${checkinsH.length===0?'<span style="font-size:12px;color:#bbb">Nenhum check-in hoje</span>':
-        checkinsH.map(ev=>`<div class="painel-event-row">
-          <span class="painel-badge" style="background:#0F6E56">CI</span>
-          <div style="flex:1"><div style="font-weight:700">Apt. ${ev.apt}${ev.hospedagem?' · '+ev.hospedagem:''}</div>
-          <div style="color:#888;font-size:10px">${fmtDt(ev.ts)}${ev.usuario?' · '+ev.usuario:''}</div></div>
-        </div>`).join('')}
-    </div>`;
+  <!-- SEÇ6: RECARGA (só se módulo ativo) -->
+  ${MODULOS.recarga&&(recAtivas.length>0||filaRec.length>0)?`
+  <div class="painel-sec" style="cursor:pointer" onclick="navTo('recarga')">
+    <div class="painel-sec-title">⚡ Recarga — ${recAtivas.length} carregando${filaRec.length>0?' · '+filaRec.length+' na fila':''}</div>
+    ${recAtivas.slice(0,2).map(r=>{
+      const elapsed=r.inicio_ts?Math.floor((Date.now()-r.inicio_ts)/60000):0;
+      return `<div style="font-size:12px;display:flex;align-items:center;gap:6px;padding:4px 0;border-bottom:1px solid #f0f0ec">
+        <span style="color:#27AE60;font-size:14px">⚡</span>
+        <div><div style="font-weight:700">Apt. ${r.apt||'—'}</div><div style="font-size:10px;color:#888">${elapsed}min · ${r.usuario||'—'}</div></div>
+      </div>`;
+    }).join('')}
+    ${filaRec.length>0?`<div style="font-size:11px;color:#854F0B;margin-top:4px">Fila: ${filaRec.map(f=>'Apt.'+f.apt).join(', ')}</div>`:''}
+  </div>`:''}
+
+  <!-- SEÇ7: VISTORIA PENDENTE (só se módulo ativo) -->
+  ${MODULOS.vistorias&&vstPend.length>0?`
+  <div class="painel-sec" style="cursor:pointer" onclick="navTo('vistorias')" >
+    <div class="painel-sec-title" style="color:#A32D2D">❗ Vistorias sem assinatura (${vstPend.length})</div>
+    ${vstPend.slice(0,2).map(v=>`<div style="font-size:12px;display:flex;align-items:center;gap:6px;padding:4px 0;border-bottom:1px solid #f0f0ec">
+      <span style="color:#A32D2D">❗</span>
+      <div><div style="font-weight:700">${v.numero}${v.apt?' · Apt.'+v.apt:''}</div><div style="font-size:10px;color:#888">${v.modelo||'—'} · ${v.placa||'—'}</div></div>
+    </div>`).join('')}
+    ${vstPend.length>2?`<div style="font-size:11px;color:#A32D2D;margin-top:4px">+${vstPend.length-2} outras → toque para ver</div>`:''}
+  </div>`:''}
+
+  <!-- SEÇ8: PLANTÃO + BACKUP (rodapé) -->
+  <div class="painel-sec" style="border-top:1px solid #eee;padding-top:10px;margin-top:4px">
+    <div style="display:flex;align-items:flex-start;gap:8px;flex-wrap:wrap">
+      <div style="flex:1;min-width:120px">
+        <div style="font-size:10px;font-weight:700;color:#888;text-transform:uppercase;margin-bottom:4px">👥 Plantão${turnoAtual?' — '+turnoAtual:''}</div>
+        ${(noExp.length===0&&(!PLANTAO_MANUAL||PLANTAO_MANUAL.length===0))
+          ?'<span style="font-size:11px;color:#bbb">Nenhum no plantão</span>'
+          :[...noExp.map(u=>`<div style="font-size:12px;font-weight:700">${u.nome} <span style="font-weight:400;color:#888">${u.cargo||''}</span></div>`),
+            ...(PLANTAO_MANUAL||[]).map(e=>`<div style="font-size:12px;font-weight:700">${e.nome}</div>`)].join('')}
+      </div>
+      <div style="flex:1;min-width:100px;text-align:right">
+        <div style="font-size:10px;font-weight:700;color:#888;text-transform:uppercase;margin-bottom:4px">☁️ Backup</div>
+        <div style="font-size:11px;color:${lastBkp?'#0F6E56':'#A32D2D'};font-weight:700">${lastBkp?'Hoje às '+fmtHr(lastBkp):'Sem backup'}</div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function _painelToggleHosps(){
+  const ex=document.getElementById('pd-hosps-extra');
+  const btn=document.getElementById('pd-hosps-btn');
+  if(!ex||!btn) return;
+  const open=ex.style.display!=='none';
+  ex.style.display=open?'none':'';
+  btn.textContent=open?'ver mais ▾':'ocultar ▴';
+}
+function _painelToggleMov(){
+  const ex=document.getElementById('pd-mov-extra');
+  const btn=document.getElementById('pd-mov-btn');
+  if(!ex||!btn) return;
+  const open=ex.style.display!=='none';
+  ex.style.display=open?'none':'';
+  btn.textContent=open?'ver mais ▾':'ocultar ▴';
 }
 
 // ── GESTÃO COM PIN ────────────────────────────────────────────────────────
@@ -2952,6 +3190,7 @@ function _mostrarMenuGestao(){
     <div class="gestao-menu-item" onclick="closeOv();showModalTurnos()">🕒 <span>Cadastro de turnos</span></div>
     <div class="gestao-menu-sep">Relatórios e análises</div>
     <div class="gestao-menu-item" onclick="closeOv();showRelatorios()">📊 <span>Relatórios</span></div>
+    ${MODULOS.vistorias?`<div class="gestao-menu-item" onclick="closeOv();irParaVistorias()">📋 <span>Vistorias</span></div>`:''}
     <div class="gestao-menu-sep">Configurações</div>
     <div class="gestao-menu-item" onclick="closeOv();showConfiguracoesSistema()">⚙ <span>Configurações do Sistema</span></div>
     <div class="gestao-menu-item" onclick="closeOv();showConexoes()">🔗 <span>Backup e Conexões</span></div>
@@ -3112,12 +3351,10 @@ function loadModulos(){ try{const m=localStorage.getItem(MODULOS_LS);if(m) MODUL
 function saveModulos(){ try{localStorage.setItem(MODULOS_LS,JSON.stringify(MODULOS));}catch(e){} }
 function applyModulos(){
   const btnR=document.getElementById('nav-recarga');
-  const btnV=document.getElementById('nav-vistorias');
   if(btnR) btnR.style.display=MODULOS.recarga?'':'none';
-  if(btnV) btnV.style.display=MODULOS.vistorias?'':'none';
-  // Se estiver na tela desativada, volta para o mapa
-  if(!MODULOS.recarga && document.getElementById('recarga-wrap')?.style?.display!=='none') navTo('mapa');
-  if(!MODULOS.vistorias && document.getElementById('vistorias-wrap')?.style?.display!=='none') navTo('mapa');
+  // Se estiver na tela desativada, volta para painel
+  if(!MODULOS.recarga && document.getElementById('recarga-wrap')?.style?.display!=='none') navTo('painel');
+  if(!MODULOS.vistorias && document.getElementById('vistorias-wrap')?.style?.display!=='none') navTo('painel');
   // Atualiza ícones de recarga nas vagas
   Object.keys(VAGAS_RECARGA).forEach(id=>refRecarga(id));
 }
@@ -3167,47 +3404,89 @@ const VST_VIEWS_META=[
 // ── Tela principal de vistorias ───────────────────────────────────────────
 function renderTelaVistorias(){
   const vw=document.getElementById('vistorias-wrap'); if(!vw) return;
-  const list=Object.values(VISTORIAS).sort((a,b)=>b.ts_criada-a.ts_criada);
+
+  // Preserve filter state between renders
   const q=(document.getElementById('vst-search-inp')?.value||'').trim().toLowerCase();
-  const filtered=q?list.filter(v=>
+  const stFilt=document.getElementById('vst-st-filt')?.value||'todas';
+  const deVal=document.getElementById('vst-de')?.value||'';
+  const ateVal=document.getElementById('vst-ate')?.value||'';
+
+  let list=Object.values(VISTORIAS).sort((a,b)=>b.ts_criada-a.ts_criada);
+
+  // Text search
+  if(q) list=list.filter(v=>
     (v.apt||'').toLowerCase().includes(q)||
     (v.numero||'').toLowerCase().includes(q)||
     (v.hospede||'').toLowerCase().includes(q)||
     (v.modelo||'').toLowerCase().includes(q)||
-    (v.placa||'').toLowerCase().includes(q)
-  ):list;
+    (v.placa||'').toLowerCase().includes(q)||
+    new Date(v.ts_criada).toLocaleDateString('pt-BR').includes(q)
+  );
+
+  // Status filter
+  if(stFilt==='assinada') list=list.filter(v=>!!v.ts_assinada);
+  else if(stFilt==='sem') list=list.filter(v=>!v.ts_assinada);
+
+  // Date range filter
+  if(deVal){ const t=new Date(deVal+'T00:00:00').getTime(); list=list.filter(v=>v.ts_criada>=t); }
+  if(ateVal){ const t=new Date(ateVal+'T23:59:59').getTime(); list=list.filter(v=>v.ts_criada<=t); }
+
+  const lixQtd=Object.keys(VISTORIAS_LIXEIRA).length;
 
   vw.innerHTML=`
-    <div style="padding:10px 0 6px;display:flex;gap:8px;align-items:center">
-      <input id="vst-search-inp" type="text" placeholder="Buscar vistoria..." value="${q}" oninput="renderTelaVistorias()" style="flex:1;padding:7px 10px;border:1.5px solid #ddd;border-radius:8px;font-size:13px;outline:none">
-      ${Object.keys(VISTORIAS_LIXEIRA).length>0?`<button onclick="showLixeiraVistorias()" style="font-size:12px;padding:7px 10px;border:1.5px solid #ddd;border-radius:8px;background:#FFF5F5;color:#A32D2D;cursor:pointer;font-family:inherit;white-space:nowrap">🗑 ${Object.keys(VISTORIAS_LIXEIRA).length}</button>`:''}
-      <button class="bsv" style="padding:7px 12px;font-size:13px;white-space:nowrap" onclick="novaVistoria()">+ Nova</button>
+    <div style="padding:10px 0 4px">
+      <!-- Linha 1: busca + botões -->
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
+        <input id="vst-search-inp" type="text" placeholder="Buscar apt, VIST, placa, hóspede..." value="${q}" oninput="renderTelaVistorias()" style="flex:1;padding:7px 10px;border:1.5px solid #ddd;border-radius:8px;font-size:13px;outline:none;min-width:0">
+        ${lixQtd>0?`<button onclick="showLixeiraVistorias()" style="font-size:12px;padding:7px 10px;border:1.5px solid #ddd;border-radius:8px;background:#FFF5F5;color:#A32D2D;cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0">🗑 ${lixQtd}</button>`:''}
+        <button class="bsv" style="padding:7px 12px;font-size:13px;white-space:nowrap;flex-shrink:0" onclick="novaVistoria()">＋ Nova</button>
+      </div>
+      <!-- Linha 2: filtros -->
+      <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+        <select id="vst-st-filt" onchange="renderTelaVistorias()" style="padding:5px 8px;border:1.5px solid #ddd;border-radius:8px;font-size:12px;font-family:inherit;background:#fff;cursor:pointer;flex-shrink:0">
+          <option value="todas"${stFilt==='todas'?' selected':''}>Todas</option>
+          <option value="assinada"${stFilt==='assinada'?' selected':''}>✅ Assinada</option>
+          <option value="sem"${stFilt==='sem'?' selected':''}>❗ Sem assinatura</option>
+        </select>
+        <div style="display:flex;align-items:center;gap:4px;flex-shrink:0">
+          <span style="font-size:11px;color:#888">De</span>
+          <input type="date" id="vst-de" value="${deVal}" onchange="renderTelaVistorias()" style="padding:4px 6px;border:1.5px solid #ddd;border-radius:8px;font-size:12px;font-family:inherit">
+        </div>
+        <div style="display:flex;align-items:center;gap:4px;flex-shrink:0">
+          <span style="font-size:11px;color:#888">Até</span>
+          <input type="date" id="vst-ate" value="${ateVal}" onchange="renderTelaVistorias()" style="padding:4px 6px;border:1.5px solid #ddd;border-radius:8px;font-size:12px;font-family:inherit">
+        </div>
+        ${(deVal||ateVal)?`<button onclick="document.getElementById('vst-de').value='';document.getElementById('vst-ate').value='';renderTelaVistorias()" style="font-size:11px;padding:4px 8px;border:1px solid #ddd;border-radius:6px;background:#f5f5f5;cursor:pointer;font-family:inherit;flex-shrink:0">✕ Limpar</button>`:''}
+        <span style="margin-left:auto;font-size:11px;color:#aaa;flex-shrink:0">${list.length} resultado${list.length!==1?'s':''}</span>
+      </div>
     </div>
-    ${filtered.length===0?`<div style="text-align:center;padding:40px 20px;color:#aaa;font-size:13px">${q?'Nenhuma vistoria encontrada':'Nenhuma vistoria registrada'}</div>`:''}
-    ${filtered.map(v=>{
+    ${list.length===0?`<div style="text-align:center;padding:40px 20px;color:#aaa;font-size:13px">${q||stFilt!=='todas'||deVal||ateVal?'Nenhuma vistoria encontrada':'Nenhuma vistoria registrada ainda'}</div>`:''}
+    ${list.map(v=>{
       const assinada=!!v.ts_assinada;
       const vinculada=!!v.hospedagem;
       const nd=(v.danos||[]).length;
-      const hospStr=v.hospedagem?`<span style="color:#888">${v.hospedagem}</span> · `:'';
-      const stIcon=vinculada&&assinada?'✅':vinculada?'⚠️':'○';
-      const stLabel=vinculada&&assinada?'Vinc.+Assinada':vinculada?'Vinculada':'Não vinculada';
-      const stBg=vinculada&&assinada?'#EEF9F2':vinculada?'#FFF9E6':'#F5F5F5';
-      const stClr=vinculada&&assinada?'#0F6E56':vinculada?'#8B6200':'#888';
-      const bdColor=vinculada&&assinada?'#b0dbc0':vinculada?'#e0b84a':'#ddd';
-      return `<div style="background:#fff;border-radius:10px;border:1.5px solid ${bdColor};margin-bottom:8px;padding:10px 12px">
+      const hospStr=v.hospedagem?`<span style="font-size:11px;color:#888;font-weight:600">${v.hospedagem}</span> · `:'';
+      const stIcon=assinada?'✅':'❗';
+      const stLabel=assinada?'Assinada':'Sem assinatura';
+      const stBg=assinada?'#EEF9F2':'#FFF5F5';
+      const stClr=assinada?'#0F6E56':'#A32D2D';
+      const bdColor=assinada?'#b0dbc0':'#f0c0c0';
+      const dt=new Date(v.ts_criada).toLocaleDateString('pt-BR');
+      const hr=new Date(v.ts_criada).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+      return `<div onclick="verVistoria('${v.id}')" style="background:#fff;border-radius:10px;border:1.5px solid ${bdColor};margin-bottom:8px;padding:10px 12px;cursor:pointer;transition:box-shadow .15s" onmousedown="this.style.boxShadow='0 0 0 2px var(--cp)'" onmouseup="this.style.boxShadow=''" ontouchstart="this.style.boxShadow='0 0 0 2px var(--cp)'" ontouchend="this.style.boxShadow=''">
         <div style="display:flex;align-items:center;gap:6px;margin-bottom:5px">
-          <span style="font-size:13px;font-weight:700">${v.numero}</span>
-          <span style="font-size:10px;background:${stBg};color:${stClr};border-radius:10px;padding:1px 7px;font-weight:700">${stIcon} ${stLabel}</span>
+          <span style="font-size:13px;font-weight:700;color:#222">${v.numero}</span>
+          <span style="font-size:10px;background:${stBg};color:${stClr};border-radius:10px;padding:1px 8px;font-weight:700">${stIcon} ${stLabel}</span>
           ${nd>0?`<span style="font-size:10px;background:#FFF2F2;color:#A32D2D;border-radius:10px;padding:1px 7px;font-weight:700">${nd} avaria${nd>1?'s':''}</span>`:''}
-          <span style="margin-left:auto;font-size:11px;color:#aaa">${new Date(v.ts_criada).toLocaleDateString('pt-BR')}</span>
+          <span style="margin-left:auto;font-size:11px;color:#aaa;flex-shrink:0">${dt} ${hr}</span>
         </div>
-        <div style="font-size:12px;color:#555;margin-bottom:7px">${hospStr}<strong>Apt. ${v.apt||'—'}</strong> · ${v.modelo||'—'} · ${v.cor||'—'}${v.placa?' · '+v.placa:''}</div>
-        <div style="display:flex;gap:6px;flex-wrap:wrap">
-          <button onclick="verVistoria('${v.id}')" style="font-size:11px;padding:4px 10px;border:1.5px solid #ccc;border-radius:6px;background:#fff;cursor:pointer">👁 Ver</button>
-          ${!assinada?`<button onclick="assinarVistoria('${v.id}')" style="font-size:11px;padding:4px 10px;border:1.5px solid #27AE60;border-radius:6px;background:#EEF9F2;color:#27AE60;cursor:pointer;font-weight:700">✍ Assinar</button>`:''}
-          <button onclick="editarVistoria('${v.id}')" style="font-size:11px;padding:4px 10px;border:1.5px solid #ccc;border-radius:6px;background:#fff;cursor:pointer">✏️</button>
-          <button onclick="gerarPDFVistoria('${v.id}')" style="font-size:11px;padding:4px 10px;border:1.5px solid var(--cp);border-radius:6px;background:var(--cp-lt);color:var(--cp);cursor:pointer">📤 PDF</button>
-          <button onclick="deletarVistoria('${v.id}')" style="font-size:11px;padding:4px 10px;border:1.5px solid #ddd;border-radius:6px;background:#fff;color:#A32D2D;cursor:pointer">🗑</button>
+        <div style="font-size:12px;color:#555;margin-bottom:8px">${hospStr}<strong>Apt. ${v.apt||'—'}</strong> · ${v.modelo||'—'} · ${v.cor||'—'}${v.placa?' · <span style="font-family:monospace">'+v.placa+'</span>':''}${v.hospede?' · '+v.hospede:''}</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap" onclick="event.stopPropagation()">
+          <button onclick="verVistoria('${v.id}')" style="font-size:11px;padding:4px 10px;border:1.5px solid #ccc;border-radius:6px;background:#fff;cursor:pointer;font-family:inherit">👁 Ver</button>
+          ${!assinada?`<button onclick="assinarVistoria('${v.id}')" style="font-size:11px;padding:4px 10px;border:1.5px solid #27AE60;border-radius:6px;background:#EEF9F2;color:#27AE60;cursor:pointer;font-weight:700;font-family:inherit">✍ Assinar</button>`:''}
+          <button onclick="editarVistoria('${v.id}')" style="font-size:11px;padding:4px 10px;border:1.5px solid #ccc;border-radius:6px;background:#fff;cursor:pointer;font-family:inherit">✏️ Editar</button>
+          <button onclick="gerarPDFVistoria('${v.id}')" style="font-size:11px;padding:4px 10px;border:1.5px solid var(--cp);border-radius:6px;background:var(--cp-lt);color:var(--cp);cursor:pointer;font-family:inherit">📤 PDF</button>
+          <button onclick="deletarVistoria('${v.id}')" style="font-size:11px;padding:4px 10px;border:1.5px solid #ddd;border-radius:6px;background:#fff;color:#A32D2D;cursor:pointer;font-family:inherit">🗑</button>
         </div>
       </div>`;
     }).join('')}`;
@@ -3774,7 +4053,10 @@ function gerarPDFVistoria(id){
   </body></html>`;
   const d=new Date();
   const ds=String(d.getDate()).padStart(2,'0')+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getFullYear()).slice(-2);
-  gerarECompartilharPDF(`Vistoria ${v.numero}`,html,`${v.apt||'000'}_${v.numero}_${ds}_Vistoria_GarageSpot`);
+  const MESES_PT=['Janeiro','Fevereiro','Marco','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  const subpasta='Vistorias/'+MESES_PT[d.getMonth()]+' '+d.getFullYear()+'/';
+  const nomeArq=subpasta+`${v.apt||'000'}_${v.numero}_${ds}_Vistoria_GarageSpot`;
+  gerarECompartilharPDF(`Vistoria ${v.numero}`,html,nomeArq);
 }
 
 // ── Ícone ❗ no mapa ────────────────────────────────────────────────────────
@@ -6272,6 +6554,7 @@ checkLicense().then(async (ativo)=>{
       if(restored) Object.keys(S).forEach(id=>ref(id));
       attachDrag();
       applyModulos();
+      navTo('painel');
       upd(); tick(); setInterval(tick,15000);
       requestAnimationFrame(()=>setTimeout(positionPilares, 150));
     });
