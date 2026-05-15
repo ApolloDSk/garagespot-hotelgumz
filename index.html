@@ -1116,10 +1116,11 @@ function renderP(){
     const info=[d.model,d.color].filter(Boolean).join(' · ');
     const isLarge=d.size==='large';
     const elapsed=d.saida_ts?fmtElapsed(d.saida_ts):'';
+    const vstPend=MODULOS.vistorias&&(()=>{const vst=getVistoriaByApt(apt)||(d.hospedagem?getVistoriaByHosp(d.hospedagem):null);return vst&&!vst.ts_assinada;})();
     const dv=document.createElement('div');dv.className='oi';dv.dataset.apt=apt;
     dv.innerHTML=`
       <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap">
-        <div class="oa">${apt}</div>
+        <div class="oa">${apt}${vstPend?'<span style="font-size:9px;color:#A32D2D;font-weight:700;margin-left:3px" title="Vistoria pendente de assinatura">❗</span>':''}</div>
         ${isLarge?'<span style="font-size:9px;background:#E3F2FD;color:#185FA5;border-radius:3px;padding:1px 4px;font-weight:700;line-height:1.4">🚐 Grande</span>':''}
         ${elapsed?`<span style="font-size:9px;background:#F3EFFF;color:#5C35B0;border-radius:3px;padding:1px 4px;font-weight:600;line-height:1.4">⏱ ${elapsed}</span>`:''}
       </div>
@@ -1161,9 +1162,10 @@ function renderP(){
   const hidden  = items.length - visible.length;
 
   visible.forEach(([apt,d])=>{
+    const vstP=MODULOS.vistorias&&(()=>{const vst=getVistoriaByApt(apt)||(d.hospedagem?getVistoriaByHosp(d.hospedagem):null);return vst&&!vst.ts_assinada;})();
     const btn=document.createElement('span');
     btn.className='tb-pi'+(d.size==='large'?' large-badge':'');
-    btn.textContent=apt;
+    btn.innerHTML=apt+(vstP?'<span style="color:#A32D2D;font-size:9px;margin-left:2px">❗</span>':'');
     btn.title=([d.model,d.color,d.plate].filter(Boolean).join(' · '))||'Apt. '+apt;
     btn.addEventListener('click',()=>showPasseioDetail(apt));
     piList.appendChild(btn);
@@ -2490,8 +2492,8 @@ function getTurnoAtual(){ return getTurnoDoEvento(Date.now()); }
 function showHistoricoUsuario(userId){
   const u=USUARIOS.find(x=>x.id===userId);
   if(!u){ showToast('Usuário não encontrado'); return; }
-  const tLabel={checkin:'Check-in',saida_passeio:'Saída Passeio',retorno_passeio:'Retorno',checkout:'Check-out',edicao:'Edição',movimentacao_vaga:'Mudança de Vaga',tornar_grande:'Carro Grande',tornar_pequeno:'Carro Pequeno',merge_lateral:'Mesclagem',desfaz_merge_lateral:'Merge Desfeito',vistoria_criada:'Vistoria Criada',vistoria_vinculada:'Vistoria Vinculada',vistoria_assinada:'Vistoria Assinada'};
-  const tColor={checkin:'#0F6E56',saida_passeio:'#854F0B',retorno_passeio:'#185FA5',checkout:'#A32D2D',edicao:'#555',movimentacao_vaga:'#5C35B0',tornar_grande:'#185FA5',tornar_pequeno:'#0F6E56',merge_lateral:'#854F0B',desfaz_merge_lateral:'#888',vistoria_criada:'#0D3B6E',vistoria_vinculada:'#0F6E56',vistoria_assinada:'#27AE60'};
+  const tLabel={checkin:'Check-in',saida_passeio:'Saída Passeio',retorno_passeio:'Retorno',checkout:'Check-out',edicao:'Edição',movimentacao_vaga:'Mudança de Vaga',tornar_grande:'Carro Grande',tornar_pequeno:'Carro Pequeno',merge_lateral:'Mesclagem',desfaz_merge_lateral:'Merge Desfeito',vistoria_criada:'Vistoria Criada',vistoria_vinculada:'Vistoria Vinculada',vistoria_editada:'Vistoria Editada',vistoria_assinada:'Vistoria Assinada',vistoria_deletada:'Vistoria Excluída'};
+  const tColor={checkin:'#0F6E56',saida_passeio:'#854F0B',retorno_passeio:'#185FA5',checkout:'#A32D2D',edicao:'#555',movimentacao_vaga:'#5C35B0',tornar_grande:'#185FA5',tornar_pequeno:'#0F6E56',merge_lateral:'#854F0B',desfaz_merge_lateral:'#888',vistoria_criada:'#0D3B6E',vistoria_vinculada:'#0F6E56',vistoria_editada:'#555',vistoria_assinada:'#27AE60',vistoria_deletada:'#A32D2D'};
   const nomeU=u.nome.toLowerCase();
   const allEvts=[];
   Object.entries(HISTORICO).forEach(([apt,evts])=>evts.forEach(ev=>{
@@ -3029,10 +3031,16 @@ function applyModulos(){
 
 // ── VISTORIAS ─────────────────────────────────────────────────────────────
 let VISTORIAS = {};
+let VISTORIAS_LIXEIRA = {};
 const VISTORIA_COUNTER_KEY = 'garagespot_vistoria_counter';
 const VISTORIAS_LS = 'garagespot_vistorias';
+const VISTORIAS_LIXEIRA_LS = 'garagespot_vistorias_lixeira';
 function saveVistorias(){try{localStorage.setItem(VISTORIAS_LS,JSON.stringify(VISTORIAS));}catch(e){}}
-function loadVistorias(){try{const d=localStorage.getItem(VISTORIAS_LS);if(d)VISTORIAS=JSON.parse(d)||{};}catch(e){}}
+function saveLixeira(){try{localStorage.setItem(VISTORIAS_LIXEIRA_LS,JSON.stringify(VISTORIAS_LIXEIRA));}catch(e){}}
+function loadVistorias(){
+  try{const d=localStorage.getItem(VISTORIAS_LS);if(d)VISTORIAS=JSON.parse(d)||{};}catch(e){}
+  try{const d=localStorage.getItem(VISTORIAS_LIXEIRA_LS);if(d)VISTORIAS_LIXEIRA=JSON.parse(d)||{};}catch(e){}
+}
 function nextNumVistoria(){
   let n=parseInt(localStorage.getItem(VISTORIA_COUNTER_KEY)||'0')+1;
   localStorage.setItem(VISTORIA_COUNTER_KEY,String(n));
@@ -3079,17 +3087,24 @@ function renderTelaVistorias(){
   vw.innerHTML=`
     <div style="padding:10px 0 6px;display:flex;gap:8px;align-items:center">
       <input id="vst-search-inp" type="text" placeholder="Buscar vistoria..." value="${q}" oninput="renderTelaVistorias()" style="flex:1;padding:7px 10px;border:1.5px solid #ddd;border-radius:8px;font-size:13px;outline:none">
+      ${Object.keys(VISTORIAS_LIXEIRA).length>0?`<button onclick="showLixeiraVistorias()" style="font-size:12px;padding:7px 10px;border:1.5px solid #ddd;border-radius:8px;background:#FFF5F5;color:#A32D2D;cursor:pointer;font-family:inherit;white-space:nowrap">🗑 ${Object.keys(VISTORIAS_LIXEIRA).length}</button>`:''}
       <button class="bsv" style="padding:7px 12px;font-size:13px;white-space:nowrap" onclick="novaVistoria()">+ Nova</button>
     </div>
     ${filtered.length===0?`<div style="text-align:center;padding:40px 20px;color:#aaa;font-size:13px">${q?'Nenhuma vistoria encontrada':'Nenhuma vistoria registrada'}</div>`:''}
     ${filtered.map(v=>{
       const assinada=!!v.ts_assinada;
+      const vinculada=!!v.hospedagem;
       const nd=(v.danos||[]).length;
       const hospStr=v.hospedagem?`<span style="color:#888">${v.hospedagem}</span> · `:'';
-      return `<div style="background:#fff;border-radius:10px;border:1.5px solid ${assinada?'#b0dbc0':'#e0b84a'};margin-bottom:8px;padding:10px 12px">
+      const stIcon=vinculada&&assinada?'✅':vinculada?'⚠️':'○';
+      const stLabel=vinculada&&assinada?'Vinc.+Assinada':vinculada?'Vinculada':'Não vinculada';
+      const stBg=vinculada&&assinada?'#EEF9F2':vinculada?'#FFF9E6':'#F5F5F5';
+      const stClr=vinculada&&assinada?'#0F6E56':vinculada?'#8B6200':'#888';
+      const bdColor=vinculada&&assinada?'#b0dbc0':vinculada?'#e0b84a':'#ddd';
+      return `<div style="background:#fff;border-radius:10px;border:1.5px solid ${bdColor};margin-bottom:8px;padding:10px 12px">
         <div style="display:flex;align-items:center;gap:6px;margin-bottom:5px">
           <span style="font-size:13px;font-weight:700">${v.numero}</span>
-          <span style="font-size:10px;background:${assinada?'#EEF9F2':'#FFF9E6'};color:${assinada?'#0F6E56':'#8B6200'};border-radius:10px;padding:1px 7px;font-weight:700">${assinada?'Assinada':'Pendente'}</span>
+          <span style="font-size:10px;background:${stBg};color:${stClr};border-radius:10px;padding:1px 7px;font-weight:700">${stIcon} ${stLabel}</span>
           ${nd>0?`<span style="font-size:10px;background:#FFF2F2;color:#A32D2D;border-radius:10px;padding:1px 7px;font-weight:700">${nd} avaria${nd>1?'s':''}</span>`:''}
           <span style="margin-left:auto;font-size:11px;color:#aaa">${new Date(v.ts_criada).toLocaleDateString('pt-BR')}</span>
         </div>
@@ -3097,6 +3112,7 @@ function renderTelaVistorias(){
         <div style="display:flex;gap:6px;flex-wrap:wrap">
           <button onclick="verVistoria('${v.id}')" style="font-size:11px;padding:4px 10px;border:1.5px solid #ccc;border-radius:6px;background:#fff;cursor:pointer">👁 Ver</button>
           ${!assinada?`<button onclick="assinarVistoria('${v.id}')" style="font-size:11px;padding:4px 10px;border:1.5px solid #27AE60;border-radius:6px;background:#EEF9F2;color:#27AE60;cursor:pointer;font-weight:700">✍ Assinar</button>`:''}
+          <button onclick="editarVistoria('${v.id}')" style="font-size:11px;padding:4px 10px;border:1.5px solid #ccc;border-radius:6px;background:#fff;cursor:pointer">✏️</button>
           <button onclick="gerarPDFVistoria('${v.id}')" style="font-size:11px;padding:4px 10px;border:1.5px solid var(--cp);border-radius:6px;background:var(--cp-lt);color:var(--cp);cursor:pointer">📤 PDF</button>
           <button onclick="deletarVistoria('${v.id}')" style="font-size:11px;padding:4px 10px;border:1.5px solid #ddd;border-radius:6px;background:#fff;color:#A32D2D;cursor:pointer">🗑</button>
         </div>
@@ -3222,20 +3238,43 @@ function _vstPlaceDanoMark(viewId,x,y,idx){
   mk.dataset.idx=String(idx);
   mk.onclick=function(e){
     e.stopPropagation();
-    _vstDanos.splice(parseInt(this.dataset.idx),1);
-    document.querySelectorAll('.vst-ol').forEach(o=>o.innerHTML='');
-    _vstDanos.forEach((d,i)=>_vstPlaceDanoMark(d.view,d.x,d.y,i));
-    const badge=document.getElementById('vst-nd-badge');
-    if(badge){const nd2=_vstDanos.length;badge.style.color=nd2>0?'#0F6E56':'#888';badge.textContent=nd2>0?nd2+' avaria'+(nd2>1?'s':'')+' marcada'+(nd2>1?'s':''):'Nenhuma avaria marcada ainda';}
+    // Janelinha de confirmação
+    const existing=document.getElementById('vst-dano-confirm');
+    if(existing) existing.remove();
+    const janela=document.createElement('div');
+    janela.id='vst-dano-confirm';
+    janela.style.cssText='position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);background:#fff;border:1.5px solid #A32D2D;border-radius:8px;padding:8px 12px;z-index:10;box-shadow:0 2px 10px rgba(0,0,0,.25);text-align:center;min-width:120px';
+    janela.innerHTML='<div style="font-size:11px;color:#A32D2D;font-weight:700;margin-bottom:6px">Excluir marcação?</div><div style="display:flex;gap:6px;justify-content:center"><button style="font-size:11px;padding:3px 10px;background:#A32D2D;color:#fff;border:none;border-radius:5px;cursor:pointer" id="vst-dc-ok">Excluir</button><button style="font-size:11px;padding:3px 10px;background:#f0f0f0;border:1px solid #ccc;border-radius:5px;cursor:pointer" id="vst-dc-no">Manter</button></div>';
+    ol.appendChild(janela);
+    const tidx=parseInt(this.dataset.idx);
+    document.getElementById('vst-dc-ok').onclick=function(ev){ev.stopPropagation();janela.remove();_vstDanos.splice(tidx,1);document.querySelectorAll('.vst-ol').forEach(o=>o.innerHTML='');_vstDanos.forEach((d,i)=>_vstPlaceDanoMark(d.view,d.x,d.y,i));const badge=document.getElementById('vst-nd-badge');if(badge){const nd2=_vstDanos.length;badge.style.color=nd2>0?'#0F6E56':'#888';badge.textContent=nd2>0?nd2+' avaria'+(nd2>1?'s':'')+' marcada'+(nd2>1?'s':''):'Nenhuma avaria marcada ainda';}};
+    document.getElementById('vst-dc-no').onclick=function(ev){ev.stopPropagation();janela.remove();};
   };
   ol.appendChild(mk);
+}
+
+function _vstMkViewStatic(vm, danos){
+  const pts=danos.filter(d=>d.view===vm.id);
+  if(!pts.length) return '';
+  const vbMap={le:'280 130',ld:'280 130',di:'200 155',tr:'200 155',su:'160 260'};
+  const vb=(vbMap[vm.id]||'200 200').split(' ');
+  const marks=pts.map(p=>`<circle cx="${(p.x/100*parseFloat(vb[0])).toFixed(1)}" cy="${(p.y/100*parseFloat(vb[1])).toFixed(1)}" r="8" fill="rgba(163,45,45,.82)" stroke="#fff" stroke-width="1.5"/>`).join('');
+  const svgWithMarks=VST_SVG[vm.id].replace('</svg>',marks+'</svg>');
+  return `<div style="min-width:70px;max-width:${vm.id==='su'?'80px':'140px'}">
+    <div style="font-size:9px;font-weight:700;color:#666;text-align:center;margin-bottom:2px;text-transform:uppercase">${vm.label}</div>
+    <div style="border:1px solid #ddd;border-radius:5px;overflow:hidden;background:#f7f8f9">${svgWithMarks}</div>
+  </div>`;
 }
 
 function _vstStep3(){
   const nd=_vstDanos.length;
   const hospStr=_vstD.hospedagem?`<div class="dr"><span class="dl">Hospedagem</span><span class="dv">${_vstD.hospedagem}</span></div>`:'';
+  const svgGrid=nd>0?`<div style="margin:8px 0 4px;font-size:11px;font-weight:700;color:#A32D2D">Avarias marcadas:</div>
+    <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;justify-content:center">
+      ${VST_VIEWS_META.map(vm=>_vstMkViewStatic(vm,_vstDanos)).filter(Boolean).join('')}
+    </div>`:'';
   showM(`<div class="mt">📋 Revisão</div>
-    <div style="background:#f8f8f8;border-radius:8px;padding:10px;margin-bottom:10px">
+    <div style="background:#f8f8f8;border-radius:8px;padding:10px;margin-bottom:6px">
       <div class="dr"><span class="dl">Apartamento</span><span class="dv">${_vstD.apt}</span></div>
       <div class="dr"><span class="dl">Modelo</span><span class="dv">${_vstD.modelo}</span></div>
       <div class="dr"><span class="dl">Cor</span><span class="dv">${_vstD.cor}</span></div>
@@ -3244,9 +3283,10 @@ function _vstStep3(){
       ${hospStr}
       <div class="dr"><span class="dl">Avarias</span><span class="dv" style="color:${nd>0?'#A32D2D':'#0F6E56'}">${nd>0?nd+' marcada'+(nd>1?'s':''):'Nenhuma'}</span></div>
     </div>
+    ${svgGrid}
     <div class="ag" style="gap:8px">
-      <button class="bsv" style="background:#0F6E56" onclick="_vstStep4()">✍ Assinar agora</button>
-      <button class="bcx" style="border-color:var(--cp);color:var(--cp)" onclick="_vstConfirmar(null)">Confirmar sem assinatura</button>
+      <button class="bsv" style="background:#0F6E56" onclick="_vstPreConfirmar('assinar')">✍ Assinar agora</button>
+      <button class="bcx" style="border-color:var(--cp);color:var(--cp)" onclick="_vstPreConfirmar('sem')">Confirmar sem assinatura</button>
       <button class="bcx" onclick="${nd>0?'_vstStep2b()':'_vstStep2()'}">← Corrigir</button>
     </div>`);
 }
@@ -3276,7 +3316,8 @@ function _vstStep4(){
   const mc=document.getElementById('mc');
   mc.innerHTML=`
     <div class="mt" style="font-size:14px">✍ Assinatura do Hóspede</div>
-    <div style="font-size:11px;color:#888;margin-bottom:8px">Assine no campo abaixo</div>
+    <div style="font-size:11px;color:#444;margin:0 0 10px;font-style:italic;text-align:center;line-height:1.5;padding:6px 8px;background:#f8f8f8;border-radius:7px;border:1px solid #ddd">"O veículo de minha posse foi entregue com as condições descritas."</div>
+    <div style="font-size:10px;color:#888;margin-bottom:8px;text-align:center">Assine abaixo para confirmar</div>
     <canvas id="vst-sig-canvas" width="320" height="150" style="border:2px solid #ddd;border-radius:8px;background:#fff;touch-action:none;width:100%;max-width:320px;display:block;margin:0 auto"></canvas>
     <div class="b2" style="margin-top:8px">
       <button class="bcx" onclick="_vstLimparSig()">🗑 Limpar</button>
@@ -3291,35 +3332,115 @@ function _vstStep4(){
   };
 }
 
+// Verifica se precisa vincular antes de confirmar
+function _vstPreConfirmar(modo){
+  // Se já tem hospedagem (vistoria criada de uma vaga/checkout), pula vincular
+  if(_vstD.hospedagem || _vstD._editId){
+    modo==='assinar' ? _vstStep4() : _vstConfirmar(null);
+    return;
+  }
+  // Busca hospedagem ativa para o apt informado
+  const apt=_vstD.apt;
+  let autoHosp='';
+  const vagaId=Object.keys(S).find(k=>S[k].apt===apt&&S[k].status==='occupied');
+  if(vagaId&&S[vagaId].hospedagem) autoHosp=S[vagaId].hospedagem;
+  else if(PASSEIO[apt]?.hospedagem) autoHosp=PASSEIO[apt].hospedagem;
+
+  if(autoHosp){
+    // Há hospedagem ativa — oferece vincular
+    const mc=document.getElementById('mc');
+    mc.innerHTML=`
+      <div class="mt">🔗 Vincular à Hospedagem?</div>
+      <div style="background:#EEF6FF;border:1.5px solid #378ADD;border-radius:8px;padding:9px 12px;font-size:12px;margin-bottom:10px">
+        <strong>${autoHosp}</strong><br>Apt. ${apt}
+      </div>
+      <div class="ag" style="gap:8px">
+        <button class="bsv" id="vst-vc-sim">✅ Vincular a ${autoHosp}</button>
+        <button class="bcx" id="vst-vc-nao">Não vincular</button>
+      </div>`;
+    document.getElementById('ov').classList.add('on');
+    document.getElementById('vst-vc-sim').onclick=function(){_vstD.hospedagem=autoHosp;modo==='assinar'?_vstStep4():_vstConfirmar(null);};
+    document.getElementById('vst-vc-nao').onclick=function(){modo==='assinar'?_vstStep4():_vstConfirmar(null);};
+  } else {
+    // Não há hospedagem ativa — oferece escolher de lista ou pular
+    const aptsAtivos=[];
+    Object.entries(S).forEach(([vid,vd])=>{if(vd.status==='occupied'&&vd.apt&&!vd.mergedSlave)aptsAtivos.push({apt:vd.apt,hosp:vd.hospedagem||''});});
+    Object.entries(PASSEIO).forEach(([a,pd])=>aptsAtivos.push({apt:a,hosp:pd.hospedagem||''}));
+    const uniq=[...new Map(aptsAtivos.map(x=>[x.apt,x])).values()];
+    // ordena: sem vistoria primeiro
+    uniq.sort((a,b)=>{
+      const va=getVistoriaByApt(a.apt)?1:0, vb=getVistoriaByApt(b.apt)?1:0;
+      return va-vb || a.apt.localeCompare(b.apt);
+    });
+    const mc=document.getElementById('mc');
+    mc.innerHTML=`
+      <div class="mt">🔗 Vincular à Hospedagem?</div>
+      <div class="ms" style="margin-bottom:8px">Escolha o apartamento ou pule</div>
+      <div style="max-height:220px;overflow-y:auto;margin-bottom:8px">
+        ${uniq.map(x=>{
+          const haVist=!!getVistoriaByApt(x.apt);
+          return `<button class="ab ao" id="vst-vc-${x.apt}" style="margin-bottom:5px;text-align:left;justify-content:flex-start;font-size:12px">
+            ${haVist?'✅':'○'} Apt. ${x.apt}${x.hosp?' · <span style="color:#888">'+x.hosp+'</span>':''}
+          </button>`;
+        }).join('')}
+      </div>
+      <button class="bcx" style="width:100%" id="vst-vc-skip">Não vincular agora</button>`;
+    document.getElementById('ov').classList.add('on');
+    uniq.forEach(x=>{
+      const btn=document.getElementById('vst-vc-'+x.apt);
+      if(btn) btn.onclick=function(){_vstD.hospedagem=x.hosp;_vstD.apt=x.apt;modo==='assinar'?_vstStep4():_vstConfirmar(null);};
+    });
+    document.getElementById('vst-vc-skip').onclick=function(){modo==='assinar'?_vstStep4():_vstConfirmar(null);};
+  }
+}
+
 function _vstConfirmar(assinatura){
-  confirmarUsuario('registrando vistoria',function(usuario){
+  const isEdit=!!_vstD._editId;
+  const acao=isEdit?'editando vistoria':'registrando vistoria';
+  confirmarUsuario(acao,function(usuario){
     const usuarioStr=usuario?(usuario.nome+' · '+usuario.cargo):'';
-    const id=nextNumVistoria();
     const now=Date.now();
-    VISTORIAS[id]={
-      id,numero:id,
-      apt:_vstD.apt,modelo:_vstD.modelo,cor:_vstD.cor,
-      placa:_vstD.placa||'',hospede:_vstD.hospede||'',
-      hospedagem:_vstD.hospedagem||'',
-      ts_criada:now,ts_assinada:assinatura?now:null,
-      danos:[..._vstDanos],
-      assinatura:assinatura||null,
-      usuario_criou:usuarioStr,
-      usuario_assinou:assinatura?usuarioStr:null,
-    };
-    saveVistorias();
-    if(_vstD.apt){
-      const extra=`${id} — ${_vstD.modelo} ${_vstD.cor}${_vstDanos.length?' · '+_vstDanos.length+' avaria(s)':''}`;
-      addHistorico(_vstD.apt,'vistoria_criada','',extra,usuarioStr,_vstD.hospedagem||'');
-      if(assinatura) addHistorico(_vstD.apt,'vistoria_assinada','',id,usuarioStr,_vstD.hospedagem||'');
+    let id;
+    if(isEdit){
+      id=_vstD._editId;
+      const v=VISTORIAS[id];
+      const prevApt=v.apt;
+      Object.assign(v,{
+        apt:_vstD.apt,modelo:_vstD.modelo,cor:_vstD.cor,
+        placa:_vstD.placa||'',hospede:_vstD.hospede||'',
+        hospedagem:_vstD.hospedagem||v.hospedagem||'',
+        danos:[..._vstDanos],
+        ts_editada:now,usuario_editou:usuarioStr,
+      });
+      if(assinatura&&!v.ts_assinada){v.assinatura=assinatura;v.ts_assinada=now;v.usuario_assinou=usuarioStr;}
+      saveVistorias();
+      if(_vstD.apt) addHistorico(_vstD.apt,'vistoria_editada','',id,usuarioStr,v.hospedagem||'');
+    } else {
+      id=nextNumVistoria();
+      VISTORIAS[id]={
+        id,numero:id,
+        apt:_vstD.apt,modelo:_vstD.modelo,cor:_vstD.cor,
+        placa:_vstD.placa||'',hospede:_vstD.hospede||'',
+        hospedagem:_vstD.hospedagem||'',
+        ts_criada:now,ts_assinada:assinatura?now:null,
+        danos:[..._vstDanos],
+        assinatura:assinatura||null,
+        usuario_criou:usuarioStr,
+        usuario_assinou:assinatura?usuarioStr:null,
+      };
+      saveVistorias();
+      if(_vstD.apt){
+        const extra=`${id} — ${_vstD.modelo} ${_vstD.cor}${_vstDanos.length?' · '+_vstDanos.length+' avaria(s)':''}`;
+        addHistorico(_vstD.apt,'vistoria_criada','',extra,usuarioStr,_vstD.hospedagem||'');
+        if(assinatura) addHistorico(_vstD.apt,'vistoria_assinada','',id,usuarioStr,_vstD.hospedagem||'');
+      }
     }
     const vagaId=Object.keys(S).find(k=>S[k].apt===_vstD.apt&&S[k].status==='occupied');
     if(vagaId) refVistoria(vagaId);
     if(document.getElementById('vistorias-wrap')?.style?.display!=='none') renderTelaVistorias();
     _vstD=null;_vstDanos=[];
-    // Mostrar resultado com opção de PDF
     showM(`<div class="mt">${assinatura?'✅':'📋'} Vistoria ${id}</div>
-      <div class="ms" style="margin-bottom:10px">${assinatura?'Registrada e assinada':'Registrada — pendente de assinatura'}</div>
+      <div class="ms" style="margin-bottom:10px">${isEdit?'Atualizada':(assinatura?'Registrada e assinada':'Registrada — pendente de assinatura')}</div>
       <div style="background:#f8f8f8;border-radius:8px;padding:8px 10px;font-size:12px;margin-bottom:12px">
         <div class="dr"><span class="dl">Número</span><span class="dv">${id}</span></div>
         <div class="dr"><span class="dl">Apartamento</span><span class="dv">${VISTORIAS[id]?.apt||'—'}</span></div>
@@ -3353,6 +3474,7 @@ function verVistoria(id){
     <div class="ag" style="gap:8px;flex-wrap:wrap">
       ${!assinada?`<button class="bsv" style="background:#0F6E56" onclick="assinarVistoria('${id}')">✍ Assinar</button>`:''}
       <button class="bsv" onclick="gerarPDFVistoria('${id}')">📤 PDF</button>
+      <button style="font-size:12px;padding:6px 14px;border:1.5px solid #ccc;border-radius:8px;background:#fff;cursor:pointer;font-family:inherit" onclick="editarVistoria('${id}')">✏️ Editar</button>
       <button class="bcx" onclick="closeOv()">Fechar</button>
     </div>`);
 }
@@ -3362,8 +3484,9 @@ function assinarVistoria(id){
   const mc=document.getElementById('mc');
   mc.innerHTML=`
     <div class="mt" style="font-size:14px">✍ Assinar Vistoria</div>
-    <div style="font-size:12px;color:#888;margin-bottom:4px">${v.numero} — Apt. ${v.apt} · ${v.modelo}</div>
-    <div style="font-size:11px;color:#888;margin-bottom:8px">Assine no campo abaixo</div>
+    <div style="font-size:12px;color:#888;margin-bottom:6px">${v.numero} — Apt. ${v.apt} · ${v.modelo}</div>
+    <div style="font-size:11px;color:#444;margin:0 0 10px;font-style:italic;text-align:center;line-height:1.5;padding:6px 8px;background:#f8f8f8;border-radius:7px;border:1px solid #ddd">"O veículo de minha posse foi entregue com as condições descritas."</div>
+    <div style="font-size:10px;color:#888;margin-bottom:8px;text-align:center">Assine abaixo para confirmar</div>
     <canvas id="vst-sig2-canvas" width="320" height="150" style="border:2px solid #ddd;border-radius:8px;background:#fff;touch-action:none;width:100%;max-width:320px;display:block;margin:0 auto"></canvas>
     <div class="b2" style="margin-top:8px">
       <button class="bcx" onclick="_vstLimparSig()">🗑 Limpar</button>
@@ -3393,26 +3516,123 @@ function assinarVistoria(id){
 
 function deletarVistoria(id){
   const v=VISTORIAS[id]; if(!v) return;
-  showM(`<div class="mt">🗑 Excluir Vistoria</div>
+  showM(`<div class="mt">🗑 Mover para Lixeira</div>
     <div class="ms">${v.numero} — Apt. ${v.apt} · ${v.modelo}</div>
-    <div class="warn-box">Esta vistoria será excluída permanentemente.</div>
+    <div class="warn-box" style="font-size:12px">A vistoria será movida para a lixeira.<br>Para excluir permanentemente, acesse Gestão → Vistorias.</div>
     <div class="ag">
-      <button class="ab ac" id="vst-del-ok">Excluir</button>
+      <button class="ab ac" id="vst-del-ok">Mover para Lixeira</button>
       <button class="bcx" onclick="closeOv()" style="margin-top:4px">Cancelar</button>
     </div>`);
   document.getElementById('vst-del-ok').onclick=function(){
-    confirmarUsuario('excluindo vistoria',function(usuario){
+    confirmarUsuario('movendo vistoria para lixeira',function(usuario){
       const usuarioStr=usuario?(usuario.nome+' · '+usuario.cargo):'';
       if(v.apt) addHistorico(v.apt,'vistoria_deletada','',v.numero,usuarioStr,v.hospedagem||'');
+      VISTORIAS_LIXEIRA[id]={...v, ts_deletada:Date.now(), deletada_por:usuarioStr};
       delete VISTORIAS[id];
-      saveVistorias();
+      saveVistorias(); saveLixeira();
       const vagaId=Object.keys(S).find(k=>S[k].apt===v.apt&&S[k].status==='occupied');
       if(vagaId) refVistoria(vagaId);
       closeOv();
-      showToast('Vistoria excluída');
+      showToast('Vistoria movida para lixeira');
       if(document.getElementById('vistorias-wrap')?.style?.display!=='none') renderTelaVistorias();
     });
   };
+}
+
+function showLixeiraVistorias(){
+  const itens=Object.values(VISTORIAS_LIXEIRA).sort((a,b)=>b.ts_deletada-a.ts_deletada);
+  const mc=document.getElementById('mc');
+  mc.innerHTML=`
+    <div class="mt">🗑 Lixeira de Vistorias</div>
+    <div class="ms" style="margin-bottom:10px">${itens.length} item${itens.length!==1?'s':''} na lixeira</div>
+    ${itens.length===0?`<div style="text-align:center;color:#aaa;padding:20px;font-size:13px">Lixeira vazia</div>`:''}
+    ${itens.map(v=>`
+      <div style="background:#fff;border:1px solid #eee;border-radius:8px;padding:8px 10px;margin-bottom:6px;font-size:12px">
+        <div style="font-weight:700;color:#A32D2D">${v.numero}</div>
+        <div style="color:#555">Apt. ${v.apt||'—'} · ${v.modelo||'—'} · ${v.cor||'—'}</div>
+        <div style="color:#aaa;font-size:10px">Excluída em ${fmtTs(v.ts_deletada)} por ${v.deletada_por||'—'}</div>
+        <button onclick="restaurarVistoria('${v.id}')" style="font-size:11px;margin-top:4px;padding:3px 10px;border:1.5px solid #0F6E56;border-radius:5px;background:#EEF9F2;color:#0F6E56;cursor:pointer;font-family:inherit">↩ Restaurar</button>
+      </div>`).join('')}
+    ${itens.length>0?`<button class="ab ac" style="width:100%;margin-top:8px;font-size:12px" id="vst-lx-clear">🗑 Limpar lixeira</button>`:''}
+    <button class="bcx" style="width:100%;margin-top:6px" onclick="closeOv()">Fechar</button>`;
+  document.getElementById('ov').classList.add('on');
+  if(itens.length>0){
+    document.getElementById('vst-lx-clear').onclick=function(){
+      const pinAtual=localStorage.getItem('garagespot_gestao_pin')||'1200';
+      const mc2=document.getElementById('mc');
+      mc2.innerHTML=`
+        <div class="mt">🔒 Confirmar Limpeza</div>
+        <div class="ms" style="margin-bottom:10px">Digite o PIN de Gestão para limpar a lixeira permanentemente</div>
+        <input class="fi" id="lx-pin" type="password" inputmode="numeric" maxlength="6" placeholder="PIN" style="text-align:center;font-size:20px;letter-spacing:4px">
+        <div class="b2" style="margin-top:8px">
+          <button class="bcx" onclick="showLixeiraVistorias()">← Voltar</button>
+          <button class="bsv" id="lx-pin-ok" style="background:#A32D2D">Limpar definitivamente</button>
+        </div>`;
+      document.getElementById('lx-pin-ok').onclick=function(){
+        const pin=document.getElementById('lx-pin').value.trim();
+        if(pin!==pinAtual){showToast('PIN incorreto');return;}
+        VISTORIAS_LIXEIRA={};
+        saveLixeira();
+        closeOv();
+        showToast('Lixeira limpa');
+      };
+    };
+  }
+}
+
+function restaurarVistoria(id){
+  const v=VISTORIAS_LIXEIRA[id]; if(!v) return;
+  VISTORIAS[v.id]={...v};
+  delete VISTORIAS[v.id].ts_deletada;
+  delete VISTORIAS[v.id].deletada_por;
+  delete VISTORIAS_LIXEIRA[id];
+  saveVistorias(); saveLixeira();
+  const vagaId=Object.keys(S).find(k=>S[k].apt===v.apt&&S[k].status==='occupied');
+  if(vagaId) refVistoria(vagaId);
+  showToast('Vistoria '+id+' restaurada');
+  showLixeiraVistorias();
+}
+
+function editarVistoria(id){
+  const v=VISTORIAS[id]; if(!v) return;
+  _vstD={apt:v.apt||'',hospedagem:v.hospedagem||'',modelo:v.modelo||'',cor:v.cor||'',placa:v.placa||'',hospede:v.hospede||'',_editId:id};
+  _vstDanos=[...(v.danos||[])];
+  showM(`<div class="mt">✏️ Editar Vistoria</div>
+    <div class="ms" style="margin-bottom:10px">${v.numero}</div>
+    <label class="fl">Apartamento *</label>
+    <input class="fi" id="vst-apt" value="${v.apt||''}" placeholder="Ex: 101, 205...">
+    <label class="fl">Modelo *</label>
+    <input class="fi" id="vst-mod" value="${v.modelo||''}" placeholder="Ex: Civic, HB20...">
+    <label class="fl">Cor *</label>
+    <input class="fi" id="vst-cor" value="${v.cor||''}" placeholder="Ex: Prata, Preto...">
+    <label class="fl">Placa</label>
+    <input class="fi" id="vst-pla" value="${v.placa||''}" placeholder="ABC1D23" style="text-transform:uppercase">
+    <label class="fl">Hóspede</label>
+    <input class="fi" id="vst-gst" value="${v.hospede||''}" placeholder="Nome completo">
+    <div class="b2">
+      <button class="bcx" onclick="closeOv()">Cancelar</button>
+      <button class="bsv" id="vst-edit-next">Próximo →</button>
+    </div>`);
+  document.getElementById('vst-edit-next').onclick=function(){
+    const aptV=document.getElementById('vst-apt').value.trim();
+    const modV=document.getElementById('vst-mod').value.trim();
+    const corV=document.getElementById('vst-cor').value.trim();
+    if(!aptV||!modV||!corV){showToast('Preencha Apt., Modelo e Cor');return;}
+    _vstD.apt=aptV;_vstD.modelo=modV;_vstD.cor=corV;
+    _vstD.placa=document.getElementById('vst-pla').value.trim().toUpperCase();
+    _vstD.hospede=document.getElementById('vst-gst').value.trim();
+    _vstStep2();
+  };
+}
+
+// Helper: SVG estático com marcações de avaria para PDF/revisão
+function _vstSvgComDanos(vmId, danos){
+  const vbMap={le:'280 130',ld:'280 130',di:'200 155',tr:'200 155',su:'160 260'};
+  const vb=(vbMap[vmId]||'200 200').split(' ');
+  const pts=danos.filter(d=>d.view===vmId);
+  if(!pts.length) return VST_SVG[vmId];
+  const marks=pts.map(p=>`<circle cx="${(p.x/100*parseFloat(vb[0])).toFixed(1)}" cy="${(p.y/100*parseFloat(vb[1])).toFixed(1)}" r="7" fill="rgba(163,45,45,.85)" stroke="#fff" stroke-width="1.5"/><text x="${(p.x/100*parseFloat(vb[0])).toFixed(1)}" y="${(parseFloat(p.y/100*parseFloat(vb[1]))+4.5).toFixed(1)}" text-anchor="middle" font-size="8" font-weight="bold" fill="#fff">×</text>`).join('');
+  return VST_SVG[vmId].replace('</svg>',marks+'</svg>');
 }
 
 // ── PDF de vistoria ────────────────────────────────────────────────────────
@@ -3422,13 +3642,15 @@ function gerarPDFVistoria(id){
   const viewsComDano=VST_VIEWS_META.filter(vm=>(v.danos||[]).some(d=>d.view===vm.id));
   let danosHtml='';
   if(nd>0){
-    danosHtml=`<table style="width:100%;border-collapse:collapse;font-size:11px;margin-top:8px">
-      <tr style="background:#f0f0f0"><th style="padding:4px 8px;text-align:left;border:1px solid #ddd">Vista</th><th style="padding:4px 8px;border:1px solid #ddd">Localizações</th></tr>
+    // SVGs inline com as marcações
+    danosHtml=`<div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:8px;justify-content:flex-start">
       ${viewsComDano.map(vm=>{
-        const pts=v.danos.filter(d=>d.view===vm.id);
-        return `<tr><td style="padding:4px 8px;border:1px solid #ddd">${vm.label}</td><td style="padding:4px 8px;border:1px solid #ddd">${pts.map(p=>`(${p.x.toFixed(0)}%, ${p.y.toFixed(0)}%)`).join(' | ')}</td></tr>`;
+        return `<div style="flex:0 0 auto;text-align:center">
+          <div style="font-size:10px;font-weight:700;color:#555;margin-bottom:3px;text-transform:uppercase">${vm.label}</div>
+          <div style="width:${vm.id==='su'?'80px':vm.id==='le'||vm.id==='ld'?'160px':'120px'};border:1px solid #ddd;border-radius:4px;overflow:hidden;background:#f7f8f9;display:inline-block">${_vstSvgComDanos(vm.id,v.danos)}</div>
+        </div>`;
       }).join('')}
-    </table>`;
+    </div>`;
   }
   const html=`<!DOCTYPE html><html><head><meta charset="utf-8"><style>
     body{font-family:Arial,sans-serif;font-size:12px;color:#222;margin:20px}
@@ -3498,6 +3720,7 @@ async function fazerBackupLocal(motivo){
       recarga_config:RECARGA_CONFIG||{},recargas:RECARGAS||{},
       historico_recargas:HISTORICO_RECARGAS||[],
       vistorias:VISTORIAS||{},
+      vistorias_lixeira:VISTORIAS_LIXEIRA||{},
       vistoria_counter:localStorage.getItem(VISTORIA_COUNTER_KEY)||'0'};
     const json=JSON.stringify(dados);
     const hoje=new Date();
@@ -3898,6 +4121,7 @@ async function exportarZip(){
       recargas:RECARGAS||{},
       historico_recargas:HISTORICO_RECARGAS||[],
       vistorias:VISTORIAS||{},
+      vistorias_lixeira:VISTORIAS_LIXEIRA||{},
       vistoria_counter:localStorage.getItem(VISTORIA_COUNTER_KEY)||'0',
     };
     zip.file('dados.json', JSON.stringify(dados, null, 2));
@@ -4653,8 +4877,8 @@ function showToast(msg,duration){
 // ── MODAL HISTÓRICO ───────────────────────────────────────────────────────
 function showHistoricoModal(apt, hospedagem, detId, detFp){
   const hist=getHistorico(apt);
-  const tLabel={checkin:'Check-in',saida_passeio:'Saída para Passeio',retorno_passeio:'Retorno do Passeio',checkout:'Check-out',edicao:'Edição',movimentacao_vaga:'Mudança de Vaga',tornar_grande:'Expandido para Carro Grande',tornar_pequeno:'Reduzido para Carro Pequeno',merge_lateral:'Mesclagem Lateral',desfaz_merge_lateral:'Mesclagem Lateral Desfeita'};
-  const tColor={checkin:'#0F6E56',saida_passeio:'#854F0B',retorno_passeio:'#185FA5',checkout:'#A32D2D',edicao:'#555',movimentacao_vaga:'#5C35B0',tornar_grande:'#185FA5',tornar_pequeno:'#0F6E56',merge_lateral:'#854F0B',desfaz_merge_lateral:'#888'};
+  const tLabel={checkin:'Check-in',saida_passeio:'Saída para Passeio',retorno_passeio:'Retorno do Passeio',checkout:'Check-out',edicao:'Edição',movimentacao_vaga:'Mudança de Vaga',tornar_grande:'Expandido para Carro Grande',tornar_pequeno:'Reduzido para Carro Pequeno',merge_lateral:'Mesclagem Lateral',desfaz_merge_lateral:'Mesclagem Lateral Desfeita',vistoria_criada:'Vistoria Criada',vistoria_vinculada:'Vistoria Vinculada',vistoria_editada:'Vistoria Editada',vistoria_assinada:'Vistoria Assinada',vistoria_deletada:'Vistoria Excluída'};
+  const tColor={checkin:'#0F6E56',saida_passeio:'#854F0B',retorno_passeio:'#185FA5',checkout:'#A32D2D',edicao:'#555',movimentacao_vaga:'#5C35B0',tornar_grande:'#185FA5',tornar_pequeno:'#0F6E56',merge_lateral:'#854F0B',desfaz_merge_lateral:'#888',vistoria_criada:'#0D3B6E',vistoria_vinculada:'#0F6E56',vistoria_editada:'#555',vistoria_assinada:'#27AE60',vistoria_deletada:'#A32D2D'};
   const titulo=hospedagem?`ℹ️ Apt. ${apt} · ${hospedagem}`:`ℹ️ Apt. ${apt}`;
   const cardsHTML=hist.length===0
     ?'<span style="font-size:12px;color:#bbb;font-style:italic">Sem eventos registrados</span>'
