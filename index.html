@@ -549,6 +549,9 @@ td.pulse-novo{animation:pulse-vaga 2s ease-out 1}
 .rcp-card{background:#fff;border-radius:12px;padding:13px;box-shadow:0 1px 3px rgba(15,30,60,.06),0 1px 2px rgba(15,30,60,.04);border:1.5px solid #E1E5EB;position:relative;overflow:hidden}
 .rcp-card.ativo{border-color:#2BB673;background:linear-gradient(180deg,#fff 0%,#F2FBF6 100%)}
 .rcp-card.concluido{border-color:#1F9A5F;background:linear-gradient(180deg,#fff 0%,#EEF9F2 100%)}
+/* v1.9.6.2: destaque temporário ao chegar pelo toque na notificação */
+.rcp-card.rcp-destacado{box-shadow:0 0 0 3px rgba(24,95,165,.35),0 4px 14px rgba(15,30,60,.18);animation:rcpPulso 1.1s ease-in-out 2}
+@keyframes rcpPulso{0%,100%{box-shadow:0 0 0 3px rgba(24,95,165,.35),0 4px 14px rgba(15,30,60,.18)}50%{box-shadow:0 0 0 7px rgba(24,95,165,.14),0 4px 14px rgba(15,30,60,.18)}}
 .rcp-card-hdr{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px}
 .rcp-label{font-size:10px;font-weight:700;color:#8892A6;text-transform:uppercase;letter-spacing:.5px}
 .rcp-vagas{font-size:17px;font-weight:800;color:#1A2238;margin-top:2px}
@@ -1304,11 +1307,20 @@ https://github.com/nodeca/pako/blob/main/LICENSE
 </script>
 
 <script>
-// v1.9.4.10: string de versão atualizada. versionCode permanece 22 no JS (sem APK build
-// nesta release — correções 100% HTML/CSS/JS). O versionCode NATIVO do APK do hotel é 23.
-const GS_VERSION = 'v1.9.4.16';
-const GS_VERSION_CODE = 22;
-const GS_BUILD_TS = '2026-07-30';
+// v1.9.5.0: PRIMEIRA mudança NATIVA desde a 4.7 (plugin de login Google) → APK
+// rebuildado. O versionCode do JS volta a bater com o do `android/app/build.gradle`
+// (25) — desde a 4.10 ele ficava em 22 porque as releases eram só HTML/CSS/JS.
+// vc25: fix nativo do gancho da MainActivity (login Google com escopos). A build
+// boa se distingue da quebrada (vc24) pelo versionCode no rodapé.
+// v1.9.5.1: SEM rebuild de APK — as correções da pipeline da nuvem são HTML/JS e
+// chegam ao aparelho pelo Pages. O versionCode CONTINUA 25 de propósito: nada
+// nativo mudou, e o APK vc25 instalado segue valendo.
+// v1.9.6.2: SEM rebuild de APK — alarme persistente e espelhamento contínuo são
+// 100% HTML/JS (o plugin de notificações já está no vc27, com as permissões e os
+// receivers no manifesto). O versionCode CONTINUA 27 de propósito.
+const GS_VERSION = 'v1.9.6.3';
+const GS_VERSION_CODE = 28;
+const GS_BUILD_TS = '2026-08-06';
 
 // ════════════════════════════════════════════════════════════════════════
 // v1.9.4.14 — "HOJE" É O CALENDÁRIO LOCAL, NUNCA UTC
@@ -2082,6 +2094,7 @@ function executarMove(ms, destId, usuario){
       if(hospedagem) S[destId].hospedagem=hospedagem;
       saveV(destId,ms.apt,ms.model,ms.color,ms.plate,ms.guest,ms.obs);
       addHistorico(ms.apt,'movimentacao_vaga',destId,'Movido de '+ms.id+' para '+destId,usuarioStr,hospedagem);
+      _gsBackupAuto('movimentação de vaga '+ms.id+'→'+destId);   // v1.9.6.3
       refByApt(ms.apt);upd();_refrescarRecargaTodos();closeOv();setTimeout(positionPilares,150);
     };
   } else {
@@ -2091,6 +2104,7 @@ function executarMove(ms, destId, usuario){
     if(hospedagem) S[destId].hospedagem=hospedagem;
     saveV(destId,ms.apt,ms.model,ms.color,ms.plate,ms.guest,ms.obs);
     addHistorico(ms.apt,'movimentacao_vaga',destId,'Movido de '+ms.id+' para '+destId,usuarioStr,hospedagem);
+    _gsBackupAuto('movimentação de vaga '+ms.id+'→'+destId);   // v1.9.6.3
     refByApt(ms.apt);upd();_refrescarRecargaTodos();setTimeout(positionPilares,150);
   }
 }
@@ -2810,7 +2824,11 @@ function saveV(id,apt,model,color,plate,guest,obs,isCheckin,usuario,saidaPrevist
     if(HMERGE_OPTS[id]){ upd(); perguntarHMerge(id,d.apt,d.model,d.color,d.plate,d.guest,d.obs,usuario); return; }
     upd();closeOv();
     showToast('✅ Check-in registrado — Hospedagem '+numH);
-    _gsBackupAuto('check-in '+numH); // v1.9.4.11
+    // v1.9.5.4: TODO check-in usa cadência COMPLETA — inclusive este, o clássico
+    // pela vaga livre, que conclui sem vistoria. Antes ele usava a leve, e como só
+    // a completa espelha na nuvem, esses check-ins ficavam fora do Drive até o tique
+    // horário. (Impor vistoria obrigatória aqui é decisão de outra rodada.)
+    _gsBackupAuto('check-in '+numH, {completo:true});
   } else if(isCheckin===false){
     const hospNum=(PASSEIO[apt]?.hospedagem)||d.hospedagem||'';
     if(hospNum) d.hospedagem=hospNum;
@@ -2819,6 +2837,10 @@ function saveV(id,apt,model,color,plate,guest,obs,isCheckin,usuario,saidaPrevist
     if(HMERGE_OPTS[id]){ upd(); perguntarHMerge(id,d.apt,d.model,d.color,d.plate,d.guest,d.obs,usuario); return; }
     upd();closeOv();
     showToast('✅ Retorno registrado — Apt. '+apt);
+    // v1.9.6.2 — LACUNA FECHADA: o retorno do passeio devolve o carro a uma vaga e
+    // apaga o registro de PASSEIO. Não disparava cadência nenhuma (só o check-in,
+    // logo acima, disparava). Agora o par saída/volta fica consistente na nuvem.
+    _gsBackupAuto('retorno do passeio '+apt);
   } else {
     ref(id);refByApt(d.apt);
     if(HMERGE_OPTS[id]){ upd(); perguntarHMerge(id,d.apt,d.model,d.color,d.plate,d.guest,d.obs,usuario); return; }
@@ -2998,6 +3020,11 @@ function doOut(id){
     d.status='free';d.apt='';d.model='';d.color='';d.plate='';d.guest='';d.hospedagem='';
     d.mergedMaster=false;d.mergedSlave=false;
     ref(id);refByApt(aptKey);upd();closeOv();
+    // v1.9.6.2 — LACUNA FECHADA: a saída para passeio esvazia a vaga e cria um
+    // registro em PASSEIO, e não disparava cadência NENHUMA — dependia do tique
+    // horário. Um carro fora da garagem é exatamente o estado que precisa estar
+    // atualizado na nuvem se o aparelho se perder.
+    _gsBackupAuto('saída para passeio '+aptKey);
   });
 }
 
@@ -3105,7 +3132,10 @@ function doChk(id){
       // Ao final: DUAS opções — "Salvar" e "Salvar e compartilhar". O app
       // SEMPRE salva no dispositivo; compartilhar é ação adicional.
       // ══════════════════════════════════════════════════════════════════
-      const _coNome=fmtNomeCheckout(aptKey,hospNum);
+      // v1.9.5.2: o nome traz as DUAS pontas da hospedagem; a data de check-in vem
+      // de HOSPEDAGENS (já disponível aqui — o bloco acima grava usuario_checkout).
+      const _coCheckinTs=(HOSPEDAGENS[hospNum]&&HOSPEDAGENS[hospNum].checkin_ts)||null;
+      const _coNome=fmtNomeCheckout(aptKey,hospNum,Date.now(),_coCheckinTs);
       showM(`<div class="mt">✅ Check-out realizado!</div>
         <div class="ms">Hospedagem ${hospNum||'s/n'} · Apt. ${aptKey}<br>${dvChk.guest||'Hóspede não identificado'}</div>
         <div id="co-save-status" style="background:#FFF8E6;border:1px solid #BA7517;border-radius:8px;padding:10px 12px;margin:10px 0;font-size:12px;color:#633806">📄 Preparando o documento…</div>
@@ -3136,6 +3166,15 @@ function doChk(id){
         // O app SEMPRE salva — nas duas opções.
         if(_coConteudo){
           _salvo=await salvarPDFNoDispositivo('Registro de Movimentacao',_coConteudo,_coNome);
+          // v1.9.5.2: cópia para a nuvem SÓ DEPOIS de o arquivo estar no dispositivo,
+          // e fire-and-forget — falha de rede não trava, não reverte e não atrasa o
+          // check-out. Sem Drive conectado, entra na fila de pendentes.
+          try{
+            if(_salvo&&_salvo.sucesso&&typeof _coConteudo.output==='function'){
+              const _b64=_coConteudo.output('datauristring').split(',')[1];
+              _gdEspelharPDFFechamento(_salvo.nome,_b64,aptKey,_coCheckinTs);
+            }
+          }catch(ePdfNuvem){ console.warn('[DRIVE] PDF de fechamento não agendado:',ePdfNuvem&&ePdfNuvem.message); }
         }
         _prog(100);
         const pw=document.getElementById('co-prog-wrap'); if(pw) pw.style.display='none';
@@ -3404,6 +3443,7 @@ function showEdit(id, fromPasseio){
         } catch(e){ console.error('[editar] re-render vaga falhou', e); }
       }
       try { if(typeof renderAgrupadoresPainel==='function' && document.getElementById('painel-wrap')?.style?.display!=='none') renderAgrupadoresPainel(); } catch(e){}
+      _gsBackupAuto('edição de hospedagem '+(hospNum||novoApt));   // v1.9.6.3
       showToast('✓ Dados atualizados',2500);
       showDet(fromPasseio?novoApt:id, fromPasseio);
     });
@@ -3495,6 +3535,7 @@ function executarReset(){
   Object.keys(PASSEIO).forEach(k=>delete PASSEIO[k]);
 
   addLogSistema('Mapa limpo por usuário', {aud:true, acao:'mapa_limpo'});
+  _gsBackupAuto('mapa limpo');   // v1.9.6.3
   upd(); saveData(); closeOv();
   atualizarBotoesRestore();
 }
@@ -4395,6 +4436,7 @@ function showModalTurnos(){
         ESCALA_CONFIG.doze36.ancora=hojeISO();
       }
       saveEscala();
+      _gsBackupAuto('escala de turnos');   // v1.9.6.3
       closeOv();
       showToast('Escala salva');
       if(typeof renderPainelDia==='function' && document.getElementById('painel-wrap')?.style?.display!=='none') renderPainelDia();
@@ -4506,11 +4548,11 @@ function showPlantaoTooltip(){
     const nome=(ni&&ni.value.trim())||'';
     if(!nome){ if(ni){ni.classList.add('err');ni.addEventListener('input',()=>ni.classList.remove('err'),{once:true});ni.focus();} return; }
     PLANTAO_MANUAL.push({nome, obs:(oi&&oi.value.trim())||''});
-    savePlantaoManual(); atualizarPlantao(); renderPlantao();
+    savePlantaoManual(); _gsBackupAuto('plantão manual'); atualizarPlantao(); renderPlantao();
   };
   window._rmPlantao=function(i){
     PLANTAO_MANUAL.splice(i,1);
-    savePlantaoManual(); atualizarPlantao(); renderPlantao();
+    savePlantaoManual(); _gsBackupAuto('plantão manual'); atualizarPlantao(); renderPlantao();
   };
   renderPlantao();
 }
@@ -4776,16 +4818,24 @@ function renderPainelDia(){
             '<button onclick="showEditarPlantao()" style="margin-top:6px;font-size:10px;font-weight:700;color:#185FA5;background:#fff;border:1px solid #185FA5;border-radius:6px;padding:3px 8px;cursor:pointer;font-family:inherit">✏️ Editar plantão</button>';
         })()}
       </div>
-      <div style="flex:1;min-width:100px;text-align:right">
+      <!-- v1.9.5.3: as três linhas viram um ATALHO que força o envio para a nuvem.
+           Sem PIN e sem registrar autor: forçar backup é precaução que qualquer
+           funcionário pode tomar. Conectar/desconectar continua só em Gestão. -->
+      <div id="rodape-backup-atalho" role="button" tabindex="0"
+           onclick="_gdForcarPeloRodape()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();_gdForcarPeloRodape();}"
+           title="Tocar para enviar o backup para a nuvem agora"
+           style="flex:1;min-width:100px;text-align:right;cursor:pointer;user-select:none;-webkit-tap-highlight-color:rgba(24,95,165,.15);border-radius:8px;padding:6px 8px;margin:-4px -4px -4px 0">
         <div style="font-size:10px;font-weight:700;color:#888;text-transform:uppercase;margin-bottom:4px">☁️ Backup</div>
         <div style="font-size:11px;color:${lastBkp?'#0F6E56':'#A32D2D'};font-weight:700">${lastBkp?'Hoje às '+fmtHr(lastBkp):'Sem backup'}</div>
+        ${_gdRodapeHTML()}
+        ${_gdDicaTocarHTML()}
       </div>
     </div>
   </div>
 
   <!-- v1.9.4.2: versão visível no rodapé do Painel + 5 toques abre painel de debug -->
   <div id="gs-versao-rodape" onclick="_debugVersaoTap()" style="text-align:center;font-size:10px;color:#aaa;padding:10px 0 16px;font-family:inherit;cursor:pointer;user-select:none">
-    GarageSpot ${GS_VERSION} · build ${GS_BUILD_TS} · versionCode ${GS_VERSION_CODE}
+    GarageSpot ${GS_VERSION} · <span id="gs-ambiente-rodape">${_gsAmbiente().rotulo}</span> · build ${GS_BUILD_TS} · versionCode ${GS_VERSION_CODE}
   </div>`;
 
   // v1.9.4.1.3: recalcular contadores dos agrupadores após renderizar
@@ -5527,15 +5577,13 @@ function _mostrarMenuGestao(){
     <div class="gestao-menu-sep">Configurações</div>
     <div class="gestao-menu-item" onclick="_gestaoAbrir('showConfiguracoesSistema')">⚙ <span>Configurações do Sistema</span></div>
     <div class="gestao-menu-item" onclick="_gestaoAbrir('showConexoes')">🔗 <span>Backup e Conexões</span></div>
-    <div class="gestao-menu-sep">Exibição</div>
+    <div class="gestao-menu-item" onclick="_gestaoAbrir('alterarPIN')">🔑 <span>Alterar PIN do gestor</span></div>
     <div class="gestao-menu-item" onclick="_gestaoAbrir('showExibicao')">🔤 <span>Tamanho de fonte</span></div>
-    <div class="gestao-menu-sep">Dados do mapa</div>
-    <div class="gestao-menu-item" onclick="closeOv();exportarBackupCompleto()">📦 <span>Exportar todos os dados</span></div>
-    <div class="gestao-menu-item" onclick="closeOv();abrirImportarDados()">📥 <span>Importar dados</span></div>
-    <div class="gestao-menu-item" onclick="_gestaoAbrir('confirmReset')" style="color:#A32D2D;border-color:#FCEBEB">🗑 <span>Limpar / Restaurar mapa</span></div>
+    <div class="gestao-menu-sep">Diagnóstico</div>
     <div class="gestao-menu-item" onclick="_gestaoAbrir('showLogSistema')" style="color:#555">📋 <span>Log do sistema</span></div>
     <div class="gestao-menu-item" onclick="_gestaoAbrir('showAuditoria')" style="color:#555">🛡 <span>Trilha de auditoria</span></div>
-    <div class="gestao-menu-item" onclick="_gestaoAbrir('alterarPIN')" style="color:#555;font-size:12px">🔑 <span>Alterar PIN</span></div>
+    <div class="gestao-menu-sep">Zona de risco</div>
+    <div class="gestao-menu-item" onclick="_gestaoAbrir('confirmReset')" style="color:#A32D2D;border-color:#FCEBEB">🗑 <span>Limpar / Restaurar mapa</span></div>
     <button class="bcx" onclick="closeOv()" style="width:100%;margin-top:8px">Fechar</button>`;
   document.getElementById('ov').classList.add('on');
 }
@@ -5686,6 +5734,10 @@ function addLogSistema(msg, meta){
       if(meta.quem) ent.quem=String(meta.quem);
       if(meta.acao) ent.acao=String(meta.acao);
       if(meta.alvo) ent.alvo=String(meta.alvo);
+      // v1.9.5.4: ORIGEM da ação (usuário × automático). Nasceu para a desconexão do
+      // Drive: sem isso, "o app desconectou sozinho" vira discussão de memória em vez
+      // de fato auditável. Campo opcional — nada antigo muda.
+      if(meta.origem) ent.origem=String(meta.origem);
     }
     log.push(ent);
     log=_logPodar(log);
@@ -6453,6 +6505,11 @@ function assinarVistoria(id){
       // Bug H v1.9.4.1.4: atualizar badge de Pendências no Painel
       if(typeof renderAgrupadoresPainel==='function') renderAgrupadoresPainel();
       showToast('Vistoria '+id+' assinada');
+      // v1.9.6.2 — LACUNA FECHADA: a assinatura é o que transforma a vistoria em
+      // documento válido (e tira a pendência do check-out), e não disparava cadência
+      // nenhuma. LEVE de propósito: a imagem da assinatura vive no IndexedDB e sobe
+      // com a próxima COMPLETA — o rolante leva os dados, não as fotos.
+      _gsBackupAuto('assinatura de vistoria '+id);
     });
   };
 }
@@ -7376,6 +7433,34 @@ function _vtMostrarPopupAvaria(idx){
     pop.remove();
   });
   layer.appendChild(pop);
+  _vtAjustarPopupNaBorda(pop, layer);
+}
+
+// v1.9.6.3 — MARCAÇÃO PERTO DA BORDA.
+// O popup era posicionado em `left:x% / top:y%` com `translate(-50%,-130%)` fixo:
+// uma avaria marcada no alto jogava o menu para fora por cima, e nas laterais
+// metade dele saía da tela — o operador não conseguia concluir a ação num ponto
+// legítimo da imagem. Agora, depois de anexado (que é quando se pode MEDIR), o
+// menu é reposicionado para caber: vira para baixo quando não há espaço acima e
+// desliza na horizontal até encostar na borda, sem nunca sair.
+function _vtAjustarPopupNaBorda(pop, layer){
+  try{
+    if(!pop || !layer || typeof pop.getBoundingClientRect !== 'function') return;
+    const lr = layer.getBoundingClientRect();
+    const pr = pop.getBoundingClientRect();
+    if(!lr.width || !pr.width) return;          // ainda sem layout: deixa como está
+    const folga = 4;
+    let dx = 0;
+    // Sem espaço acima → abre para BAIXO do ponto (mantém o ponto visível).
+    const paraBaixo = (pr.top < lr.top + folga);
+    // Horizontal: empurra para dentro do lado que estourou.
+    if(pr.left < lr.left + folga)          dx = (lr.left + folga) - pr.left;
+    else if(pr.right > lr.right - folga)   dx = (lr.right - folga) - pr.right;
+    if(!dx && !paraBaixo) return;
+    pop.style.transform = 'translate(-50%, ' + (paraBaixo ? '30%' : '-130%') + ') translate(' + dx + 'px, 0)';
+    if(paraBaixo) pop.setAttribute('data-borda', 'abaixo');
+    else if(dx)   pop.setAttribute('data-borda', 'lateral');
+  }catch(e){ /* posicionamento é conforto: nunca pode quebrar a vistoria */ }
 }
 
 function _vtAvariaLimparTodas(){
@@ -8426,6 +8511,10 @@ function _nciCommitNovaVistoriaAdicional(){
     ANEXOS[anexoKey].push({name:nome,type:'image/png',data:d.documento_final_b64,isImg:true,vistoria:numero,tipo:'vistoria'});
     saveAnexos();
   }
+  // v1.9.6.3: vistoria adicional cria documento e anexo e não disparava cadência
+  // nenhuma. COMPLETA porque o que ela produz é justamente uma FOTO — o rolante,
+  // que não leva fotos, não daria conta de proteger este dado.
+  _gsBackupAuto('vistoria adicional '+numero, {completo:true});
 }
 
 function _nciCriarVistoriaV2(d,numero){
@@ -9086,7 +9175,43 @@ function _aplicarDesignacao(vagaId,pendenteId,usuario){
   _gsBackupAuto('designação '+p.gs); // v1.9.4.11
 }
 // ── BACKUP LOCAL ──────────────────────────────────────────────────────────
-let DRIVE_STATUS = {conectado:false,email:'',ultimo_backup:null,falha_backup:false};
+// ATENÇÃO (v1.9.5.0): `ultimo_backup` e `falha_backup` são do BACKUP LOCAL — estão
+// aqui desde a v1.6 e são lidos pelo Painel e por `_renderBackupStatus`. A nuvem
+// (Fase 2) usa campos PRÓPRIOS `nuvem_*`; não reaproveitar os de cima, senão uma
+// falha de rede passaria a acusar "backup local falhou" (e vice-versa).
+let DRIVE_STATUS = {
+  conectado:false, email:'', ultimo_backup:null, falha_backup:false,     // LOCAL
+  nuvem_conectada:false, nuvem_email:'', nuvem_ultimo_backup:null,       // NUVEM
+  nuvem_falha:false, nuvem_ultimo_erro:'', nuvem_pasta_id:'', nuvem_enviados:0,
+  // v1.9.5.1: DIAGNÓSTICO do último erro de nuvem. Sem isto, um 403 aparece como
+  // "403" e cada iteração vira adivinhação — foi exatamente o que travou a rodada
+  // anterior. Campo ADITIVO: aparelho antigo simplesmente não tem a chave.
+  nuvem_erro_detalhe:null,   // {ts,etapa,status,reason,message,via,escopos,url}
+  // v1.9.5.2: PDFs de fechamento que ainda não subiram. Só METADADOS — o arquivo
+  // pesa MBs e já está no dispositivo. Campo ADITIVO: aparelho antigo não tem a chave.
+  nuvem_pdfs_pendentes:[],   // [{nome, apt, checkin, ts}]
+  // v1.9.5.3: falha de REDE (transitória) é diferente de falha do Google. E
+  // `nuvem_pendente` marca envio ADIADO por condição ruim — nada disso alarma.
+  nuvem_falha_transitoria:false,
+  nuvem_pendente:false,
+  // v1.9.5.4: "precisa reconectar" ≠ "desconectado". O vínculo continua; o que
+  // falta é permissão. Só o botão Desconectar (com PIN) desvincula de fato.
+  nuvem_reconectar:false,
+  // v1.9.6.2: arquivo ROLANTE de estado atual (dados, sem fotos), sobrescrito por
+  // ID a cada cadência LEVE. Campos ADITIVOS: aparelho antigo não tem as chaves.
+  // `nuvem_rolante_id` é o id do arquivo no Drive — é ele que garante SOBRESCRITA
+  // em vez de um arquivo novo por envio.
+  nuvem_rolante_id:'',
+  nuvem_rolante_ts:null,
+  // v1.9.6.3: cota do Drive lida por `about.get` (escopo `drive.file` basta),
+  // no máximo 1×/6h. Serve ao aviso preventivo de espaço. Campos ADITIVOS.
+  nuvem_cota_limite:0,
+  nuvem_cota_uso:0,
+  nuvem_cota_ts:null,
+  // v1.9.6.3: Drive CHEIO é um estado próprio. Sem isto, `storageQuotaExceeded`
+  // aparecia como um 403 qualquer e os backups paravam de subir em silêncio.
+  nuvem_cheio:false,
+};
 const DRIVE_STATUS_LS = 'garagespot_drive_status';
 function loadDriveStatus(){ try{const d=localStorage.getItem(DRIVE_STATUS_LS);if(d) DRIVE_STATUS=Object.assign(DRIVE_STATUS,JSON.parse(d)||{});}catch(e){} }
 function saveDriveStatus(){ try{localStorage.setItem(DRIVE_STATUS_LS,JSON.stringify(DRIVE_STATUS));}catch(e){} }
@@ -9267,8 +9392,18 @@ async function fazerBackupLocal(motivo, opts){
       return {ok:false,erro:val.motivo};
     }
     const json=JSON.stringify(snap);
+    // v1.9.5.4: nome no MESMO formato da nuvem (`AAAA-MM-DD_HHhMM`, dia local), para
+    // os dois lados baterem. Os arquivos antigos NÃO são renomeados, e a contagem
+    // não depende do nome — ela vem do registro `garagespot_backups_local`.
     const hoje=new Date();
-    const ds=String(hoje.getDate()).padStart(2,'0')+'-'+String(hoje.getMonth()+1).padStart(2,'0')+'-'+String(hoje.getFullYear()).slice(-2)+'_'+String(hoje.getHours()).padStart(2,'0')+'h'+String(hoje.getMinutes()).padStart(2,'0')+'m'+String(hoje.getSeconds()).padStart(2,'0');
+    const p2=n=>String(n).padStart(2,'0');
+    let ds=_localISO(hoje)+'_'+p2(hoje.getHours())+'h'+p2(hoje.getMinutes());
+    // ⚠️ O LEVE mantém os SEGUNDOS. Ele roda a cada mudança relevante (debounce de
+    // 15s), então dois leves podem cair no mesmo minuto — e sem os segundos o
+    // segundo arquivo SOBRESCREVERIA o primeiro. Sobrescrever é destruir, e esta
+    // rodada é explicitamente não destrutiva. O COMPLETO usa o formato da nuvem sem
+    // segundos porque o freio abaixo garante minutos de distância entre eles.
+    if(!comFotos) ds += 'm'+p2(hoje.getSeconds());
     const nome='backup_'+(comFotos?'completo':'leve')+'_'+ds+'.json';
     let gravouArquivo = false;
     if(window.Capacitor?.Plugins?.Filesystem){
@@ -9299,6 +9434,16 @@ async function fazerBackupLocal(motivo, opts){
     saveDriveStatus();
     // Bug latente v1.9.4.1.8: era logSistema (não definido) — causava ReferenceError em cada backup/designação
     if(typeof addLogSistema === 'function') addLogSistema('Backup ('+snap.tipo+'): '+(motivo||'manual')+' — '+nome);
+    // v1.9.5.0 — NUVEM: espelha no Drive só a cadência COMPLETA (a leve roda a cada
+    // mudança; subir tudo isso viraria centenas de arquivos por dia na conta do
+    // hotel). Fire-and-forget: o backup local ACIMA já está gravado, então nenhuma
+    // falha de rede daqui para baixo pode afetá-lo.
+    if(comFotos) _gdEspelharNoDrive(nome, json, motivo);
+    // v1.9.6.2: a cadência LEVE passa a espelhar também — mas em ARQUIVO ROLANTE,
+    // sobrescrito, sem fotos. É o que fecha o furo de recarga/designação/PIN/cadastro/
+    // passeio/assinatura ficarem fora da nuvem até o tique horário. Continua valendo
+    // que a leve NÃO cria histórico e NÃO substitui os completos.
+    else _gdEspelharEstadoAtual(json, motivo);
     return {ok:true,nome,tipo:snap.tipo,contagens:snap.contagens};
   }catch(e){
     DRIVE_STATUS.falha_backup=true;
@@ -9317,6 +9462,125 @@ try {
   const _m = JSON.parse(localStorage.getItem(GS_BACKUP_META_LS) || 'null');
   if(_m && _m.ts) _gsUltimoCompletoTs = _m.ts;
 } catch(e){}
+
+// ── v1.9.5.4 — FREIO DO BACKUP AO MINIMIZAR ────────────────────────────────
+// Dois critérios, nesta ordem:
+//  1. **Houve mudança?** Sem alteração nos dados, não existe motivo para gerar
+//     arquivo nenhum — a cópia seria byte a byte igual à anterior. Este é o
+//     critério principal: alternar entre apps para tirar print não muda dado.
+//  2. **Intervalo mínimo entre COMPLETOS: 30 min.** Escolhido para casar com a
+//     cadência periódica, que já promove a completo 1×/h: com 30 min o app nunca
+//     gera mais de ~2 completos por hora por minimização, contra os 10 em 6 minutos
+//     medidos no aparelho. O LEVE não tem freio de tempo (pesa poucos KB) — se
+//     houve mudança e o completo está barrado, **a mudança é salva no leve**, para
+//     o freio nunca custar dado real.
+const GS_MIN_ENTRE_COMPLETOS_MS = 30 * 60 * 1000;
+let _gsUltimaAssinatura = '';
+
+// Assinatura barata do estado: contagens + carimbo da última escrita relevante.
+// Não serializa fotos de propósito — o custo teria de ser pago a cada minimização.
+function _gsAssinaturaDados(){
+  try{
+    const c = (typeof _gsContar === 'function') ? _gsContar() : {};
+    // ⚠️ NADA de metadado de backup aqui (ex.: `ultimo_backup`): ele muda a CADA
+    // backup, então a assinatura nunca coincidiria com a anterior e o freio não
+    // frearia nada. A assinatura descreve os DADOS, e só eles.
+    return JSON.stringify({
+      c: c,
+      h: Object.keys(HOSPEDAGENS||{}).length,
+      s: Object.keys(S||{}).filter(function(k){ return S[k] && S[k].status === 'occupied'; }).length,
+      u: (USUARIOS||[]).length,
+      hist: Object.keys(HISTORICO||{}).reduce(function(t,k){ return t + ((HISTORICO[k]||[]).length); }, 0),
+    });
+  }catch(e){ return String(Date.now()); }   // na dúvida, considera mudado
+}
+
+function _gsDecidirBackupMinimizar(){
+  try{
+    const assinatura = _gsAssinaturaDados();
+    if(_gsUltimaAssinatura && assinatura === _gsUltimaAssinatura){
+      return { fazer:false, motivo:'nenhuma mudança desde o último backup' };
+    }
+    const desdeCompleto = Date.now() - (_gsUltimoCompletoTs || 0);
+    const completo = desdeCompleto > GS_MIN_ENTRE_COMPLETOS_MS;
+    _gsUltimaAssinatura = assinatura;
+    // Houve mudança: SEMPRE grava. Completo se já passou o intervalo; senão leve —
+    // a mudança não pode se perder por causa do freio.
+    return { fazer:true, completo:completo,
+             motivo: completo ? 'mudança + intervalo vencido' : 'mudança, mas completo recente → leve' };
+  }catch(e){
+    return { fazer:true, completo:true, motivo:'falha ao avaliar (lado seguro: grava)' };
+  }
+}
+
+// ── v1.9.6.0 — CONFERÊNCIA NA ABERTURA ─────────────────────────────────────
+// O intervalo JÁ era contado desde o último backup completo (`_gsUltimoCompletoTs`,
+// carregado do meta no init) — isso foi verificado e está correto, não mexi.
+// O que faltava era conferir na ABERTURA: o primeiro tique só roda 10 min depois.
+//
+// Fail-safe em todas as bordas: sem app pronto, offline ou escondido, não faz nada —
+// e o freio (`_gsDecidirBackupMinimizar` no minimizar; as guardas em `fazerBackupLocal`)
+// continua valendo, então sem mudança nos dados nada é gerado.
+function _gsConferirBackupNaAbertura(){
+  try{
+    if(!gsPronto()) return { fez:false, motivo:'app ainda inicializando' };
+    if(typeof document !== 'undefined' && document.visibilityState === 'hidden') return { fez:false, motivo:'app em segundo plano' };
+    if(typeof navigator !== 'undefined' && navigator.onLine === false) return { fez:false, motivo:'sem conexão' };
+    // ── v1.9.6.3 — A CONFERÊNCIA PASSA A OLHAR TAMBÉM A NUVEM ──────────────
+    // Ela media SÓ o intervalo do backup LOCAL. Como "App minimizado" gera
+    // completos locais, o local costuma estar em dia — e a conferência devolvia
+    // "dentro do intervalo" e não fazia nada, MESMO COM A NUVEM PARADA HÁ DIAS.
+    // Era cega justamente para o lado que importa: a nuvem é o backup de verdade,
+    // o dispositivo é rede de segurança. Bate com o relato de campo (abrir o app
+    // depois de muito tempo não disparava nada; só o toque no rodapé resolvia).
+    //
+    // São duas perguntas independentes, e cada uma tem a sua resposta barata:
+    //  • local vencido  → gera o backup completo, como antes;
+    //  • nuvem parada   → espelha o ESTADO ATUAL (leve, poucos KB) e cutuca a
+    //    fila de pendências. Não gera arquivo local novo: seria caro e inútil,
+    //    já que o dado local está em dia — o que falta é ele estar na nuvem.
+    const desde = Date.now() - (_gsUltimoCompletoTs || 0);
+    const localVencido = !_gsUltimoCompletoTs || desde > GS_BACKUP_INTERVALO_COMPLETO;
+
+    let nuvemAtrasada = false;
+    try{
+      if(_gdDisponivel() && _gdConectado() && !DRIVE_STATUS.nuvem_reconectar){
+        const contato = _gdUltimoContatoNuvem();
+        nuvemAtrasada = !contato || (Date.now() - contato) > GS_BACKUP_INTERVALO_COMPLETO;
+      }
+    }catch(e){}
+
+    if(!localVencido && !nuvemAtrasada){
+      return { fez:false, motivo:'backup local e nuvem dentro do intervalo' };
+    }
+
+    if(localVencido){
+      // `{completo:true}` só declara a INTENÇÃO — as guardas de dados decidem se
+      // realmente há o que gravar. O caminho completo já espelha na nuvem.
+      _gsBackupAuto('abertura do app', {completo:true, imediato:true});
+    } else if(nuvemAtrasada){
+      // Local em dia, nuvem atrasada: manda o estado atual para o rolante e
+      // retoma o que estiver pendente. Fail-safe — nada aqui pode quebrar a abertura.
+      try{
+        const snap = _gsMontarSnapshot(false);
+        if(_gsValidarSnapshot(snap).ok) _gdEspelharEstadoAtual(JSON.stringify(snap), 'conferência na abertura');
+      }catch(e){ console.warn('[BACKUP] espelho da abertura falhou (ignorado):', e && e.message); }
+    }
+    try{ if(typeof _gdTentarPendente === 'function') _gdTentarPendente(); }catch(e){}
+
+    // ⚠️ O texto do caso local continua sendo "intervalo vencido": a v1.9.6.0 já
+    // travou esse contrato numa spec, e o comportamento dele NÃO mudou aqui — só
+    // ganhou um segundo motivo ao lado. Reescrever a mensagem seria inventar uma
+    // regressão de graça.
+    return { fez:true, local:localVencido, nuvem:nuvemAtrasada,
+             motivo: localVencido
+               ? (_gsUltimoCompletoTs ? 'intervalo vencido' : 'nenhum backup completo ainda')
+               : 'nuvem atrasada' };
+  }catch(e){
+    console.warn('[BACKUP] conferência na abertura falhou (ignorada):', e && e.message);
+    return { fez:false, motivo:'erro' };
+  }
+}
 
 function _gsBackupAuto(motivo, opts){
   opts = opts || {};
@@ -9348,6 +9612,399 @@ async function fazerBackupAgora(){
   } else {
     showToast('⚠️ Backup não gravado: '+(r.erro||'erro'),5000);
   }
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// v1.9.6.3 — RETENÇÃO (PODA)
+// ════════════════════════════════════════════════════════════════════════════
+// FILOSOFIA DE ARMAZENAMENTO (decisão do Douglas — é o eixo de tudo aqui):
+//   • A NUVEM é o backup de verdade. É ela que garante que o dado está salvo.
+//   • O DISPOSITIVO é rede de segurança, para quando a conexão falha. Guarda só
+//     o necessário, pelo tempo necessário.
+//   • Janela local: 7 dias contados DEPOIS de confirmado que o backup está na
+//     nuvem. Sem confirmação, o arquivo FICA — por mais velho que seja. A
+//     análise é POR ARQUIVO, nunca só por idade.
+//   • A poda é só sobre BACKUPS. PDFs de fechamento ficam para sempre.
+//
+// A PODA NASCE DESLIGADA. O app vai para o hotel sem apagar nada; o gestor liga
+// depois, em Backup e Conexões, e pode desligar de novo a qualquer momento.
+// "Simular limpeza" é somente leitura e roda quantas vezes se quiser.
+const GS_PODA_LS = 'garagespot_poda_config';
+const GS_PODA_DIAS_LOCAL = 7;
+
+// TETO POR EXECUÇÃO = 40 arquivos. Justificativa: existe para que um erro de
+// lógica não esvazie a pasta numa tacada só. 40 cobre com folga o acúmulo de um
+// dia de operação normal (a cadência leve roda a cada mudança, mas o freio de 30
+// min entre completos limita os pesados), então na prática o teto nunca estorva
+// quem está em dia. Para um acúmulo histórico — o aparelho do Douglas já teve
+// 119 cópias — a limpeza acontece em algumas execuções, e entre elas o gestor vê
+// o resultado na trilha. Um defeito precisa se repetir várias vezes, à vista,
+// antes de causar dano: é exatamente essa a proteção que se quer.
+const GS_PODA_TETO = 40;
+
+// Escada da NUVEM, mais generosa que a local porque lá o espaço é folgado e o
+// custo de guardar é quase nulo — o que se protege aqui é a capacidade de voltar
+// no tempo, e ela vale mais do que alguns MB.
+//   • 30 dias: tudo. É a janela em que um problema costuma ser percebido; dentro
+//     dela se recupera QUALQUER ponto, sem buraco.
+//   • 30 dias a 6 meses: 1 por semana. Cobre uma temporada inteira; para algo
+//     notado com semanas de atraso, granularidade semanal é o que de fato se usa.
+//   • Acima de 6 meses: 1 por mês. A essa altura o valor é de referência
+//     histórica, não de recuperação operacional.
+const GD_PODA_TUDO_DIAS   = 30;
+const GD_PODA_SEMANAL_ATE = 180;   // 6 meses
+
+function _gsPodaConfig(){
+  try{
+    const c = JSON.parse(localStorage.getItem(GS_PODA_LS) || 'null');
+    // DESLIGADA POR PADRÃO: chave ausente = desligada. Nunca inferir "ligada".
+    return Object.assign({ ligada:false, nuvem:false }, c || {});
+  }catch(e){ return { ligada:false, nuvem:false }; }
+}
+function _gsPodaSalvarConfig(c){
+  try{ _gsSetItemSeguro(GS_PODA_LS, JSON.stringify(c), 'configuração da limpeza'); }catch(e){}
+}
+function _gsPodaLigada(){ return !!_gsPodaConfig().ligada; }
+
+// Marca no registro local que ESTE arquivo já está na nuvem, com o instante da
+// confirmação. É daqui que a janela de 7 dias conta.
+function _gsMarcarBackupNaNuvem(nome, driveId){
+  try{
+    const bkps = JSON.parse(localStorage.getItem('garagespot_backups_local') || '[]');
+    let mudou = false;
+    for(let i = 0; i < bkps.length; i++){
+      if(bkps[i] && bkps[i].nome === nome && !bkps[i].nuvem_ok){
+        bkps[i].nuvem_ok = true;
+        bkps[i].nuvem_ts = Date.now();
+        if(driveId) bkps[i].nuvem_id = String(driveId);
+        mudou = true;
+        break;
+      }
+    }
+    if(mudou) _gsSetItemSeguro('garagespot_backups_local', JSON.stringify(bkps), 'registro de backups');
+  }catch(e){ console.warn('[PODA] não marcou confirmação na nuvem:', e && e.message); }
+}
+
+// Um backup local é candidato SÓ se passar por TODAS estas peneiras. A ordem é
+// deliberada: o que protege vem antes do que apaga.
+function _gsPodaAvaliarLocal(reg, agora, maisRecenteTs){
+  const nome = String((reg && reg.nome) || '');
+  // 1. Só arquivos que o APP criou como backup, e só os que vivem em
+  //    GarageSpot/Dados/. PDFs de fechamento e relatórios de recarga são gravados
+  //    na RAIZ GarageSpot/ — a pasta já os separa, e o prefixo confirma. Critério
+  //    duplo de propósito: nome sozinho seria frágil demais para autorizar apagar.
+  if(nome.indexOf('backup_') !== 0) return { podar:false, motivo:'não é um arquivo de backup do app' };
+  if(!/\.json$/i.test(nome))        return { podar:false, motivo:'não é .json — fora do escopo da limpeza' };
+  // 2. O mais recente NUNCA sai, aconteça o que acontecer.
+  if(reg.ts === maisRecenteTs)      return { podar:false, motivo:'é o backup mais recente' };
+  // 3. Sem confirmação na nuvem, FICA — por mais velho que seja. Esta é a regra
+  //    que dá sentido à janela: o dispositivo é rede de segurança justamente
+  //    para o que ainda não chegou na nuvem.
+  if(!reg.nuvem_ok || !reg.nuvem_ts) return { podar:false, motivo:'ainda não confirmado na nuvem' };
+  // 4. 7 dias contados da CONFIRMAÇÃO, não da criação.
+  const dias = (agora - reg.nuvem_ts) / (24*60*60*1000);
+  if(dias < GS_PODA_DIAS_LOCAL){
+    return { podar:false, motivo:'confirmado na nuvem há ' + Math.floor(dias) + 'd — faltam ' +
+                                 Math.ceil(GS_PODA_DIAS_LOCAL - dias) + 'd' };
+  }
+  return { podar:true, motivo:'na nuvem há ' + Math.floor(dias) + 'd (≥ ' + GS_PODA_DIAS_LOCAL + 'd)' };
+}
+
+// SOMENTE LEITURA. Não apaga, não grava, não marca nada. Pode rodar à vontade.
+function _gsPodaSimularLocal(){
+  const out = { remover:[], manter:[], teto:GS_PODA_TETO, truncado:false };
+  try{
+    const bkps = JSON.parse(localStorage.getItem('garagespot_backups_local') || '[]');
+    const agora = Date.now();
+    let maisRecenteTs = 0;
+    bkps.forEach(function(b){ if(b && b.ts > maisRecenteTs) maisRecenteTs = b.ts; });
+    bkps.forEach(function(b){
+      if(!b) return;
+      const v = _gsPodaAvaliarLocal(b, agora, maisRecenteTs);
+      const linha = { nome:b.nome, ts:b.ts, tipo:b.tipo, motivo:v.motivo };
+      if(v.podar) out.remover.push(linha); else out.manter.push(linha);
+    });
+    // Mais antigos primeiro: se o teto cortar, some o lixo mais velho.
+    out.remover.sort(function(a,b){ return (a.ts||0) - (b.ts||0); });
+    if(out.remover.length > GS_PODA_TETO){
+      out.truncado = true;
+      out.excedente = out.remover.length - GS_PODA_TETO;
+      out.remover = out.remover.slice(0, GS_PODA_TETO);
+    }
+  }catch(e){ console.warn('[PODA] simulação local falhou:', e && e.message); }
+  return out;
+}
+
+// Apaga UM arquivo do dispositivo. Devolve true só se realmente sumiu.
+async function _gsPodaApagarArquivoLocal(nome){
+  const F = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Filesystem;
+  if(!F) return false;
+  await F.deleteFile({ path:'GarageSpot/Dados/' + nome, directory:'DOCUMENTS' });
+  return true;
+}
+
+// Executa a poda LOCAL. Falha no meio → ABORTA, mantém íntegro o que sobrou,
+// registra e relata. O registro só é regravado no fim, refletindo o disco.
+async function _gsPodaExecutarLocal(){
+  if(!_gsPodaLigada()) return { ok:false, erro:'limpeza desligada' };
+  const plano = _gsPodaSimularLocal();
+  if(!plano.remover.length) return { ok:true, apagados:0, plano:plano };
+  const apagados = [];
+  let erro = null;
+  for(let i = 0; i < plano.remover.length; i++){
+    const it = plano.remover[i];
+    try{
+      await _gsPodaApagarArquivoLocal(it.nome);
+      apagados.push(it);
+    }catch(e){
+      // ABORTO: nada de continuar tentando às cegas. O que já saiu, saiu; o
+      // registro abaixo passa a refletir exatamente isso.
+      erro = (e && e.message) || String(e);
+      break;
+    }
+  }
+  try{
+    const apagadosNomes = {};
+    apagados.forEach(function(a){ apagadosNomes[a.nome] = true; });
+    const bkps = JSON.parse(localStorage.getItem('garagespot_backups_local') || '[]');
+    const restam = bkps.filter(function(b){ return !(b && apagadosNomes[b.nome]); });
+    _gsSetItemSeguro('garagespot_backups_local', JSON.stringify(restam), 'registro de backups');
+  }catch(e){ console.warn('[PODA] registro não atualizado:', e && e.message); }
+  // TRILHA: cada exclusão fica registrada, com a regra que a autorizou.
+  apagados.forEach(function(a){
+    try{ addLogSistema('Limpeza: backup local apagado — ' + a.nome + ' (' + a.motivo + ')',
+      {aud:true, acao:'poda_backup_local', alvo:a.nome}); }catch(e){}
+  });
+  if(erro){
+    try{ addLogSistema('Limpeza ABORTADA após ' + apagados.length + ' arquivo(s): ' + erro,
+      {aud:true, acao:'poda_abortada', alvo:String(erro).slice(0,80)}); }catch(e){}
+    return { ok:false, erro:erro, apagados:apagados.length, plano:plano };
+  }
+  return { ok:true, apagados:apagados.length, plano:plano };
+}
+
+// ── Poda da NUVEM ──────────────────────────────────────────────────────────
+// Escopo: SÓ a pasta de backups (`GarageSpot Backups`). A árvore de hospedagens,
+// onde vivem os PDFs de fechamento, não é sequer listada aqui — não existe
+// caminho de código que a alcance, o que é uma garantia melhor que uma condição.
+function _gdPodaChaveSemana(d){
+  // Segunda-feira da semana daquele arquivo — agrupador estável, sem depender de locale.
+  const x = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  const dow = (x.getDay() + 6) % 7;             // 0 = segunda
+  x.setDate(x.getDate() - dow);
+  return _localISO(x);
+}
+
+function _gdPodaPlanejarNuvem(arquivos, agora){
+  const out = { remover:[], manter:[], teto:GS_PODA_TETO, truncado:false };
+  const candidatos = [];
+  (arquivos || []).forEach(function(f){
+    const nome = String((f && f.name) || '');
+    // O ROLANTE nunca é tocado: não começa com `backup_` justamente para isso.
+    // Qualquer coisa que não seja da série histórica também fica de fora.
+    if(nome.indexOf('backup_') !== 0){ out.manter.push({ nome:nome, motivo:'não é da série de backups (rolante/outro)' }); return; }
+    const t = Date.parse(f.createdTime || '') || 0;
+    if(!t){ out.manter.push({ nome:nome, motivo:'sem data confiável — na dúvida, fica' }); return; }
+    candidatos.push({ id:f.id, nome:nome, ts:t, size:Number(f.size||0) });
+  });
+  candidatos.sort(function(a,b){ return b.ts - a.ts; });      // recente → antigo
+  const vistoSemana = {}, vistoMes = {};
+  candidatos.forEach(function(c, ix){
+    const dias = (agora - c.ts) / (24*60*60*1000);
+    if(ix === 0){ out.manter.push({ nome:c.nome, motivo:'é o backup mais recente' }); return; }
+    if(dias <= GD_PODA_TUDO_DIAS){ out.manter.push({ nome:c.nome, motivo:'dentro dos ' + GD_PODA_TUDO_DIAS + ' dias — tudo é mantido' }); return; }
+    const d = new Date(c.ts);
+    if(dias <= GD_PODA_SEMANAL_ATE){
+      const k = _gdPodaChaveSemana(d);
+      if(!vistoSemana[k]){ vistoSemana[k] = true; out.manter.push({ nome:c.nome, motivo:'representante da semana de ' + k }); return; }
+      out.remover.push({ id:c.id, nome:c.nome, ts:c.ts, motivo:'já há um backup guardado nessa semana' });
+      return;
+    }
+    const km = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
+    if(!vistoMes[km]){ vistoMes[km] = true; out.manter.push({ nome:c.nome, motivo:'representante do mês de ' + km }); return; }
+    out.remover.push({ id:c.id, nome:c.nome, ts:c.ts, motivo:'já há um backup guardado nesse mês' });
+  });
+  out.remover.sort(function(a,b){ return (a.ts||0) - (b.ts||0); });
+  if(out.remover.length > GS_PODA_TETO){
+    out.truncado = true;
+    out.excedente = out.remover.length - GS_PODA_TETO;
+    out.remover = out.remover.slice(0, GS_PODA_TETO);
+  }
+  return out;
+}
+
+// SOMENTE LEITURA: lista e planeja, não apaga nada.
+async function _gdPodaSimularNuvem(){
+  if(!_gdDisponivel() || !_gdConectado()) return { remover:[], manter:[], indisponivel:true };
+  const arquivos = await _gdComToken(async function(token){
+    const pasta = await _gdGarantirPasta(token);
+    return await _gdListarArquivos(token, pasta);
+  }, false);
+  return _gdPodaPlanejarNuvem(arquivos, Date.now());
+}
+
+// LIXEIRA, não exclusão definitiva: `PATCH {trashed:true}` dá 30 dias de
+// arrependimento e é reversível pelo próprio Drive. Apagar de vez seria ganhar
+// nada e perder a única chance de desfazer um engano.
+async function _gdPodaLixeira(token, id){
+  const r = await _gdFetch(GD_API + '/files/' + encodeURIComponent(id) + '?fields=id,trashed', {
+    method:'PATCH',
+    headers:{ 'Content-Type':'application/json' },
+    body: JSON.stringify({ trashed:true }),
+  }, token, 'mover backup para a lixeira');
+  return await r.json();
+}
+
+async function _gdPodaExecutarNuvem(){
+  if(!_gsPodaLigada()) return { ok:false, erro:'limpeza desligada' };
+  const plano = await _gdPodaSimularNuvem();
+  if(plano.indisponivel) return { ok:false, erro:'nuvem não conectada' };
+  if(!plano.remover.length) return { ok:true, apagados:0, plano:plano };
+  const feitos = [];
+  let erro = null;
+  try{
+    await _gdComToken(async function(token){
+      for(let i = 0; i < plano.remover.length; i++){
+        const it = plano.remover[i];
+        try{ await _gdPodaLixeira(token, it.id); feitos.push(it); }
+        catch(e){ erro = (e && e.message) || String(e); break; }   // aborta no primeiro tropeço
+      }
+      return true;
+    }, false);
+  }catch(e){ erro = erro || (e && e.message) || String(e); }
+  feitos.forEach(function(a){
+    try{ addLogSistema('Limpeza: backup da nuvem para a lixeira — ' + a.nome + ' (' + a.motivo + ')',
+      {aud:true, acao:'poda_backup_nuvem', alvo:a.nome}); }catch(e){}
+  });
+  if(erro){
+    try{ addLogSistema('Limpeza da nuvem ABORTADA após ' + feitos.length + ' arquivo(s): ' + erro,
+      {aud:true, acao:'poda_abortada', alvo:String(erro).slice(0,80)}); }catch(e){}
+    return { ok:false, erro:erro, apagados:feitos.length, plano:plano };
+  }
+  return { ok:true, apagados:feitos.length, plano:plano };
+}
+
+// Roda a poda de verdade — SÓ se o gestor tiver ligado. Uma vez por dia basta:
+// a janela é de 7 dias, então não há nada que ganhe em rodar mais vezes.
+const GS_PODA_ULT_LS = 'garagespot_poda_ultima';
+async function _gsPodaRodarSeLigada(){
+  try{
+    if(!_gsPodaLigada()) return;
+    let ult = 0;
+    try{ ult = parseInt(localStorage.getItem(GS_PODA_ULT_LS) || '0', 10) || 0; }catch(e){}
+    if(ult && (Date.now() - ult) < 24*60*60*1000) return;
+    try{ localStorage.setItem(GS_PODA_ULT_LS, String(Date.now())); }catch(e){}
+    const rl = await _gsPodaExecutarLocal();
+    if(rl && rl.apagados) console.log('[PODA] local:', rl.apagados, 'arquivo(s)');
+    const cfg = _gsPodaConfig();
+    if(cfg.nuvem){
+      const rn = await _gdPodaExecutarNuvem();
+      if(rn && rn.apagados) console.log('[PODA] nuvem:', rn.apagados, 'arquivo(s)');
+    }
+  }catch(e){ console.warn('[PODA] execução automática falhou (ignorada):', e && e.message); }
+}
+
+// ── Interface da limpeza (Backup e Conexões) ───────────────────────────────
+function _renderPodaStatus(){
+  const c = _gsPodaConfig();
+  let n = 0;
+  try{ n = (JSON.parse(localStorage.getItem('garagespot_backups_local')||'[]')||[]).length; }catch(e){}
+  return `<div id="poda-box" style="background:#f8f7f3;border-radius:8px;padding:12px;font-size:12px">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px">
+      <div><div style="font-weight:600;color:${c.ligada?'#0F6E56':'#555'}">Limpeza automática: ${c.ligada?'LIGADA':'DESLIGADA'}</div>
+      <div style="color:#999">${n} cópia(s) no registro do aparelho</div></div>
+      <span style="font-size:18px;color:${c.ligada?'#0F6E56':'#aaa'}">${c.ligada?'●':'○'}</span>
+    </div>
+    <div style="color:#666;line-height:1.55;margin-bottom:8px">
+      Um backup do aparelho só é apagado depois de <strong>confirmado na nuvem</strong> e de passados
+      <strong>${GS_PODA_DIAS_LOCAL} dias dessa confirmação</strong>. Sem confirmação, ele fica — por mais velho que seja.
+      O <strong>mais recente nunca sai</strong>.
+    </div>
+    <div style="background:#EEF9F2;border:1px solid #0F6E56;border-radius:6px;padding:8px 10px;color:#0F6E56;font-size:11px;line-height:1.5;margin-bottom:8px">
+      Os <strong>PDFs de fechamento nunca são apagados</strong> pelo app — nem no aparelho, nem na nuvem.
+      A limpeza alcança <strong>somente arquivos de backup</strong>.
+    </div>
+    <button class="bcx" id="btn-poda-simular" onclick="simularLimpeza()" style="width:100%">🔍 Simular limpeza (não apaga nada)</button>
+    <button class="bcx" id="btn-poda-toggle" onclick="alternarLimpeza()" style="width:100%;margin-top:6px">${c.ligada?'Desligar limpeza automática':'Ligar limpeza automática'}</button>
+  </div>`;
+}
+
+// Ligar/desligar é ação de gestor: pede o PIN e deixa rastro.
+function alternarLimpeza(){
+  showEntrarPIN(function(){
+    const c = _gsPodaConfig();
+    c.ligada = !c.ligada;
+    _gsPodaSalvarConfig(c);
+    try{ addLogSistema('Limpeza automática ' + (c.ligada?'LIGADA':'DESLIGADA'),
+      {aud:true, acao:(c.ligada?'poda_ligada':'poda_desligada')}); }catch(e){}
+    showToast(c.ligada ? '✅ Limpeza ligada — rode a simulação antes de confiar nela' : 'Limpeza desligada. Nada será apagado.', 5000);
+    _gdReabrirConexoes();
+  });
+}
+
+// SOMENTE LEITURA. Mostra o que sairia, o que ficaria e POR QUAL REGRA, com nome
+// e data. Roda com a limpeza desligada — é justamente assim que se ganha confiança
+// nela antes de ligar.
+async function simularLimpeza(){
+  const mc = document.getElementById('mc');
+  mc.innerHTML = `<div class="mt">🔍 Simulação de limpeza</div>
+    <div class="ms">Nada foi apagado. Isto é só uma previsão.</div>
+    <div id="sim-corpo" style="font-size:12px;color:#666">Analisando…</div>
+    <button class="bcx" onclick="showConexoes()" style="width:100%;margin-top:12px">← Voltar</button>`;
+  document.getElementById('ov').classList.add('on');
+  const local = _gsPodaSimularLocal();
+  let nuvem = { remover:[], manter:[], indisponivel:true };
+  try{ nuvem = await _gdPodaSimularNuvem(); }catch(e){ nuvem = { remover:[], manter:[], erro:(e&&e.message)||String(e) }; }
+  const fmtL = function(it){
+    const q = it.ts ? fmtDt(it.ts) : '—';
+    return `<div style="padding:5px 0;border-bottom:1px solid #eee"><div style="color:#333;word-break:break-all">${_vtEsc(it.nome)}</div>
+      <div style="color:#999;font-size:11px">${_vtEsc(q)} · ${_vtEsc(it.motivo)}</div></div>`;
+  };
+  const bloco = function(titulo, cor, itens, vazio){
+    if(!itens.length) return `<div style="margin-top:10px"><div style="font-weight:600;color:${cor}">${titulo} (0)</div><div style="color:#999;font-size:11px;padding:4px 0">${vazio}</div></div>`;
+    return `<div style="margin-top:10px"><div style="font-weight:600;color:${cor};margin-bottom:4px">${titulo} (${itens.length})</div>${itens.map(fmtL).join('')}</div>`;
+  };
+  const corpo = document.getElementById('sim-corpo');
+  if(!corpo) return;
+  corpo.innerHTML =
+    `<div style="background:#FFF8E6;border:1px solid #BA7517;border-radius:6px;padding:8px 10px;color:#633806;font-size:11px;line-height:1.5">
+       Simulação <strong>somente leitura</strong> — nenhum arquivo foi tocado. A limpeza está
+       <strong>${_gsPodaLigada()?'LIGADA':'DESLIGADA'}</strong>.
+     </div>
+     <div class="gestao-menu-sep" style="margin-top:12px">No aparelho</div>
+     ${bloco('Sairiam', '#A32D2D', local.remover, 'Nada seria apagado agora.')}
+     ${local.truncado?`<div style="color:#854F0B;font-size:11px;padding:4px 0">Teto de ${local.teto} por execução: outros ${local.excedente} ficariam para a próxima.</div>`:''}
+     ${bloco('Ficariam', '#0F6E56', local.manter, 'Nenhuma cópia registrada.')}
+     <div class="gestao-menu-sep" style="margin-top:14px">Na nuvem</div>
+     ${nuvem.indisponivel?'<div style="color:#999;font-size:11px;padding:4px 0">Drive não conectado — nada a analisar.</div>':''}
+     ${nuvem.erro?`<div style="color:#A32D2D;font-size:11px;padding:4px 0">Não deu para listar: ${_vtEsc(nuvem.erro)}</div>`:''}
+     ${(!nuvem.indisponivel&&!nuvem.erro)?bloco('Iriam para a lixeira do Drive', '#A32D2D', nuvem.remover, 'Nada seria movido agora.'):''}
+     ${(!nuvem.indisponivel&&!nuvem.erro&&nuvem.truncado)?`<div style="color:#854F0B;font-size:11px;padding:4px 0">Teto de ${nuvem.teto} por execução: outros ${nuvem.excedente} ficariam para a próxima.</div>`:''}
+     ${(!nuvem.indisponivel&&!nuvem.erro)?bloco('Ficariam', '#0F6E56', nuvem.manter, 'Nenhum backup na nuvem.'):''}`;
+  try{ addLogSistema('Simulação de limpeza consultada', {aud:true, acao:'poda_simulada'}); }catch(e){}
+}
+
+// ── Cota do Drive (aviso preventivo) ───────────────────────────────────────
+// `about.get` aceita o escopo `drive.file` (confirmado na doc oficial da API v3).
+// Qualquer falha aqui é engolida: é informação de conforto, nunca pode derrubar
+// nem atrasar um backup.
+const GD_COTA_INTERVALO_MS = 6 * 60 * 60 * 1000;
+async function _gdLerCota(){
+  try{
+    if(!_gdDisponivel() || !_gdConectado()) return;
+    const ult = DRIVE_STATUS.nuvem_cota_ts || 0;
+    if(ult && (Date.now() - ult) < GD_COTA_INTERVALO_MS) return;
+    await _gdComToken(async function(token){
+      const r = await _gdFetch(GD_API + '/about?fields=storageQuota', {method:'GET'}, token, 'consultar o espaço do Drive');
+      const j = await r.json();
+      const q = (j && j.storageQuota) || {};
+      DRIVE_STATUS.nuvem_cota_limite = Number(q.limit || 0);
+      DRIVE_STATUS.nuvem_cota_uso    = Number(q.usage || 0);
+      DRIVE_STATUS.nuvem_cota_ts     = Date.now();
+      saveDriveStatus();
+      return true;
+    }, false);
+  }catch(e){ console.warn('[DRIVE] cota não consultada (ignorado):', e && e.message); }
 }
 
 // ── Exportação COMPLETA sem depender de plugin ─────────────────────────────
@@ -9735,6 +10392,1338 @@ function _gsConfirmarImportacao(obj, nomeArq){
 }
 
 // ════════════════════════════════════════════════════════════════════════════
+// v1.9.5.0 — FASE 2: NUVEM (GOOGLE DRIVE)  ·  backup + restauração
+// ════════════════════════════════════════════════════════════════════════════
+// O QUE ESTA FASE É: recuperação. Se o tablet morrer ou for perdido, instala-se o
+// app num aparelho novo, loga com a MESMA conta Google do hotel e restaura tudo.
+// O QUE ELA NÃO É: sincronização multi-dispositivo (isso é a Fase 3, com servidor).
+//
+// O BACKUP LOCAL CONTINUA IGUAL. A nuvem é ADICIONAL — nada é apagado do aparelho
+// por causa dela. (A mudança para "nuvem primária", a organização em pastas
+// Ano > Mês/Ano > Apartamento e o upload dos PDFs ficam para a v1.9.5.1, depois de
+// validarmos no aparelho que o upload funciona.)
+//
+// 🔒 SEGURANÇA — POR QUE NÃO HÁ CLIENT SECRET AQUI:
+// o login usa o Google Sign-In NATIVO em `mode:'online'`, que devolve um
+// ACCESS TOKEN pronto. Token de acesso não se troca por nada — quem o emite é o
+// Google, para este pacote (`com.apollods.garagespot`) + este SHA-1, conferidos
+// pelo próprio sistema. O client secret só seria necessário no modo "offline" do
+// plugin, que devolve um `serverAuthCode` para um BACKEND trocar por tokens — e é
+// exatamente esse modo que NÃO usamos. Os dois Client IDs abaixo são públicos por
+// natureza (vão no APK e no tráfego). O SECRET NUNCA ENTRA NO HTML NEM NO REPO.
+const GD_WEB_CLIENT_ID     = '1033748409208-agsiv4ape8a15iffcqrdrqpgjqktl7um.apps.googleusercontent.com';
+const GD_ANDROID_CLIENT_ID = '1033748409208-cucf9rddoqoevbk066ldrtjvfu1jlqs7.apps.googleusercontent.com';
+// `drive.file` = o app só enxerga o que ELE MESMO criou. É escopo não-sensível
+// (sem verificação pesada do Google) e o app não consegue ler o Drive do hotel.
+const GD_SCOPES     = ['https://www.googleapis.com/auth/drive.file'];
+// v1.9.5.3: pasta PRINCIPAL na raiz do Drive; as duas de baixo vivem dentro dela.
+const GD_PASTA_RAIZ = 'GarageSpot';
+const GD_PASTA_NOME = 'GarageSpot Backups';
+const GD_MIME_PASTA = 'application/vnd.google-apps.folder';
+const GD_API        = 'https://www.googleapis.com/drive/v3';
+const GD_API_UPLOAD = 'https://www.googleapis.com/upload/drive/v3';
+// O token vive só nesta sessão. Renovado bem antes da validade real (1h).
+const GD_TOKEN_TTL  = 50 * 60 * 1000;
+
+// ⚠️ O access token NUNCA é gravado (nem localStorage, nem IndexedDB, nem backup).
+// Só existe nesta variável, em memória, e morre com o processo.
+let _gdTokenCache = null;   // {token, ts}
+let _gdIniciado   = false;
+let _gdEnviando   = false;  // trava contra uploads concorrentes
+let _gdTokenVia   = '';     // v1.9.5.1: por qual caminho o token atual foi obtido
+// v1.9.5.4: em QUAL passo da obtenção de token estamos. Sem isto, uma falha antes
+// da rede era registrada como `etapa: envio do backup` — rótulo que mandava o
+// diagnóstico para o lado errado (procurava-se problema de upload, quando o app
+// nem tinha chegado a montar uma requisição).
+let _gdTokenPasso = '';
+
+// v1.9.5.1 — TETO DE TEMPO PARA A CADEIA NATIVA/REDE.
+// A trava `_gdEnviando` SEMPRE foi liberada num `finally` — o que prendia era um
+// `await` que nunca assentava: no 403 o retry escalava para `p.login()`, e quando o
+// intent de consentimento não voltava (o "Cannot get getAuthorizationResultFromIntent"),
+// a promise ficava pendente para sempre e a trava junto. Um teto resolve a classe
+// inteira do problema, sem depender de qual chamada nativa travou.
+// v1.9.5.2 — TETOS SEPARADOS. Um teto único de 45s servia mal aos dois lados:
+//  • OBTER TOKEN: a cadeia do plugin é lenta por dentro. `getAuthorizationCode`
+//    valida o token PELA REDE com `.get(7s)` (GoogleProvider.java:1029) e o
+//    `refresh` espera `future.get(60s)` na autorização (:1185) — pior caso ~74s,
+//    e os 45s disparavam ANTES do timeout interno do próprio plugin. Pior: o
+//    `onFailure` de `accessTokenIsValid` está VAZIO (:223), então erro de rede
+//    nunca completa o future e queima os 7s inteiros a cada chamada.
+//    → teto CURTO por passo + falha rápida quando não há autorização.
+//  • REDE (upload/download): sobe o snapshot COM FOTOS, megabytes no wi-fi do
+//    hotel. 45s é apertado e cortaria envio legítimo.
+//    → teto FOLGADO.
+const GD_TIMEOUT_MS       = 45 * 1000;   // padrão dos elos genéricos
+const GD_TIMEOUT_TOKEN_MS = 12 * 1000;   // por PASSO do plugin (interno é 7s)
+const GD_TIMEOUT_REDE_MS  = 120 * 1000;  // upload/download com fotos
+function _gdComTeto(promessa, oQue, ms){
+  const teto = ms || GD_TIMEOUT_MS;
+  return new Promise(function(resolve, reject){
+    let vivo = true;
+    const t = setTimeout(function(){
+      if(!vivo) return;
+      vivo = false;
+      const e = new Error('tempo esgotado ' + (oQue || 'na nuvem') + ' (' + Math.round(teto/1000) + 's)');
+      e.gdTimeout = true;
+      reject(e);
+    }, teto);
+    Promise.resolve(promessa).then(function(v){
+      if(!vivo) return; vivo = false; clearTimeout(t); resolve(v);
+    }, function(e){
+      if(!vivo) return; vivo = false; clearTimeout(t); reject(e);
+    });
+  });
+}
+
+function _gdPlugin(){
+  try{ return (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.SocialLogin) || null; }
+  catch(e){ return null; }
+}
+// Sem plugin (navegador/Playwright) ou sem `fetch` (WebView muito antigo) a nuvem
+// simplesmente não existe — o app segue inteiro, com o backup local.
+function _gdDisponivel(){
+  try{ return !!_gdPlugin() && typeof fetch === 'function'; }catch(e){ return false; }
+}
+function _gdConectado(){
+  try{ return !!(DRIVE_STATUS && DRIVE_STATUS.nuvem_conectada); }catch(e){ return false; }
+}
+
+// v1.9.5.3 — reconhece falha de REDE (a requisição não chegou a sair) em vez de
+// resposta de erro do Google. `fetch` rejeita com TypeError nesses casos; a
+// mensagem varia por navegador/WebView, daí a lista.
+function _gdErroDeRede(e){
+  try{
+    if(!e) return false;
+    if(e.gdAuth) return false;                       // veio com status HTTP → é do Google
+    if(e.gdDet && e.gdDet.status) return false;      // idem
+    if(e.gdTimeout) return true;                     // estourou o teto: tratar como transitório
+    const m = String(e.message || e).toLowerCase();
+    return e instanceof TypeError ||
+      m.indexOf('failed to fetch') >= 0 || m.indexOf('networkerror') >= 0 ||
+      m.indexOf('network request failed') >= 0 || m.indexOf('load failed') >= 0 ||
+      m.indexOf('conexão') >= 0 || m.indexOf('internet') >= 0;
+  }catch(_){ return false; }
+}
+
+// `transitorio=true` registra a falha (o detalhe continua copiável — foi ele que
+// permitiu diagnosticar o `Failed to fetch`) mas NÃO acende o alarme: quem decide
+// se alarma é `_gdRodapeEstado`, pelos limiares de persistência.
+// v1.9.6.3 — DRIVE CHEIO É UM ESTADO PRÓPRIO, NÃO "erro 403".
+// Sem isto o upload falhava com uma mensagem genérica e os backups paravam de
+// subir em silêncio — o pior modo de falha possível para uma rede de segurança.
+// O Google devolve 403 com `reason: storageQuotaExceeded`; o parser já extraía
+// o `reason` desde a v1.9.5.1, só ninguém olhava para ele.
+const GD_RAZOES_CHEIO = ['storagequotaexceeded', 'quotaexceeded'];
+
+function _gdErroDeDriveCheio(detalhe){
+  try{
+    if(!detalhe) return false;
+    const r = String(detalhe.reason || '').toLowerCase();
+    if(GD_RAZOES_CHEIO.indexOf(r) >= 0) return true;
+    // Rede de segurança: alguns retornos trazem só a mensagem.
+    const m = String(detalhe.message || '').toLowerCase();
+    return m.indexOf('storage quota') >= 0 || m.indexOf('quota has been exceeded') >= 0;
+  }catch(e){ return false; }
+}
+
+function _gdMsgDriveCheio(){
+  return 'O Google Drive do hotel está SEM ESPAÇO. Os backups não estão subindo. ' +
+         'Libere espaço na conta ou fale com o gestor — os PDFs de fechamento NÃO são apagados pelo app.';
+}
+
+function _gdMarcarFalha(msg, detalhe, transitorio){
+  try{
+    // Drive cheio nunca é "transitório": insistir não resolve, e a mensagem tem
+    // de ser específica, senão o operador não sabe o que fazer.
+    const cheio = _gdErroDeDriveCheio(detalhe);
+    if(cheio){
+      transitorio = false;
+      msg = _gdMsgDriveCheio();
+      DRIVE_STATUS.nuvem_cheio = true;
+    } else if(DRIVE_STATUS.nuvem_cheio && detalhe){
+      // Um erro de outra natureza não limpa o estado "cheio" — só um envio bem
+      // sucedido limpa (em `_gdLimparFalha`).
+    }
+    DRIVE_STATUS.nuvem_falha = !transitorio;
+    DRIVE_STATUS.nuvem_falha_transitoria = !!transitorio;
+    DRIVE_STATUS.nuvem_ultimo_erro = String(msg == null ? '' : msg).slice(0, 180);
+    // v1.9.5.1: guarda o diagnóstico junto, quando houver. Nunca sobrescreve com
+    // vazio — um erro genérico depois de um detalhado não pode apagar a evidência.
+    if(detalhe) DRIVE_STATUS.nuvem_erro_detalhe = detalhe;
+    saveDriveStatus();
+  }catch(e){}
+}
+function _gdLimparFalha(){
+  try{
+    DRIVE_STATUS.nuvem_falha = false;
+    DRIVE_STATUS.nuvem_falha_transitoria = false;
+    DRIVE_STATUS.nuvem_reconectar = false;   // v1.9.5.4: um envio bom prova que a autorização voltou
+    DRIVE_STATUS.nuvem_cheio = false;        // v1.9.6.3: subiu, logo há espaço
+    DRIVE_STATUS.nuvem_ultimo_erro = '';
+    DRIVE_STATUS.nuvem_erro_detalhe = null;
+    saveDriveStatus();
+  }catch(e){}
+}
+
+// v1.9.5.1 — DIAGNÓSTICO DO 403 (o item que destrava tudo o resto).
+//
+// Até a v1.9.5.0 o `_gdFetch` lançava no 401/403 ANTES de ler o corpo, então o
+// motivo real do Google era descartado e sobrava "403" mudo. `error.errors[].reason`
+// é o que distingue causas que exigem ações OPOSTAS:
+//   insufficientPermissions/insufficientScopes → token sem `drive.file`
+//   accessNotConfigured  → Drive API desligada no projeto
+//   appNotAuthorizedToFile → arquivo que o app não criou (fora do drive.file)
+//   rateLimitExceeded/userRateLimitExceeded → cota
+function _gdParseErroGoogle(txt){
+  const out = { reason:'', message:'', corpo: String(txt == null ? '' : txt).slice(0, 600) };
+  try{
+    const j = JSON.parse(txt);
+    const e = j && j.error;
+    if(e){
+      out.message = String(e.message || '');
+      if(e.errors && e.errors.length && e.errors[0]) out.reason = String(e.errors[0].reason || '');
+      if(!out.reason && e.status) out.reason = String(e.status);
+    }
+  }catch(e){ /* corpo não-JSON: o texto cru já foi preservado */ }
+  return out;
+}
+
+// Pergunta ao Google QUAIS escopos o token realmente carrega. É a evidência
+// decisiva entre "o app não pediu" e "o Google não concedeu" — e não custa nada:
+// endpoint público, sem autenticação, e qualquer falha aqui é engolida (é sonda de
+// diagnóstico, nunca pode derrubar um backup).
+async function _gdEscoposDoToken(token){
+  try{
+    if(!token || typeof fetch !== 'function') return '';
+    const r = await fetch('https://www.googleapis.com/oauth2/v3/tokeninfo?access_token=' + encodeURIComponent(token));
+    if(!r.ok) return '(tokeninfo respondeu ' + r.status + ')';
+    const j = await r.json();
+    return String((j && j.scope) || '');
+  }catch(e){ return ''; }
+}
+
+async function _gdInicializar(){
+  const p = _gdPlugin();
+  if(!p) throw new Error('login Google indisponível neste aparelho');
+  if(_gdIniciado) return;
+  // O Android Client ID NÃO entra aqui de propósito: no Android o Google resolve o
+  // cliente pelo nome do pacote + SHA-1 da assinatura, registrados no Console. O que
+  // o plugin precisa é do WEB client id (papel de serverClientId).
+  await p.initialize({ google: { webClientId: GD_WEB_CLIENT_ID, mode: 'online' } });
+  _gdIniciado = true;
+}
+
+// Login interativo. Devolve {token, email}.
+async function _gdLoginInterativo(){
+  await _gdInicializar();
+  const p = _gdPlugin();
+  const r = await p.login({ provider: 'google', options: { scopes: GD_SCOPES, forceRefreshToken: true } });
+  const res = (r && r.result) || r || {};
+  if(res.responseType === 'offline' || res.serverAuthCode){
+    // Trava de segurança: modo offline exigiria o client secret num backend.
+    throw new Error('login retornou em modo offline — configuração inválida');
+  }
+  const token = res.accessToken && res.accessToken.token;
+  if(!token) throw new Error('login não devolveu token de acesso');
+  _gdTokenCache = { token: token, ts: Date.now() };
+  return { token: token, email: (res.profile && res.profile.email) || '' };
+}
+
+// Token válido, renovando em silêncio quando dá. `interativo=false` nunca abre tela
+// (é o caminho do backup automático — não pode roubar o foco de quem está operando).
+async function _gdObterToken(interativo){
+  if(_gdTokenCache && (Date.now() - _gdTokenCache.ts) < GD_TOKEN_TTL) return _gdTokenCache.token;
+  const p = _gdPlugin();
+  if(!p) throw new Error('login Google indisponível neste aparelho');
+  await _gdInicializar();
+  // No Android o SO cacheia o token; `getAuthorizationCode` é o caminho recomendado
+  // pelo plugin para obter um token válido sem interação.
+  //
+  // ⚠️ v1.9.5.1 — ATENÇÃO AO DIAGNOSTICAR 403: `getAuthorizationCode` devolve o token
+  // PERSISTIDO e só confere se ele não expirou — NÃO confere escopos (fonte do
+  // plugin 8.3.39, GoogleProvider.java:1021-1061). Um token emitido sem `drive.file`
+  // passa por válido aqui e só falha lá na frente, no upload. Por isso registramos
+  // por qual caminho o token veio: sem isso não dá para separar "o app não pediu o
+  // escopo" de "o Google não concedeu".
+  // v1.9.5.2: cada passo tem teto PRÓPRIO e curto. Antes, os três passos ficavam
+  // sob um único teto de 45s e o usuário esperava quase um minuto para ler
+  // "tempo esgotado ao obter o token" — mensagem que não diz o que fazer.
+  // ⚠️⚠️ v1.9.5.4 — A ORDEM AQUI NÃO PODE SER INVERTIDA DE VOLTA.
+  //
+  // `getAuthorizationCode` valida o token PELA REDE e, se ele estiver inválido —
+  // o que acontece toda vez que o token expira, ~1h — chama **`rawLogout`**
+  // (GoogleProvider.java:1034), que faz
+  // `getSharedPreferences(...).edit().clear().apply()`: **apaga o blob inteiro,
+  // inclusive os `scopes` persistidos**, e desloga a conta no lado nativo.
+  //
+  // Era isso que produzia o sintoma "Conectado + sem autorização válida": o
+  // vínculo nativo tinha sido destruído pela nossa própria tentativa de obter
+  // token. `refresh` NÃO chama `rawLogout` em nenhum caminho (os três usos são
+  // :1005 logout explícito, :1034 e :1077, ambos dentro de getAuthorizationCode) —
+  // e persiste o estado quando dá certo. Por isso ele vem PRIMEIRO.
+  _gdTokenPasso = 'renovar a sessão (refresh)';
+  try{
+    await _gdComTeto(p.refresh({ provider: 'google' }), 'ao renovar a sessão', GD_TIMEOUT_TOKEN_MS);
+    _gdTokenPasso = 'obter o token após o refresh';
+    const a = await _gdComTeto(p.getAuthorizationCode({ provider: 'google' }), 'ao obter o token', GD_TIMEOUT_TOKEN_MS);
+    if(a && a.accessToken){ _gdTokenVia = 'refresh+getAuthorizationCode'; _gdTokenCache = {token:a.accessToken, ts:Date.now()}; return a.accessToken; }
+  }catch(e){
+    // FALHA RÁPIDA: o plugin rejeita com "User is not logged in" SEM tocar na rede
+    // quando não há autorização guardada (GoogleProvider.java:1058-1059).
+    //
+    // ⚠️ SÓ no caminho NÃO-interativo. Com `interativo=true` quem está pedindo é o
+    // usuário (Conectar / Restaurar da nuvem): aí "não logado" é exatamente o caso
+    // em que ABRIR o login é a resposta certa, não dizer "reconecte".
+    if(!interativo && _gdSemAutorizacao(e)) throw _gdErroReconectar();
+  }
+  // Última tentativa silenciosa. Pode custar a sessão (ver o aviso acima), por isso
+  // só acontece depois de o `refresh` já ter falhado.
+  _gdTokenPasso = 'obter o token (getAuthorizationCode)';
+  try{
+    const a2 = await _gdComTeto(p.getAuthorizationCode({ provider: 'google' }), 'ao obter o token', GD_TIMEOUT_TOKEN_MS);
+    if(a2 && a2.accessToken){ _gdTokenVia = 'getAuthorizationCode'; _gdTokenCache = {token:a2.accessToken, ts:Date.now()}; return a2.accessToken; }
+  }catch(e){ /* segue para o login (ou para o erro de reconectar) */ }
+  // Um ENVIO nunca chega aqui com `interativo=true` (regra da v1.9.5.1): quem abre
+  // tela de login é o usuário, em Backup e Conexões.
+  if(!interativo) throw _gdErroReconectar();
+  _gdTokenPasso = 'login interativo';
+  const r = await _gdLoginInterativo();
+  _gdTokenVia = 'login';
+  return r.token;
+}
+
+// Reconhece a rejeição do plugin para "não há autorização guardada". É comparação
+// por texto porque o plugin não expõe código de erro — por isso aceita as variantes
+// conhecidas em vez de casar uma frase exata.
+function _gdSemAutorizacao(e){
+  try{
+    const m = String((e && e.message) || e || '').toLowerCase();
+    return m.indexOf('not logged in') >= 0 || m.indexOf('user is not logged') >= 0 ||
+           m.indexOf('não logado') >= 0 || m.indexOf('no credential') >= 0;
+  }catch(_){ return false; }
+}
+// Mensagem ÚNICA para "sem autorização válida": diz o que fazer, em vez de
+// "tempo esgotado (45s)", que não orienta ninguém.
+function _gdErroReconectar(){
+  const e = new Error('sem autorização válida — reconecte o Google Drive em Backup e Conexões');
+  e.gdReconectar = true;
+  return e;
+}
+
+// Chamada HTTP ao Drive. 401/403 vira erro marcado, para o retry saber que é sessão.
+//
+// v1.9.5.1: o corpo do erro é lido ANTES de lançar — inclusive no 401/403, onde
+// antes era descartado. O erro carrega `gdDet` com etapa/status/reason/message, que
+// sobe intacto até o card de nuvem.
+async function _gdFetch(url, opts, token, etapa){
+  opts = opts || {};
+  const headers = Object.assign({}, opts.headers || {}, { Authorization: 'Bearer ' + token });
+  const r = await fetch(url, Object.assign({}, opts, { headers: headers }));
+  if(r.ok) return r;
+
+  let txt = '';
+  try{ txt = await r.text(); }catch(e2){}
+  const g = _gdParseErroGoogle(txt);
+  const det = {
+    ts: Date.now(),
+    etapa: etapa || 'chamada ao Drive',
+    status: r.status,
+    reason: g.reason,
+    message: g.message || g.corpo,
+    // só o caminho, sem querystring — evita despejar id de pasta/arquivo na tela
+    url: String(url).split('?')[0],
+  };
+
+  if(r.status === 401 || r.status === 403){
+    const e = new Error('o Google recusou a autorização (' + r.status +
+      (g.reason ? ' · ' + g.reason : '') + ')');
+    e.gdAuth = true;
+    e.gdDet = det;
+    throw e;
+  }
+  const e2 = new Error('Drive respondeu ' + r.status + (g.message ? ' — ' + g.message : ''));
+  e2.gdDet = det;
+  throw e2;
+}
+
+// Executa `fn(token)`; se a sessão tiver caído, descarta o token e tenta MAIS UMA vez.
+//
+// v1.9.5.1: o retry NUNCA escala para login interativo por conta própria. Antes, um
+// 403 no upload virava `p.login()` — abrindo a tela de consentimento do Google no
+// meio de um backup, inclusive num backup AUTOMÁTICO, roubando o foco de quem está
+// operando o mapa. E se aquele intent não voltasse, prendia a trava de envio.
+// Reconectar passou a ser ação EXPLÍCITA do usuário em Backup e Conexões.
+async function _gdComToken(fn, interativo){
+  // v1.9.5.2: `_gdObterToken` já embrulha CADA passo no seu próprio teto curto —
+  // não há mais um teto único por cima da cadeia inteira. A rede ganha teto folgado.
+  let token = await _gdObterToken(interativo);
+  try{
+    return await _gdComTeto(fn(token), 'na chamada ao Drive', GD_TIMEOUT_REDE_MS);
+  }catch(e){
+    if(!e || !e.gdAuth) throw e;
+    _gdTokenCache = null;
+    // segunda e última tentativa, sempre NÃO-interativa
+    token = await _gdObterToken(false);
+    return await _gdComTeto(fn(token), 'na chamada ao Drive', GD_TIMEOUT_REDE_MS);
+  }
+}
+
+// Escapa aspas simples para a sintaxe de busca do Drive.
+function _gdEscQ(s){ return String(s == null ? '' : s).replace(/\\/g, '\\\\').replace(/'/g, "\\'"); }
+
+// v1.9.5.2 — NOME ÚNICO DOS BACKUPS NA NUVEM.
+// Havia DOIS padrões convivendo na mesma pasta: o espelhamento automático herdava o
+// nome do arquivo LOCAL (`backup_completo_04-08-26_…`, dia-mês-ano) e as rotas manual
+// e de retentativa usavam `AAAA-MM-DD`. Só o segundo ordena corretamente como texto,
+// que é o que a retenção (v1.9.5.3) vai exigir.
+//
+// O nome do arquivo LOCAL fica exatamente como sempre foi — mexer nele seria mexer no
+// backup local, que é intocável. A nuvem passa a ter nome próprio.
+// Dia LOCAL (v1.9.4.14): `toISOString()` daria o dia errado das 21h à meia-noite.
+function _gdNomeBackup(ts){
+  const d = new Date(ts || Date.now());
+  const p = function(n){ return String(n).padStart(2, '0'); };
+  return 'backup_completo_' + _localISO(d) + '_' + p(d.getHours()) + 'h' + p(d.getMinutes()) + '.json';
+}
+
+// Acha (ou cria) a pasta do app. O id é lembrado, mas SEMPRE revalidado — a pasta
+// pode ter sido movida para a lixeira pelo dono da conta.
+// v1.9.5.2 — PASTA ANINHADA, SEMPRE RESTRITA AO PAI.
+// A busca de `_gdGarantirPasta` não filtra por pai, o que serve para a pasta raiz
+// única de backups mas NÃO serviria para a árvore de hospedagens: `Apt05` de agosto
+// e `Apt05` de setembro têm o mesmo nome, e sem `'<pai>' in parents` o app juntaria
+// os dois na primeira que achasse.
+async function _gdGarantirPastaEm(token, nome, paiId){
+  const q = "mimeType='" + GD_MIME_PASTA + "' and name='" + _gdEscQ(nome) + "'" +
+            " and '" + _gdEscQ(paiId) + "' in parents and trashed=false";
+  const r = await _gdFetch(GD_API + '/files?q=' + encodeURIComponent(q) +
+    '&spaces=drive&fields=files(id,name)&pageSize=10', {method:'GET'}, token, 'procurar a pasta ' + nome);
+  const j = await r.json();
+  if(j && j.files && j.files.length) return j.files[0].id;
+  const r2 = await _gdFetch(GD_API + '/files?fields=id', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name: nome, mimeType: GD_MIME_PASTA, parents: [paiId] }),
+  }, token, 'criar a pasta ' + nome);
+  const j2 = await r2.json();
+  if(!j2 || !j2.id) throw new Error('não foi possível criar a pasta "' + nome + '" no Drive');
+  return j2.id;
+}
+
+// Percorre/cria a árvore `GarageSpot/seg1/seg2/…` e devolve o id da última pasta.
+// Criação SOB DEMANDA: nada é criado antes de existir um documento para guardar.
+//
+// v1.9.5.3: TUDO passa a viver sob a pasta principal `GarageSpot` — antes as duas
+// pastas ficavam soltas na raiz do Drive do hotel.
+async function _gdGarantirCaminho(token, segmentos){
+  const raiz = await _gdGarantirPastaRaiz(token, GD_PASTA_RAIZ);
+  let paiId = raiz;
+  let primeiro = true;
+  for(const seg of segmentos){
+    if(!seg) continue;
+    // O PRIMEIRO segmento (`GarageSpot Backups` / `GarageSpot Hospedagens`) pode
+    // existir SOLTO na raiz do Drive, de instalações anteriores. Buscar só dentro
+    // de `GarageSpot` não o acharia e o app criaria uma DUPLICATA — com os backups
+    // antigos órfãos na pasta velha. Aqui a pasta existente é ADOTADA (movida),
+    // nunca recriada. Isso também torna a estrutura auto-corretiva se a migração
+    // ainda não tiver rodado.
+    paiId = primeiro ? await _gdAdotarOuCriarPrincipal(token, seg, raiz)
+                     : await _gdGarantirPastaEm(token, seg, paiId);
+    primeiro = false;
+  }
+  return paiId;
+}
+
+// Acha a pasta pelo nome em QUALQUER lugar; se estiver fora da raiz, move para
+// dentro dela. Se não existir, cria já no lugar certo.
+async function _gdAdotarOuCriarPrincipal(token, nome, raizId){
+  const achada = await _gdAcharPastaSolta(token, nome);
+  if(achada && achada.id !== raizId){
+    const pais = achada.parents || [];
+    if(pais.indexOf(raizId) < 0){
+      await _gdMover(token, achada.id, raizId, pais[0] || '');
+      try{ addLogSistema('Nuvem: pasta "' + nome + '" adotada e movida para ' + GD_PASTA_RAIZ); }catch(e){}
+    }
+    return achada.id;
+  }
+  return await _gdGarantirPastaEm(token, nome, raizId);
+}
+
+// Pasta de primeiro nível (sem pai declarado). Usada pelas DUAS raízes: a de
+// backups (recuperação) e a de hospedagens (consulta) — que são separadas de
+// propósito e não devem se misturar.
+async function _gdGarantirPastaRaiz(token, nome){
+  const q = "mimeType='" + GD_MIME_PASTA + "' and name='" + _gdEscQ(nome) + "' and trashed=false";
+  const r = await _gdFetch(GD_API + '/files?q=' + encodeURIComponent(q) +
+    '&spaces=drive&fields=files(id,name)&pageSize=10', {method:'GET'}, token, 'procurar a pasta ' + nome);
+  const j = await r.json();
+  if(j && j.files && j.files.length) return j.files[0].id;
+  const r2 = await _gdFetch(GD_API + '/files?fields=id', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name: nome, mimeType: GD_MIME_PASTA }),
+  }, token, 'criar a pasta ' + nome);
+  const j2 = await r2.json();
+  if(!j2 || !j2.id) throw new Error('não foi possível criar a pasta "' + nome + '" no Drive');
+  return j2.id;
+}
+
+async function _gdGarantirPasta(token){
+  const idLembrado = (DRIVE_STATUS && DRIVE_STATUS.nuvem_pasta_id) || '';
+  if(idLembrado){
+    try{
+      const r = await _gdFetch(GD_API + '/files/' + encodeURIComponent(idLembrado) + '?fields=id,trashed', {method:'GET'}, token, 'revalidar a pasta');
+      const j = await r.json();
+      if(j && j.id && !j.trashed) return j.id;
+    }catch(e){ if(e && e.gdAuth) throw e; }
+  }
+  // v1.9.5.3: a pasta de backups agora nasce DENTRO de `GarageSpot`. Se já existir
+  // solta na raiz (instalações anteriores), o id lembrado acima continua valendo e a
+  // migração a move — nada é recriado nem re-enviado.
+  const id = await _gdGarantirCaminho(token, [GD_PASTA_NOME]);
+  DRIVE_STATUS.nuvem_pasta_id = id; saveDriveStatus();
+  return id;
+}
+
+// Upload multipart (metadados + conteúdo numa requisição só).
+async function _gdEnviarArquivo(token, pastaId, nome, texto){
+  const lim = 'gsbnd' + Date.now() + Math.random().toString(36).slice(2, 8);
+  const meta = JSON.stringify({ name: nome, parents: [pastaId], mimeType: 'application/json' });
+  const corpo =
+    '--' + lim + '\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n' + meta + '\r\n' +
+    '--' + lim + '\r\nContent-Type: application/json\r\n\r\n' + texto + '\r\n' +
+    '--' + lim + '--';
+  const r = await _gdFetch(GD_API_UPLOAD + '/files?uploadType=multipart&fields=id,name,size,createdTime', {
+    method: 'POST',
+    headers: { 'Content-Type': 'multipart/related; boundary=' + lim },
+    body: corpo,
+  }, token, 'enviar o arquivo');
+  return await r.json();
+}
+
+// ── v1.9.6.2 — ARQUIVO ROLANTE DE ESTADO ATUAL ─────────────────────────────
+// NOME ESCOLHIDO E POR QUÊ: `_ESTADO-ATUAL (sem fotos).json`.
+//  • o `_` inicial o joga para o TOPO de qualquer listagem alfabética do Drive —
+//    quem abrir a pasta vê primeiro o arquivo que está sempre fresco;
+//  • NÃO começa com `backup_`, então nunca se mistura nem se confunde com a série
+//    histórica `backup_completo_AAAA-MM-DD_HHhMM.json`;
+//  • MAIÚSCULAS e "(sem fotos)" dizem, para um humano e sem manual, que aquilo é o
+//    estado corrente e que ele NÃO substitui o backup completo.
+//
+// ⚠️ REGRA INEGOCIÁVEL: este arquivo é ADICIONAL. Ele NUNCA substitui os backups
+// completos — a cadência COMPLETA continua criando o histórico imutável com fotos,
+// exatamente como antes. Nada aqui apaga, move ou renomeia arquivo algum; a única
+// escrita é a sobrescrita DESTE arquivo, que é sobrescrito por definição.
+const GD_ROLANTE_NOME = '_ESTADO-ATUAL (sem fotos).json';
+
+// COMO A SOBRESCRITA É FEITA: `PATCH /upload/drive/v3/files/<id>?uploadType=media`,
+// ou seja, atualização de conteúdo do MESMO arquivo, pelo id. Nunca "apagar e criar":
+// apagar e criar tem uma janela em que o dado não existe em lugar nenhum, e ainda
+// trocaria o id do arquivo a cada envio (quebrando link e histórico de revisões).
+// SE A ESCRITA FALHAR NO MEIO: o Drive só publica a nova revisão quando o corpo
+// chega inteiro — uma requisição interrompida deixa a revisão anterior intacta e
+// legível. Não há estado "meio gravado" visível para o usuário.
+async function _gdEnviarRolante(token, pastaId, json){
+  const idLembrado = (DRIVE_STATUS && DRIVE_STATUS.nuvem_rolante_id) || '';
+  if(idLembrado){
+    try{
+      const r = await _gdFetch(GD_API_UPLOAD + '/files/' + encodeURIComponent(idLembrado) +
+        '?uploadType=media&fields=id,name,size', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: json,
+        }, token, 'atualizar o estado atual');
+      return await r.json();
+    }catch(e){
+      // 404 = alguém apagou o arquivo no Drive. Esquece o id e recria abaixo; não é
+      // falha do app e não pode virar erro permanente.
+      if(e && e.gdAuth) throw e;
+      if(!(e && e.gdDet && e.gdDet.status === 404)) throw e;
+      DRIVE_STATUS.nuvem_rolante_id = ''; saveDriveStatus();
+    }
+  }
+  // Sem id em mãos: procura pelo NOME dentro da pasta antes de criar — senão cada
+  // instalação restaurada criaria uma duplicata do estado atual.
+  const q = "name='" + _gdEscQ(GD_ROLANTE_NOME) + "' and '" + _gdEscQ(pastaId) + "' in parents and trashed=false";
+  try{
+    const rb = await _gdFetch(GD_API + '/files?q=' + encodeURIComponent(q) +
+      '&spaces=drive&fields=files(id,name)&pageSize=10', {method:'GET'}, token, 'procurar o estado atual');
+    const jb = await rb.json();
+    const achado = jb && jb.files && jb.files[0];
+    if(achado && achado.id){
+      DRIVE_STATUS.nuvem_rolante_id = achado.id; saveDriveStatus();
+      const r2 = await _gdFetch(GD_API_UPLOAD + '/files/' + encodeURIComponent(achado.id) +
+        '?uploadType=media&fields=id,name,size', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: json,
+        }, token, 'atualizar o estado atual');
+      return await r2.json();
+    }
+  }catch(e){ if(e && e.gdAuth) throw e; /* busca falhou: cria abaixo */ }
+  const criado = await _gdEnviarArquivo(token, pastaId, GD_ROLANTE_NOME, json);
+  if(criado && criado.id){ DRIVE_STATUS.nuvem_rolante_id = criado.id; saveDriveStatus(); }
+  return criado;
+}
+
+async function _gdListarArquivos(token, pastaId){
+  const q = "'" + _gdEscQ(pastaId) + "' in parents and trashed=false";
+  const r = await _gdFetch(GD_API + '/files?q=' + encodeURIComponent(q) +
+    '&spaces=drive&orderBy=createdTime desc&pageSize=100&fields=files(id,name,size,createdTime)', {method:'GET'}, token, 'listar backups');
+  const j = await r.json();
+  return (j && j.files) || [];
+}
+
+async function _gdBaixarArquivo(token, id){
+  const r = await _gdFetch(GD_API + '/files/' + encodeURIComponent(id) + '?alt=media', {method:'GET'}, token, 'baixar backup da nuvem');
+  return await r.text();
+}
+
+// ── Parte 3 — conectar / desconectar ───────────────────────────────────────
+// Config sensível: pede o PIN do gestor e deixa rastro na trilha, como a exclusão
+// de anexo e o Importar.
+function conectarGoogleDrive(){
+  if(!_gdDisponivel()){
+    showToast('☁️ A nuvem só funciona no aplicativo instalado (APK). O backup local continua normal.', 5000);
+    return;
+  }
+  showEntrarPIN(function(){
+    // v1.9.6.3: o modal de PIN sai da tela AGORA, não no fim da cadeia.
+    // Antes, quem fechava era o `_gdReabrirConexoes()` lá embaixo — e ele só é
+    // alcançado quando o login nativo assenta. Durante todo o intent do Google
+    // (segundos, e indefinidamente se o intent não voltar — `p.login()` não tem
+    // teto de tempo) o "PIN de Gestão" ficava plantado na tela. Trocar pelo card
+    // de Conexões aqui resolve os dois casos com a mesma linha.
+    try{ showConexoes(); }catch(e){}
+    (async function(){
+      showToast('Abrindo o login do Google…', 2500);
+      try{
+        const r = await _gdLoginInterativo();
+        DRIVE_STATUS.nuvem_conectada = true;
+        DRIVE_STATUS.nuvem_email = r.email || '';
+        DRIVE_STATUS.nuvem_pasta_id = '';
+        saveDriveStatus();
+        _gdLimparFalha();
+        try{ await _gdComToken(function(t){ return _gdGarantirPasta(t); }, true); }catch(eP){ _gdMarcarFalha(eP && eP.message); }
+        addLogSistema('Google Drive conectado' + (r.email ? ' (' + r.email + ')' : ''),
+          {aud:true, acao:'drive_conectado', alvo:(r.email||'—')});
+        showToast('✅ Google Drive conectado' + (r.email ? ' · ' + r.email : ''), 4000);
+      }catch(e){
+        const m = (e && e.message) || String(e);
+        _gdMarcarFalha(m);
+        addLogSistema('Falha ao conectar o Google Drive: ' + m, {aud:true, acao:'drive_conexao_falhou'});
+        showToast('⚠️ Não foi possível conectar: ' + m + ' · O backup local continua normal.', 6000);
+      }
+      _gdReabrirConexoes();
+    })();
+  });
+}
+
+// ⚠️⚠️ v1.9.5.4 — PONTO ÚNICO DE DESVINCULAÇÃO, E O ÚNICO PERMITIDO.
+//
+// **Nenhum caminho automático pode desvincular a conta.** Erro de token, de rede,
+// retentativa ou arranque NUNCA podem chegar aqui: quando a autorização falha, o
+// estado vira "precisa reconectar" (`nuvem_reconectar`) com a conta e o e-mail
+// PRESERVADOS — ver `_gdMarcarPrecisaReconectar`.
+//
+// A trava é explícita (`origem !== 'usuario'` recusa) e não depende de nenhuma outra
+// correção: mesmo que um dia algum caminho automático chame esta função por engano,
+// ela se recusa a executar e deixa rastro na trilha.
+function _gdDesvincularConta(origem, antes){
+  if(origem !== 'usuario'){
+    console.warn('[DRIVE] desvinculação automática BLOQUEADA (origem:', origem, ')');
+    try{ addLogSistema('Tentativa de desconexão automática do Drive BLOQUEADA (origem: ' + (origem||'?') + ')',
+      {aud:true, acao:'drive_desconexao_bloqueada', alvo:(antes||'—')}); }catch(e){}
+    return false;
+  }
+  _gdTokenCache = null;
+  DRIVE_STATUS.nuvem_conectada = false;
+  DRIVE_STATUS.nuvem_email = '';
+  DRIVE_STATUS.nuvem_pasta_id = '';
+  DRIVE_STATUS.nuvem_reconectar = false;
+  saveDriveStatus();
+  _gdLimparFalha();
+  // v1.9.5.4: a trilha registra a ORIGEM — se um dia voltar a acontecer sozinho,
+  // dá para provar de onde veio em vez de discutir memória de quem operou.
+  addLogSistema('Google Drive desconectado' + (antes ? ' (' + antes + ')' : '') + ' [origem: usuário]',
+    {aud:true, acao:'drive_desconectado', alvo:(antes||'—'), origem:'usuario'});
+  return true;
+}
+
+// Falha de autorização NÃO desconecta: marca que é preciso reconectar, mantendo
+// conta e e-mail visíveis. "Desconectado" e "precisa reconectar" são estados
+// diferentes e o card precisa dizer qual é qual.
+function _gdMarcarPrecisaReconectar(msg){
+  try{
+    DRIVE_STATUS.nuvem_reconectar = true;
+    saveDriveStatus();
+    addLogSistema('Google Drive precisa ser reconectado: ' + (msg || 'autorização indisponível'),
+      {aud:true, acao:'drive_precisa_reconectar', alvo:(DRIVE_STATUS.nuvem_email||'—')});
+  }catch(e){}
+}
+
+function desconectarGoogleDrive(){
+  showEntrarPIN(function(){
+    try{ showConexoes(); }catch(e){}   // v1.9.6.3: mesma regra do conectar
+    (async function(){
+      const antes = DRIVE_STATUS.nuvem_email || '';
+      try{ const p = _gdPlugin(); if(p) await p.logout({ provider: 'google' }); }
+      catch(e){ console.warn('[DRIVE] logout:', e && e.message); }
+      _gdDesvincularConta('usuario', antes);
+      showToast('Google Drive desconectado. Os backups já enviados continuam no Drive.', 5000);
+      _gdReabrirConexoes();
+    })();
+  });
+}
+
+// ── Parte 4 — backup na nuvem ──────────────────────────────────────────────
+// Sobe o MESMO conteúdo do backup local completo (dados + fotos). Mantém TODAS as
+// cópias — poda só manual, pelo gestor, igual à regra do local.
+// v1.9.6.3 — `nomeLocal` (opcional) é o nome do arquivo NO DISPOSITIVO que este
+// envio representa. Só serve para marcar "confirmado na nuvem" no registro local,
+// que é a peça central da política dos 7 dias: sem essa confirmação, a poda NÃO
+// apaga nada. Parâmetro aditivo — quem não passa nada continua funcionando igual.
+async function _gdEnviarBackup(nome, json, motivo, interativo, nomeLocal){
+  if(!_gdDisponivel()) return {ok:false, erro:'nuvem indisponível neste aparelho'};
+  if(!_gdConectado())  return {ok:false, erro:'Google Drive não conectado'};
+  if(_gdEnviando)      return {ok:false, erro:'já há um envio em andamento'};
+  _gdEnviando = true;
+  _gdTokenVia = '';
+  try{
+    // `interativo` NÃO é mais repassado: um envio de backup nunca abre a tela de
+    // consentimento sozinho (v1.9.5.1). Se o token não serve, o envio falha,
+    // registra o motivo e o card manda reconectar.
+    const r = await _gdComToken(async function(token){
+      const pasta = await _gdGarantirPasta(token);
+      return await _gdEnviarArquivo(token, pasta, nome, json);
+    }, false);
+    DRIVE_STATUS.nuvem_ultimo_backup = Date.now();
+    DRIVE_STATUS.nuvem_enviados = (DRIVE_STATUS.nuvem_enviados || 0) + 1;
+    saveDriveStatus();
+    _gdLimparFalha();
+    _gdFalhasSeguidas = 0;
+    // v1.9.6.3: o arquivo local correspondente passa a valer como CONFIRMADO na
+    // nuvem, com o carimbo de QUANDO foi confirmado — é desse instante que a
+    // janela de 7 dias começa a contar, não da criação do arquivo.
+    if(nomeLocal){ try{ _gsMarcarBackupNaNuvem(nomeLocal, (r && r.id) || ''); }catch(e2){} }
+    addLogSistema('Backup na nuvem: ' + (motivo || 'automático') + ' — ' + nome);
+    return {ok:true, nome:nome, id:(r && r.id) || ''};
+  }catch(e){
+    const m = (e && e.message) || String(e);
+    // v1.9.5.4 — ETAPA REAL. Uma falha na obtenção do token não tem status HTTP nem
+    // URL: apresentá-la como "envio do backup" mandava o diagnóstico para o lado
+    // errado. Agora a etapa diz o passo em que parou de verdade.
+    const falhaDeToken = !!(e && (e.gdReconectar || _gdSemAutorizacao(e))) || !(e && e.gdDet);
+    const etapaReal = (e && e.gdDet && e.gdDet.etapa) ||
+      (falhaDeToken && _gdTokenPasso ? 'obter autorização — ' + _gdTokenPasso : 'envio do backup');
+    const det = Object.assign({ ts: Date.now(), etapa: etapaReal, via: _gdTokenVia || '(desconhecido)' },
+      (e && e.gdDet) || { status: 0, reason: (e && e.gdTimeout) ? 'timeout' : '', message: m });
+    det.etapa = etapaReal;
+    det.via = _gdTokenVia || '(não chegou a obter token)';
+    // v1.9.5.4 — a sonda de escopos passa a rodar TAMBÉM no caminho de token, que é
+    // onde o diagnóstico mais falta: antes só disparava com `gdAuth` (erro HTTP), e
+    // um erro de autorização anterior à rede não tem `gdAuth` — daí o eterno
+    // "escopos do token: (não consultado)" nos relatos do aparelho.
+    if(e && (e.gdAuth || falhaDeToken)){
+      try{
+        const t = _gdTokenCache && _gdTokenCache.token;
+        det.escopos = t ? await _gdEscoposDoToken(t)
+                        : '(sem token em mãos — a autorização falhou antes de obter um)';
+      }catch(e3){}
+    }
+    // v1.9.5.3 — REDE ≠ GOOGLE. Um `TypeError: Failed to fetch` não tem status,
+    // reason nem URL: a requisição nem chegou a sair. Isso é transitório por
+    // natureza (o caso real: o upload de ~10MB começava no `visibilitychange`
+    // 'hidden' e o Android suspendia o WebView no meio). Tratar isso como falha
+    // do Google fazia o rodapé gritar "falhando" por um tropeço normal — e o
+    // operador aprende a ignorar alarme que mente.
+    det.transitorio = _gdErroDeRede(e);
+    _gdMarcarFalha(m, det, det.transitorio);
+    // v1.9.5.4: falha de autorização marca "precisa reconectar" — NUNCA desvincula.
+    // A conta e o e-mail continuam ali; o que falta é permissão.
+    if(e && e.gdReconectar) _gdMarcarPrecisaReconectar(m);
+    _gdFalhasSeguidas++;
+    _gdAgendarRetentativa();
+    addLogSistema('Backup na nuvem falhou (' + (motivo || 'automático') + '): ' + m +
+      (det.transitorio ? ' [rede — vai retentar]' : (det.reason ? ' [' + det.reason + ']' : '')) +
+      (det.via ? ' via ' + det.via : ''));
+    return {ok:false, erro:m, detalhe:det};
+  }finally{
+    _gdEnviando = false;
+  }
+}
+
+// Chamado DEPOIS de o backup local já estar gravado. Não retorna promessa ao
+// chamador de propósito: falha de rede não pode atrasar nem afetar o backup local.
+function _gdEspelharNoDrive(nome, json, motivo){
+  try{
+    if(!_gdDisponivel() || !_gdConectado()) return;
+    // v1.9.5.3 — NÃO subir quando não há para onde subir. Três guardas:
+    //  1. app escondido: o backup do `visibilitychange` 'hidden' era exatamente o
+    //     momento em que o Android suspendia o WebView no meio de um upload de
+    //     ~10MB — origem medida do `Failed to fetch`. O snapshot completo já está
+    //     no IndexedDB, então `_gdTentarPendente` reenvia quando o app voltar.
+    //  2. offline declarado pelo próprio navegador.
+    //  3. app ainda inicializando (a conectividade pode não ter subido).
+    if(typeof document !== 'undefined' && document.visibilityState === 'hidden'){
+      _gdAdiarEnvio('app minimizado');
+      return;
+    }
+    if(typeof navigator !== 'undefined' && navigator.onLine === false){
+      _gdAdiarEnvio('sem conexão');
+      return;
+    }
+    if(typeof gsPronto === 'function' && !gsPronto()){
+      _gdAdiarEnvio('app inicializando');
+      return;
+    }
+    // v1.9.5.2: o `nome` que chega é o do arquivo LOCAL (formato DD-MM-AA, que não
+    // ordena). A nuvem usa o seu próprio padrão — o arquivo local segue intocado.
+    _gdEnviarBackup(_gdNomeBackup(), json, motivo, false, nome)
+      .catch(function(e){ console.warn('[DRIVE] espelhamento falhou:', e && e.message); });
+  }catch(e){ console.warn('[DRIVE] espelhamento não agendado:', e && e.message); }
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// v1.9.6.2 — ESPELHAMENTO CONTÍNUO (cadência LEVE → nuvem)
+// ══════════════════════════════════════════════════════════════════════════
+// O furo que esta versão fecha: recarga, designação de vaga, PIN e cadastro de
+// funcionário usavam cadência LEVE, e a leve NÃO subia — essas ações ficavam fora
+// da nuvem até o tique horário promover um completo. Passeio e assinatura de
+// vistoria estavam pior: não disparavam nem a leve.
+//
+// A regra passa a ser:
+//   LEVE     → espelha os DADOS no arquivo ROLANTE (sobrescrito, sem fotos)
+//   COMPLETA → continua sendo o HISTÓRICO IMUTÁVEL com fotos, arquivo novo a cada vez
+// A leve NUNCA vira histórico e NUNCA substitui um completo.
+//
+// DEBOUNCE = 8 SEGUNDOS. Justificativa: a cadência leve local já agrupa em 15 s
+// (`_gsBackupAuto`), então o que sobra para agrupar aqui é a rajada que ATRAVESSA
+// aquele agrupamento — o tique periódico caindo junto com uma ação, ou dois fluxos
+// concluídos em sequência. 8 s engole essa sobreposição sem que o operador perceba
+// atraso: o teste de campo é "fazer a ação e conferir no Drive na hora", e um arquivo
+// que só aparece 30 s depois reprova nesse teste. Abaixo de ~5 s não se agruparia
+// nada que os 15 s locais já não tivessem agrupado — seria custo de rede sem ganho.
+const GD_ROLANTE_DEBOUNCE_MS = 8000;
+let _gdRolanteTimer = null;
+let _gdRolantePendente = null;   // último JSON a enviar (só o mais recente importa)
+let _gdRolanteEmVoo = false;     // SERIALIZAÇÃO: nunca dois envios sobre o mesmo arquivo
+let _gdRolanteMotivo = '';
+
+// Chamado pela cadência LEVE, depois de o arquivo local já estar gravado.
+// Fire-and-forget: nada aqui pode atrasar nem afetar o backup local.
+function _gdEspelharEstadoAtual(json, motivo){
+  try{
+    if(!_gdDisponivel() || !_gdConectado()) return;
+    _gdRolantePendente = json;
+    _gdRolanteMotivo = motivo || 'mudança';
+    if(_gdRolanteTimer) clearTimeout(_gdRolanteTimer);
+    _gdRolanteTimer = setTimeout(function(){
+      _gdRolanteTimer = null;
+      _gdFlushRolante();
+    }, GD_ROLANTE_DEBOUNCE_MS);
+  }catch(e){ console.warn('[DRIVE] espelhamento leve não agendado:', e && e.message); }
+}
+
+// Envia o que estiver pendente. Guardas iguais às do espelhamento completo: sem app
+// visível, sem rede ou com o app inicializando, ADIA — o payload continua pendente e
+// o tique/volta do segundo plano tenta de novo. Adiar não é falhar.
+// v1.9.6.3 — WATCHDOG DO ROLANTE.
+// `_gdRolanteEmVoo` era uma trava sem prazo: bastava UM envio não assentar para
+// que todo flush seguinte saísse pela porta dos fundos — inclusive o do tique de
+// 10 min. E como o rolante NUNCA alarma (regra da 6.2, que continua valendo), o
+// espelhamento contínuo podia parar sem que nada na tela mudasse. É o único
+// caminho conhecido que produz o sintoma relatado em campo: o arquivo no Drive
+// congelado num horário antigo, sem nenhuma queixa do app.
+//
+// O teto é generoso de propósito (o envio já tem tetos internos de 12s/120s):
+// aqui não se está cancelando um envio bom, só recusando acreditar numa trava
+// que já deveria ter sido liberada pelo `finally`.
+const GD_ROLANTE_EMVOO_TETO_MS = 5 * 60 * 1000;
+let _gdRolanteEmVooDesde = 0;
+
+async function _gdFlushRolante(){
+  try{
+    if(_gdRolanteEmVoo){
+      const parado = Date.now() - (_gdRolanteEmVooDesde || 0);
+      if(parado < GD_ROLANTE_EMVOO_TETO_MS) return;   // envio vivo de verdade
+      // Trava vencida: o `finally` nunca rodou. Libera e segue — o pior que pode
+      // acontecer é uma sobrescrita a mais do mesmo arquivo, que é idempotente.
+      console.warn('[DRIVE] trava do rolante vencida (' + Math.round(parado/1000) + 's) — liberando');
+      _gdRolanteEmVoo = false;
+    }
+    if(_gdRolantePendente == null) return;
+    if(!_gdDisponivel() || !_gdConectado()) return;
+    if(typeof document !== 'undefined' && document.visibilityState === 'hidden') return;
+    if(typeof navigator !== 'undefined' && navigator.onLine === false) return;
+    if(typeof gsPronto === 'function' && !gsPronto()) return;
+    if(_gdEnviando) return;                           // backup completo em curso: espera a vez
+    const json = _gdRolantePendente;
+    const motivo = _gdRolanteMotivo;
+    _gdRolantePendente = null;
+    _gdRolanteEmVoo = true;
+    _gdRolanteEmVooDesde = Date.now();
+    try{
+      await _gdComToken(async function(token){
+        const pasta = await _gdGarantirPasta(token);
+        return await _gdEnviarRolante(token, pasta, json);
+      }, false);
+      DRIVE_STATUS.nuvem_rolante_ts = Date.now();
+      saveDriveStatus();
+    }catch(e){
+      // ⚠️ O ROLANTE NUNCA ALARMA E NUNCA POLUI O CARD. Ele é conveniência: o backup
+      // local está gravado e o histórico completo tem indicador próprio. Marcar falha
+      // aqui faria o rodapé gritar "falhando" por um tropeço de wi-fi numa escrita que
+      // será refeita na próxima mudança — e alarme que mente é alarme que se aprende
+      // a ignorar (regra da v1.9.5.3/5.4). Retenta sozinho: o payload volta a pendente.
+      _gdRolantePendente = json;
+      _gdRolanteMotivo = motivo;
+      const m = (e && e.message) || String(e);
+      console.warn('[DRIVE] estado atual não subiu (vai retentar):', m);
+    }finally{
+      _gdRolanteEmVoo = false;
+    }
+    // Chegou mudança nova enquanto este envio estava no ar? Manda a mais recente.
+    if(_gdRolantePendente != null && !_gdRolanteTimer){
+      _gdRolanteTimer = setTimeout(function(){ _gdRolanteTimer = null; _gdFlushRolante(); }, GD_ROLANTE_DEBOUNCE_MS);
+    }
+  }catch(e){
+    _gdRolanteEmVoo = false;
+    console.warn('[DRIVE] flush do estado atual falhou:', e && e.message);
+  }
+}
+
+// ── v1.9.5.3 — MIGRAÇÃO DA ESTRUTURA DE PASTAS ─────────────────────────────
+// Alvo:
+//   GarageSpot/
+//     GarageSpot Backups/
+//     GarageSpot Hospedagens/AAAA/Mmm-AAAA/Apt<n>/
+//
+// REGRA DE OURO: **mover e renomear, NUNCA recriar**. Mover é uma alteração de
+// metadados (`addParents`/`removeParents`) que preserva o ID e o conteúdo do
+// arquivo; recriar+reenviar duplicaria megabytes e arriscaria perder cópia. Com o
+// escopo `drive.file` o app tem acesso pleno ao que ele mesmo criou — e todas
+// estas pastas foram criadas por ele.
+//
+// Se QUALQUER passo falhar, a migração aborta e a estrutura antiga continua
+// funcionando: o app acha as pastas por nome/ID de qualquer jeito.
+const GD_MIGRACAO_LS = 'garagespot_drive_migracao_v1953';
+
+// Move uma pasta/arquivo para dentro de outro pai, sem tocar no conteúdo.
+async function _gdMover(token, id, novoPaiId, paiAtualId){
+  const url = GD_API + '/files/' + encodeURIComponent(id) +
+    '?addParents=' + encodeURIComponent(novoPaiId) +
+    (paiAtualId ? '&removeParents=' + encodeURIComponent(paiAtualId) : '') +
+    '&fields=id,parents';
+  const r = await _gdFetch(url, { method: 'PATCH' }, token, 'mover pasta');
+  return await r.json();
+}
+async function _gdRenomear(token, id, nome){
+  const r = await _gdFetch(GD_API + '/files/' + encodeURIComponent(id) + '?fields=id,name', {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name: nome }),
+  }, token, 'renomear pasta');
+  return await r.json();
+}
+// Pasta de primeiro nível pelo nome, SEM criar. Devolve {id, parents} ou null.
+async function _gdAcharPastaSolta(token, nome){
+  const q = "mimeType='" + GD_MIME_PASTA + "' and name='" + _gdEscQ(nome) + "' and trashed=false";
+  const r = await _gdFetch(GD_API + '/files?q=' + encodeURIComponent(q) +
+    '&spaces=drive&fields=files(id,name,parents)&pageSize=10', {method:'GET'}, token, 'procurar ' + nome);
+  const j = await r.json();
+  const f = (j && j.files) || [];
+  return f.length ? f[0] : null;
+}
+async function _gdFilhos(token, paiId){
+  const q = "'" + _gdEscQ(paiId) + "' in parents and trashed=false";
+  const r = await _gdFetch(GD_API + '/files?q=' + encodeURIComponent(q) +
+    '&spaces=drive&fields=files(id,name,mimeType)&pageSize=200', {method:'GET'}, token, 'listar pasta');
+  const j = await r.json();
+  return (j && j.files) || [];
+}
+
+// `MM-AAAA` → `Mmm-AAAA`. Devolve '' se não for o formato antigo.
+function _gdMesAntigoParaNovo(nome){
+  const m = /^(\d{2})-(\d{4})$/.exec(String(nome || ''));
+  if(!m) return '';
+  return _gdMesAbrev(m[1], m[2]);
+}
+
+async function _gdMigrarEstrutura(){
+  try{
+    if(!_gdDisponivel() || !_gdConectado()) return;
+    if(localStorage.getItem(GD_MIGRACAO_LS) === 'ok') return;      // já rodou
+    if(typeof document !== 'undefined' && document.visibilityState === 'hidden') return;
+    if(typeof navigator !== 'undefined' && navigator.onLine === false) return;
+
+    await _gdComToken(async function(token){
+      const raiz = await _gdGarantirPastaRaiz(token, GD_PASTA_RAIZ);
+
+      // 1) mover as duas pastas para dentro de `GarageSpot` (se ainda estiverem fora)
+      for(const nome of [GD_PASTA_NOME, GD_PASTA_HOSP]){
+        const p = await _gdAcharPastaSolta(token, nome);
+        if(!p || p.id === raiz) continue;
+        const pais = p.parents || [];
+        if(pais.indexOf(raiz) >= 0) continue;                      // já está no lugar
+        await _gdMover(token, p.id, raiz, pais[0] || '');
+        addLogSistema('Nuvem: pasta "' + nome + '" movida para dentro de ' + GD_PASTA_RAIZ);
+      }
+
+      // 2) renomear os meses `MM-AAAA` → `Mmm-AAAA`, dentro de cada ano
+      const hosp = await _gdAcharPastaSolta(token, GD_PASTA_HOSP);
+      if(hosp){
+        const anos = (await _gdFilhos(token, hosp.id)).filter(function(f){ return f.mimeType === GD_MIME_PASTA; });
+        for(const ano of anos){
+          const meses = (await _gdFilhos(token, ano.id)).filter(function(f){ return f.mimeType === GD_MIME_PASTA; });
+          for(const mes of meses){
+            const novo = _gdMesAntigoParaNovo(mes.name);
+            if(!novo) continue;                                    // já está no formato novo
+            const jaExiste = meses.filter(function(x){ return x.name === novo && x.id !== mes.id; })[0];
+            if(jaExiste){
+              // destino já existe: MOVE o conteúdo do antigo para lá. Não sobrescreve
+              // e não apaga a pasta antiga — esvaziada, ela fica visível para conferência
+              // (poda é v1.9.5.4, e apagar aqui seria justamente o que o prompt proíbe).
+              const filhos = await _gdFilhos(token, mes.id);
+              for(const f of filhos) await _gdMover(token, f.id, jaExiste.id, mes.id);
+              addLogSistema('Nuvem: conteúdo de "' + mes.name + '" movido para "' + novo + '" (' + filhos.length + ' item(ns))');
+            } else {
+              await _gdRenomear(token, mes.id, novo);
+              addLogSistema('Nuvem: pasta "' + mes.name + '" renomeada para "' + novo + '"');
+            }
+          }
+        }
+      }
+      return true;
+    }, false);
+
+    localStorage.setItem(GD_MIGRACAO_LS, 'ok');
+    addLogSistema('Nuvem: migração da estrutura de pastas concluída');
+  }catch(e){
+    // ABORTO SEGURO: não marca como concluída, não apaga nada. O app segue achando
+    // as pastas por nome, na estrutura em que elas estiverem.
+    console.warn('[DRIVE] migração abortada (estrutura antiga preservada):', e && e.message);
+    try{ addLogSistema('Nuvem: migração de pastas adiada — ' + ((e && e.message) || 'erro')); }catch(_){}
+  }
+}
+
+// ── v1.9.5.2 — PDFs DE FECHAMENTO NA NUVEM ─────────────────────────────────
+// Dois destinos com propósitos DIFERENTES, deliberadamente separados:
+//   `GarageSpot Backups`      → recuperação (trocar de aparelho)
+//   `GarageSpot Hospedagens`  → CONSULTA (achar o fechamento de uma hospedagem)
+// Misturar os dois faria a retenção da v1.9.5.3 ter de distinguir por nome de
+// arquivo, que é frágil.
+//
+// REGRA DE OURO DESTE BLOCO: o PDF já está salvo no dispositivo antes de qualquer
+// coisa aqui acontecer. Nada nesta função pode travar, reverter ou sequer atrasar
+// um check-out — a nuvem é adicional.
+const GD_PASTA_HOSP = 'GarageSpot Hospedagens';
+
+async function _gdEnviarPDFFechamento(nomeArquivo, b64, apt, checkinTs){
+  const pastas = _gdPastasHospedagem(apt, checkinTs);
+  return await _gdComToken(async function(token){
+    const destino = await _gdGarantirCaminho(token, [GD_PASTA_HOSP].concat(pastas));
+    return await _gdEnviarArquivoBin(token, destino, nomeArquivo, b64, 'application/pdf');
+  }, false);
+}
+
+// Upload multipart de conteúdo BINÁRIO (base64). O `_gdEnviarArquivo` existente
+// manda texto JSON; um PDF precisa de `Content-Transfer-Encoding: base64`.
+async function _gdEnviarArquivoBin(token, pastaId, nome, b64, mime){
+  const lim = 'gsbnd' + Date.now() + Math.random().toString(36).slice(2, 8);
+  const meta = JSON.stringify({ name: nome, parents: [pastaId], mimeType: mime });
+  const corpo =
+    '--' + lim + '\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n' + meta + '\r\n' +
+    '--' + lim + '\r\nContent-Type: ' + mime + '\r\nContent-Transfer-Encoding: base64\r\n\r\n' + b64 + '\r\n' +
+    '--' + lim + '--';
+  const r = await _gdFetch(GD_API_UPLOAD + '/files?uploadType=multipart&fields=id,name,size', {
+    method: 'POST',
+    headers: { 'Content-Type': 'multipart/related; boundary=' + lim },
+    body: corpo,
+  }, token, 'enviar o PDF de fechamento');
+  return await r.json();
+}
+
+// Fila de pendentes: guarda só METADADOS (nome, apto, data de check-in). O PDF
+// pesa megabytes e já está no dispositivo — reler de lá na retentativa é melhor do
+// que inchar o localStorage e disputar espaço com os dados da operação.
+function _gdPdfsPendentes(){
+  try{ return (DRIVE_STATUS.nuvem_pdfs_pendentes || []).slice(); }catch(e){ return []; }
+}
+function _gdMarcarPDFPendente(nomeArquivo, apt, checkinTs, motivo){
+  try{
+    const fila = _gdPdfsPendentes();
+    if(fila.some(function(x){ return x.nome === nomeArquivo; })) return;
+    fila.push({ nome: nomeArquivo, apt: apt, checkin: checkinTs || null, ts: Date.now() });
+    DRIVE_STATUS.nuvem_pdfs_pendentes = fila;
+    saveDriveStatus();
+    addLogSistema('PDF de fechamento pendente de envio (' + (motivo || 'nuvem indisponível') + '): ' + nomeArquivo);
+  }catch(e){}
+}
+function _gdTirarPDFPendente(nomeArquivo){
+  try{
+    DRIVE_STATUS.nuvem_pdfs_pendentes = _gdPdfsPendentes().filter(function(x){ return x.nome !== nomeArquivo; });
+    saveDriveStatus();
+  }catch(e){}
+}
+
+// Chamado no check-out, DEPOIS de o PDF estar salvo no dispositivo. Fire-and-forget:
+// não devolve promessa ao fluxo do check-out.
+function _gdEspelharPDFFechamento(nomeArquivo, b64, apt, checkinTs){
+  try{
+    if(!_gdDisponivel() || !_gdConectado()){ _gdMarcarPDFPendente(nomeArquivo, apt, checkinTs, 'Drive não conectado'); return; }
+    _gdEnviarPDFFechamento(nomeArquivo, b64, apt, checkinTs).then(function(){
+      _gdTirarPDFPendente(nomeArquivo);
+      addLogSistema('PDF de fechamento enviado à nuvem: ' + nomeArquivo);
+    }, function(e){
+      _gdMarcarPDFPendente(nomeArquivo, apt, checkinTs, (e && e.message) || 'falha no envio');
+      _gdMarcarFalha((e && e.message) || 'falha ao enviar o PDF', (e && e.gdDet) || null);
+    });
+  }catch(e){ _gdMarcarPDFPendente(nomeArquivo, apt, checkinTs, 'erro ao agendar'); }
+}
+
+// Retentativa dos PDFs pendentes: relê o arquivo do dispositivo e sobe. Uma por
+// tique, para não disputar banda com o backup nem martelar a API.
+async function _gdTentarPDFsPendentes(){
+  try{
+    if(!_gdDisponivel() || !_gdConectado()) return;
+    if(Date.now() < _gdProxTentativaTs) return;
+    const fila = _gdPdfsPendentes();
+    if(!fila.length) return;
+    const F = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Filesystem;
+    if(!F) return;                                  // sem Filesystem não há como reler
+    const item = fila[0];
+    let b64 = '';
+    try{
+      const r = await F.readFile({ path: 'GarageSpot/' + item.nome, directory: 'DOCUMENTS' });
+      b64 = (r && r.data) || '';
+    }catch(e){ return; }                            // arquivo sumiu do aparelho: NÃO apagamos o registro
+    if(!b64) return;
+    try{
+      await _gdEnviarPDFFechamento(item.nome, b64, item.apt, item.checkin);
+      _gdTirarPDFPendente(item.nome);
+      addLogSistema('PDF de fechamento pendente enviado: ' + item.nome);
+    }catch(e){ _gdAgendarRetentativa(); }
+  }catch(e){ console.warn('[DRIVE] pendentes de PDF não rodaram:', e && e.message); }
+}
+
+// ── v1.9.5.1 — REAGENDAMENTO APÓS FALHA ────────────────────────────────────
+// Sem isto, uma falha deixava a nuvem parada até alguém lembrar de apertar o botão
+// — que foi o que aconteceu no teste do aparelho (local em dia, nuvem em "Nunca").
+//
+// A retentativa NÃO gera backup local novo: ela reenvia o último snapshot COMPLETO
+// que já está no IndexedDB. Assim a cadência do backup local fica exatamente como
+// era — a regra de não mexer no local vale também para o que o retry faz.
+//
+// Espaçamento exponencial (5min → 10 → 20 → 40 → teto de 60min) para não martelar
+// a API: um 403 de permissão não se resolve por insistência, e a cota é do hotel.
+let _gdFalhasSeguidas = 0;
+let _gdProxTentativaTs = 0;
+
+// v1.9.5.3 — envio ADIADO (não é falha!). Marca que há algo para subir assim que
+// as condições voltarem, sem acender nada no card: o operador não precisa saber
+// que o app decidiu esperar 30 segundos por rede.
+function _gdAdiarEnvio(motivo){
+  try{
+    DRIVE_STATUS.nuvem_pendente = true;
+    saveDriveStatus();
+    _gdProxTentativaTs = 0;           // pode tentar assim que voltar
+    console.log('[DRIVE] envio adiado (' + motivo + ') — será retentado');
+  }catch(e){}
+}
+const GD_RETRY_BASE_MS = 5 * 60 * 1000;
+const GD_RETRY_MAX_MS  = 60 * 60 * 1000;
+
+function _gdAgendarRetentativa(){
+  const espera = Math.min(GD_RETRY_BASE_MS * Math.pow(2, Math.max(0, _gdFalhasSeguidas - 1)), GD_RETRY_MAX_MS);
+  _gdProxTentativaTs = Date.now() + espera;
+}
+
+// Chamado pelo tique periódico. Fail-safe: qualquer erro aqui é engolido — a nuvem
+// nunca pode derrubar o app nem atrapalhar quem está operando o mapa.
+async function _gdTentarPendente(){
+  try{
+    if(!_gdDisponivel() || !_gdConectado()) return;
+    // v1.9.5.3: não insistir quando as condições ainda são ruins — seria só
+    // acumular `Failed to fetch`.
+    if(typeof document !== 'undefined' && document.visibilityState === 'hidden') return;
+    if(typeof navigator !== 'undefined' && navigator.onLine === false) return;
+    // pendente = falha (definitiva ou transitória) OU envio adiado por condição ruim
+    const temPendencia = DRIVE_STATUS.nuvem_falha || DRIVE_STATUS.nuvem_falha_transitoria || DRIVE_STATUS.nuvem_pendente;
+    if(!temPendencia) return;
+    if(_gdEnviando) return;                        // envio vivo, não empilha
+    if(Date.now() < _gdProxTentativaTs) return;    // ainda no intervalo de espera
+    const snap = await _gsLerSnapshotIDB();
+    if(!snap) return;                              // sem snapshot completo, nada a reenviar
+    const r = await _gdEnviarBackup(_gdNomeBackup(snap.ts), JSON.stringify(snap), 'Retentativa automática', false);
+    if(r.ok){ DRIVE_STATUS.nuvem_pendente = false; saveDriveStatus(); }
+    else _gdAgendarRetentativa();
+  }catch(e){ console.warn('[DRIVE] retentativa não rodou:', e && e.message); }
+}
+
+async function fazerBackupNuvemAgora(){
+  if(!_gdDisponivel()){
+    showToast('☁️ A nuvem só funciona no aplicativo instalado (APK).', 5000);
+    return;
+  }
+  if(!_gdConectado()){ showToast('Conecte o Google Drive primeiro.', 4000); return; }
+  showToast('Enviando backup para o Google Drive…', 3000);
+  const snap = _gsMontarSnapshot(true);
+  const val = _gsValidarSnapshot(snap);
+  if(!val.ok){ showToast('⚠️ Envio abortado: ' + val.motivo, 5000); return; }
+  const nome = _gdNomeBackup();
+  // v1.9.5.1: ação explícita do usuário zera a espera do backoff — quem apertou o
+  // botão quer tentar AGORA, não daqui a 40 minutos.
+  _gdProxTentativaTs = 0;
+  const r = await _gdEnviarBackup(nome, JSON.stringify(snap), 'Manual', false);
+  if(r.ok){ showToast('✅ Backup enviado para o Drive: ' + r.nome, 5000); }
+  else {
+    // Quando o Google recusou a autorização, o caminho de saída é RECONECTAR — o
+    // envio não abre mais a tela de consentimento por conta própria.
+    const precisaReconectar = !!(r.detalhe && (r.detalhe.status === 401 || r.detalhe.status === 403));
+    showToast('⚠️ Não foi enviado: ' + r.erro +
+      (precisaReconectar ? ' · Toque em Desconectar e conecte de novo.' : '') +
+      ' · O backup local está intacto.', 7000);
+  }
+  _gdReabrirConexoes();
+}
+
+// ── Parte 5 — restaurar da nuvem ───────────────────────────────────────────
+// Mesma regra do Importar local: MESCLA, nunca substitui. O do aparelho vence.
+function abrirRestaurarNuvem(){
+  if(!_gdDisponivel()){ showToast('☁️ A nuvem só funciona no aplicativo instalado (APK).', 5000); return; }
+  if(!_gdConectado()){ showToast('Conecte o Google Drive primeiro.', 4000); return; }
+  showM(`<div class="mt">☁️ Restaurar da nuvem</div>
+    <div class="ms" id="gd-rest-ms">Buscando backups no Google Drive…</div>
+    <div id="gd-rest-lista" style="max-height:48vh;overflow-y:auto;margin:8px 0"></div>
+    <button class="bcx" onclick="closeOv()" style="width:100%;margin-top:8px">Fechar</button>`);
+  (async function(){
+    let arquivos = [];
+    try{
+      arquivos = await _gdComToken(async function(token){
+        const pasta = await _gdGarantirPasta(token);
+        return await _gdListarArquivos(token, pasta);
+      }, true);
+    }catch(e){
+      const m = (e && e.message) || String(e);
+      _gdMarcarFalha(m);
+      const ms = document.getElementById('gd-rest-ms');
+      if(ms) ms.textContent = 'Não foi possível listar: ' + m;
+      return;
+    }
+    const ms = document.getElementById('gd-rest-ms');
+    const box = document.getElementById('gd-rest-lista');
+    if(!box) return;
+    if(!arquivos.length){
+      if(ms) ms.textContent = 'Nenhum backup na nuvem ainda.';
+      box.innerHTML = `<div style="color:#bbb;font-size:12px">Use "Fazer backup na nuvem agora" para enviar o primeiro.</div>`;
+      return;
+    }
+    // v1.9.6.2: o ESTADO ATUAL não é um backup completo, e a tela não pode deixar
+    // isso ambíguo — quem restaura precisa saber que ali há dados recentes SEM as
+    // fotos, contra um completo (com fotos) de um momento anterior.
+    const rolante = arquivos.filter(function(f){ return String(f.name||'') === GD_ROLANTE_NOME; });
+    const completos = arquivos.filter(function(f){ return String(f.name||'') !== GD_ROLANTE_NOME; });
+    if(ms) ms.textContent = completos.length + ' backup(s) completo(s) na nuvem · o mais recente primeiro';
+    const linha = function(f, estadoAtual){
+      const kb = f.size ? (Math.round(Number(f.size)/1024) + ' KB') : '—';
+      const dt = f.createdTime ? (typeof fmtDt==='function' ? fmtDt(new Date(f.createdTime).getTime()) : f.createdTime) : '—';
+      const rot = estadoAtual ? '📌 Estado atual (dados recentes, sem fotos)' : String(f.name||'');
+      const sub = estadoAtual
+        ? 'Atualizado a cada mudança · ' + kb + ' · <strong>não inclui fotos nem vistorias em imagem</strong>'
+        : _vtEsc(String(dt)) + ' · ' + kb;
+      return `<div class="gd-rest-item" style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid #f0efea">
+        <div style="flex:1;min-width:0">
+          <div style="font-size:12px;font-weight:600;color:#333;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${estadoAtual?rot:_vtEsc(rot)}</div>
+          <div style="font-size:11px;color:#888">${sub}</div>
+        </div>
+        <button class="bsv" style="padding:5px 10px;font-size:11px" onclick="_gdRestaurarArquivo('${_vtEsc(String(f.id||''))}','${_vtEsc(String(f.name||''))}')">Restaurar</button>
+      </div>`;
+    };
+    box.innerHTML =
+      (rolante.length
+        ? '<div style="font-size:11px;font-weight:700;color:#185FA5;margin:2px 0 4px">ESTADO ATUAL</div>' +
+          rolante.map(function(f){ return linha(f, true); }).join('')
+        : '') +
+      (completos.length
+        ? '<div style="font-size:11px;font-weight:700;color:#6C7885;margin:10px 0 4px">BACKUPS COMPLETOS <span style="font-weight:400">(com fotos, de um momento anterior)</span></div>' +
+          completos.map(function(f){ return linha(f, false); }).join('')
+        : '<div style="color:#bbb;font-size:12px;margin-top:8px">Nenhum backup completo na nuvem ainda.</div>');
+  })();
+}
+
+function _gdRestaurarArquivo(id, nome){
+  if(!id) return;
+  showEntrarPIN(function(){
+    (async function(){
+      showToast('Baixando backup da nuvem…', 3000);
+      let obj = null;
+      try{
+        const txt = await _gdComToken(function(token){ return _gdBaixarArquivo(token, id); }, true);
+        obj = JSON.parse(String(txt || ''));
+      }catch(e){
+        const m = (e && e.message) || String(e);
+        _gdMarcarFalha(m);
+        showToast('⚠️ Não foi possível baixar: ' + m, 6000);
+        return;
+      }
+      showToast('Restaurando (mesclando)…', 3000);
+      const res = await _gsAplicarBackup(obj, 'nuvem:' + (nome || id));
+      try{ if(typeof upd==='function') upd(); }catch(e){}
+      try{ if(typeof renderPainelDia==='function') renderPainelDia(); }catch(e){}
+      addLogSistema('Restauração da nuvem: ' + (nome || id),
+        {aud:true, acao:'drive_restaurado', alvo:String(nome||id)});
+      showM(`<div class="mt">✅ Restauração concluída</div>
+        <div class="ms" style="margin-bottom:8px">${_vtEsc(String(nome||id))}</div>
+        <div style="background:#f8f7f3;border-radius:8px;padding:10px 12px;font-size:12px;line-height:1.7">
+          <div>+ ${res.hospedagens} hospedagens</div>
+          <div>+ ${res.usuarios} funcionários</div>
+          <div>+ ${res.vistorias} vistorias</div>
+          <div>+ ${res.anexosItens} anexos (em ${res.anexosChaves} chaves)</div>
+          <div>+ ${res.historico} eventos de histórico</div>
+          <div style="color:#888;margin-top:6px">${res.ignorados} registro(s) já existiam e foram preservados.</div>
+        </div>
+        <button class="bcx" onclick="closeOv()" style="width:100%;margin-top:12px">Fechar</button>`);
+    })();
+  });
+}
+
+// Re-renderiza "Backup e Conexões" se ele estiver aberto (status muda ali).
+// v1.9.5.4 — o modal do PIN ficava aberto, com as 4 bolinhas preenchidas, depois de
+// conectar ou desconectar. Causa: `_gsPinTeclado` apenas trava (`travado=true`) sem
+// fechar nem limpar, e esta função DESISTIA porque o `.mt` visível era "🔑 PIN de
+// Gestão" — não continha "Conexões". Agora ela reabre Conexões também quando o que
+// está na tela é o teclado de PIN, que é exatamente o caso a corrigir.
+function _gdReabrirConexoes(){
+  try{
+    const ov = document.getElementById('ov');
+    if(!ov || !ov.classList.contains('on')) return;
+    const t = document.getElementById('mc').querySelector('.mt');
+    const txt = (t && t.textContent) || '';
+    if(txt.indexOf('Conexões') >= 0 || txt.indexOf('PIN de Gestão') >= 0) showConexoes();
+  }catch(e){}
+}
+
+// ── Parte 6 — ambiente (Dev × Hotel Gumz) ──────────────────────────────────
+// Mesma fonte de verdade do `_isDevEnv` do kill switch, para os dois nunca
+// discordarem. `href` opcional só para teste.
+function _gsAmbiente(href){
+  try{
+    const u = String(href != null ? href : (location.href || '')).toLowerCase();
+    if(u.indexOf('garagespot-hotelgumz') >= 0) return {chave:'hotel', rotulo:'Hotel Gumz'};
+    if(u.indexOf('garagespot-dev') >= 0)       return {chave:'dev',   rotulo:'Dev'};
+    if(href == null){
+      const h = (location.hostname || '').toLowerCase();
+      if(h === 'localhost' || h === '127.0.0.1' || h === '') return {chave:'local', rotulo:'Dev'};
+    } else {
+      if(u.indexOf('localhost') >= 0 || u.indexOf('127.0.0.1') >= 0) return {chave:'local', rotulo:'Dev'};
+    }
+  }catch(e){}
+  return {chave:'hotel', rotulo:'Hotel Gumz'};
+}
+
+// ════════════════════════════════════════════════════════════════════════════
 // v1.9.4.11 — GUARDA DE INTEGRIDADE NO LOAD (conservadora)
 // ════════════════════════════════════════════════════════════════════════════
 // Compara as contagens atuais com as do último backup COMPLETO não-vazio.
@@ -9915,6 +11904,12 @@ function _rcComprovantePNG(e){
 }
 
 function agendarAlertaRecarga(vagaId){
+  // v1.9.6.1: DOIS agendamentos, com papéis diferentes:
+  //  • o NATIVO (abaixo) é quem realmente avisa — o Android acorda sozinho no
+  //    horário, mesmo com o app fechado. É a correção desta versão.
+  //  • o timer JS continua, mas só para o alarme de PRIMEIRO PLANO (modal + bipe)
+  //    de quem está com o app aberto. Ele nunca mais é a única linha de defesa.
+  try{ _rcAgendarNotificacaoFim(vagaId); }catch(e){ console.warn('[RECARGA] agendar nativo:', e && e.message); }
   if(_recTimers[vagaId]) clearTimeout(_recTimers[vagaId]);
   const r=RECARGAS[vagaId]; if(!r||!r.ativo) return;
   const delay=r.fim_ts-Date.now();
@@ -9939,11 +11934,376 @@ function _onRecargaBateu(vagaId){
   if(typeof ref==='function') ref(vagaId);
 }
 
-// Parte 6 v1.9.4.5: vibração com fallback gracioso (toque/som = futuro, requer APK).
+// Parte 6 v1.9.4.5: vibração com fallback gracioso.
+// v1.9.6.0: `navigator.vibrate` **não é implementado no WebView do Android** — é
+// no-op silencioso, e essa é a razão de a vibração nunca ter funcionado no aparelho.
+// A vibração de verdade agora vem junto com a notificação nativa (canal com
+// vibração), abaixo. Esta função continua para o navegador e como reforço.
 function _rcVibrar(padrao){
   try{
     if(navigator && typeof navigator.vibrate === 'function'){ navigator.vibrate(padrao||200); }
   }catch(e){ /* dispositivo sem suporte — ignora */ }
+}
+
+// ── v1.9.6.0 — ALERTA NATIVO DE RECARGA (som + vibração + notificação) ─────
+// A camada web (modal + Web Audio) só toca com o app ABERTO e em primeiro plano.
+// Faltava a notificação da bandeja, que é o que alcança quem está com o aparelho no
+// bolso ou em outro app.
+//
+// Sem `SCHEDULE_EXACT_ALARM` de propósito (decisão do Douglas): o alerta é aviso, não
+// despertador, e tolera atraso de minutos quando o Android está economizando bateria.
+// Estado da notificação exibido em Configurações de Recarga. A regra é não deixar a
+// interface mentir: se a permissão foi negada, o toggle "Alerta" continua ligado mas
+// o usuário precisa saber que a notificação NÃO vai aparecer.
+async function _rcRenderEstadoNotif(){
+  const el = document.getElementById('rc-cfg-notif-estado');
+  if(!el) return;
+  if(!_rcNotifDisponivel()){
+    el.style.color = '#888';
+    el.textContent = 'Notificação na bandeja: só no aplicativo instalado (APK). O alerta na tela funciona normalmente.';
+    return;
+  }
+  let permitido = _rcNotifPermitido;
+  if(permitido === null){
+    try{
+      const st = await _rcNotifPlugin().checkPermissions();
+      permitido = !!(st && st.display === 'granted');
+    }catch(e){ permitido = false; }
+  }
+  if(permitido){
+    // v1.9.6.1: a notificação está ativa — falta dizer se ela chega NA HORA. Sem
+    // alarme exato o Android agrupa em janelas de manutenção (até ~15 min em Doze),
+    // e com cobrança por tempo isso importa.
+    let exato = null;
+    try{
+      const p = _rcNotifPlugin();
+      if(p && typeof p.checkExactNotificationSetting === 'function'){
+        const e2 = await p.checkExactNotificationSetting();
+        exato = !!(e2 && e2.exact_alarm === 'granted');
+      }
+    }catch(e){ exato = null; }
+    if(exato === false){
+      el.style.color = '#B26A00';
+      el.innerHTML = '⚠️ <strong>Alerta ativo, mas sem horário exato.</strong> ' +
+        'O aviso pode atrasar alguns minutos quando o aparelho está em repouso. ' +
+        'Para ativar: Ajustes do Android → Aplicativos → GarageSpot → Alarmes e lembretes.';
+    } else {
+      el.style.color = '#0F6E56';
+      // v1.9.6.2 — A INTERFACE DESCREVE O QUE O APP FAZ, e nada além disso.
+      // NÃO prometer som de alarme (volume/toque de alarme) nem tela cheia com o
+      // aparelho bloqueado: o plugin aplica `USAGE_ALARM` só no canal default dele
+      // (`LocalNotificationManager:112-118`); o canal próprio do GarageSpot passa por
+      // `NotificationChannelManager:96-101`, que usa `USAGE_NOTIFICATION`. Full-screen
+      // intent não existe em arquivo nenhum do plugin. Ambos exigiriam plugin nativo
+      // próprio — rodada futura, se o uso real mostrar que faz falta.
+      el.innerHTML = '✓ <strong>Som, vibração e notificação ativos, inclusive com o app fechado.</strong> ' +
+        'A notificação não some com um deslize e se repete de 5 em 5 minutos por até 1 hora, ' +
+        'até a recarga ser encerrada ou prolongada. Toque nela para abrir a tela de Recarga. ' +
+        '<span style="color:#6C7885">O som usa o volume de notificação do aparelho.</span>';
+    }
+  } else {
+    el.style.color = '#A32D2D';
+    el.innerHTML = '⚠️ <strong>Notificações bloqueadas nas permissões do Android.</strong> ' +
+      'O alerta só aparecerá com o app aberto. Para ativar: Ajustes do Android → Aplicativos → GarageSpot → Notificações.';
+  }
+}
+
+const RC_CANAL_ID = 'garagespot-recarga';
+let _rcNotifPermitido = null;   // null = ainda não perguntado
+let _rcNotifId = 1;
+
+function _rcNotifPlugin(){
+  try{ return (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.LocalNotifications) || null; }
+  catch(e){ return null; }
+}
+function _rcNotifDisponivel(){ return !!_rcNotifPlugin(); }
+
+// Cria o canal com som e vibração. No Android o CANAL é quem define isso — mudar
+// depois não afeta um canal já criado, então o id é versionado se um dia mudar.
+async function _rcGarantirCanal(){
+  const p = _rcNotifPlugin(); if(!p || typeof p.createChannel !== 'function') return;
+  try{
+    await p.createChannel({
+      id: RC_CANAL_ID,
+      name: 'Recarga de veículos',
+      description: 'Avisa quando uma recarga é concluída',
+      importance: 5,          // MAX — aparece como heads-up
+      visibility: 1,
+      sound: 'default',
+      vibration: true,
+      lights: true,
+    });
+  }catch(e){ console.warn('[RECARGA] canal de notificação:', e && e.message); }
+}
+
+// Pede a permissão (Android 13+). NUNCA trava o app: negar apenas desliga a
+// notificação — o alarme na tela continua funcionando.
+async function _rcPedirPermissaoNotif(){
+  const p = _rcNotifPlugin();
+  if(!p){ _rcNotifPermitido = false; return false; }
+  try{
+    let st = await p.checkPermissions();
+    if(st && st.display !== 'granted'){ st = await p.requestPermissions(); }
+    _rcNotifPermitido = !!(st && st.display === 'granted');
+    if(_rcNotifPermitido) await _rcGarantirCanal();
+    else addLogSistema('Notificações negadas — o alerta de recarga só aparecerá com o app aberto');
+    return _rcNotifPermitido;
+  }catch(e){
+    console.warn('[RECARGA] permissão de notificação:', e && e.message);
+    _rcNotifPermitido = false;
+    return false;
+  }
+}
+
+// ── v1.9.6.1 — AGENDAMENTO NATIVO (funciona com o app FECHADO) ─────────────
+// ⚠️ REGRA QUE NÃO PODE SER DESFEITA: o alerta é AGENDADO no início da recarga,
+// com o horário de término como gatilho. **Nunca** dependa do timer JS para
+// disparar — com o app fechado o JavaScript deixa de existir, o `setTimeout`
+// nunca vence e a notificação (que está instalada e funcional) nunca chega a ser
+// chamada. Foi exatamente esse o bug da v1.9.6.0.
+//
+// O id da notificação é derivado da vaga, para conseguirmos REAGENDAR (prolongar)
+// e CANCELAR (encerrar) sem depender de guardar estado extra.
+function _rcNotifIdDaVaga(vagaId){
+  const s = String(vagaId || '');
+  let h = 0;
+  for(let i = 0; i < s.length; i++){ h = ((h * 31) + s.charCodeAt(i)) % 100000; }
+  return 500000 + h;   // faixa própria, longe dos ids das notificações imediatas
+}
+
+// ── v1.9.6.2 — REPETIÇÃO ATÉ HAVER AÇÃO ────────────────────────────────────
+// TETO DE 12 (5 em 5 min = 1 hora), decidido e não negociável sem nova ordem.
+// Repetir a noite inteira é o caminho mais curto para o operador DESLIGAR a
+// notificação nas configurações do Android — e aí o recurso morre para sempre.
+// Uma hora insistindo é muito mais do que o suficiente para alguém agir.
+const RC_REPET_MAX = 12;
+const RC_REPET_INTERVALO_MS = 5 * 60 * 1000;
+const RC_REPET_JANELA_MS = RC_REPET_MAX * RC_REPET_INTERVALO_MS;   // 1 hora
+
+// Ids das repetições. Precisam ser PRÓPRIOS: o plugin usa o id como chave do
+// PendingIntent do AlarmManager (`LocalNotificationManager:333`) e ainda chama
+// `dismissVisibleNotification(id)` + `cancelTimerForNotification(id)` a cada
+// `schedule` (`:147-148`) — ou seja, agendar 12 vezes com o MESMO id deixaria
+// apenas o último alarme de pé.
+//
+// A faixa base é 500000..599999 (100000 valores). Somar 100000×k mantém as faixas
+// de cada k disjuntas entre si, então duas vagas diferentes nunca colidem.
+function _rcNotifIdRepeticao(vagaId, k){ return _rcNotifIdDaVaga(vagaId) + 100000 * k; }
+
+function _rcNotifIdsDaVaga(vagaId){
+  const ids = [_rcNotifIdDaVaga(vagaId)];
+  for(let k = 1; k <= RC_REPET_MAX; k++) ids.push(_rcNotifIdRepeticao(vagaId, k));
+  return ids;
+}
+
+// Grupo do Android: mantém os avisos da mesma vaga COLAPSADOS num item só na
+// bandeja em vez de 13 linhas soltas.
+// ⚠️ LIMITE MEDIDO DO PLUGIN, não do app: não existe "id de exibição" separado do
+// id de agendamento — `TimedNotificationPublisher:49` faz `notify(id, …)` com o
+// mesmo id. Sem escrever plugin nativo (fora de escopo nesta rodada), agrupar é o
+// mais próximo de "um aviso só" que dá para chegar.
+function _rcNotifGrupo(vagaId){ return 'garagespot-recarga-' + String(vagaId || ''); }
+
+function _rcNotifCorpo(vagaId, r, k){
+  const base = 'Vaga ' + vagaId + (r && r.apt ? ' · Apt ' + r.apt : '') + ' — o veículo pode ser liberado.';
+  return k ? (base + ' (lembrete ' + k + ' de ' + RC_REPET_MAX + ')') : base;
+}
+
+// Monta UMA entrada de notificação. `ongoing:true` é o que impede o operador de
+// dispensar o aviso com um deslize — o aviso só sai quando a recarga é encerrada
+// ou prolongada, que é a ação real que ele representa.
+function _rcMontarNotificacao(vagaId, r, id, quando, k){
+  return {
+    id: id,
+    title: '⚡ Recarga concluída',
+    body: _rcNotifCorpo(vagaId, r, k),
+    channelId: RC_CANAL_ID,
+    smallIcon: 'ic_stat_icon_config_sample',
+    ongoing: true,        // não some com deslize (LocalNotificationManager:172)
+    autoCancel: false,    // some ao TOCAR, que é quando o app abre e cancela o bloco
+    group: _rcNotifGrupo(vagaId),
+    // `allowWhileIdle` é o que faz o plugin usar `setExactAndAllowWhileIdle`
+    // (LocalNotificationManager:392). Sem permissão de alarme exato ele DEGRADA
+    // sozinho para `setAndAllowWhileIdle` — ou seja, agenda de qualquer forma,
+    // só sem garantia de precisão.
+    schedule: { at: new Date(quando), allowWhileIdle: true },
+    extra: { vagaId: vagaId, apt: (r && r.apt) || '', repeticao: k || 0 },
+  };
+}
+
+// Agenda o término E as 12 repetições DE UMA VEZ. Agendar tudo junto é o que faz o
+// lembrete sobreviver ao app fechado: com o WebView morto não existe JavaScript
+// para agendar a próxima repetição — quem tem de saber de todas é o Android.
+async function _rcAgendarNotificacaoFim(vagaId){
+  try{
+    const p = _rcNotifPlugin(); if(!p) return false;
+    const r = RECARGAS[vagaId]; if(!r || !r.ativo || !r.fim_ts) return false;
+    const cfg = (typeof RECARGA_CONFIG !== 'undefined') ? RECARGA_CONFIG : {};
+    // toggle desligado → nem agenda (e cancela o que porventura já existia)
+    if(cfg.alertas === false){ await _rcCancelarNotificacao(vagaId); return false; }
+    if(_rcNotifPermitido === null) await _rcPedirPermissaoNotif();
+    if(!_rcNotifPermitido) return false;
+    await _rcGarantirCanal();
+    // reagendar = cancelar o bloco anterior e marcar de novo; o plugin não substitui sozinho
+    await _rcCancelarNotificacao(vagaId);
+    const notifs = _rcMontarBlocoAlarme(vagaId, r);
+    if(!notifs.length) return false;   // tudo no passado: quem avisa é o alarme na tela
+    await p.schedule({ notifications: notifs });
+    return true;
+  }catch(e){ console.warn('[RECARGA] agendamento falhou:', e && e.message); return false; }
+}
+
+// O bloco inteiro (término + repetições) que ainda está no FUTURO. O plugin recusa
+// `at` no passado (`LocalNotificationManager:338-341`), então horário vencido é
+// filtrado aqui — nada de alarme retroativo.
+function _rcMontarBlocoAlarme(vagaId, r){
+  const agora = Date.now();
+  const out = [];
+  if(r.fim_ts > agora) out.push(_rcMontarNotificacao(vagaId, r, _rcNotifIdDaVaga(vagaId), r.fim_ts, 0));
+  for(let k = 1; k <= RC_REPET_MAX; k++){
+    const quando = r.fim_ts + k * RC_REPET_INTERVALO_MS;
+    if(quando <= agora) continue;
+    out.push(_rcMontarNotificacao(vagaId, r, _rcNotifIdRepeticao(vagaId, k), quando, k));
+  }
+  return out;
+}
+
+// Cancela o BLOCO inteiro — término e as 12 repetições, numa chamada só. Chamado ao
+// encerrar, ao prolongar e ao tocar na notificação. Nenhum resquício depois da ação:
+// notificação `ongoing` que sobrevive à ação seria pior do que não avisar, porque o
+// operador não consegue nem tirá-la da tela com um deslize.
+async function _rcCancelarNotificacao(vagaId){
+  try{
+    const p = _rcNotifPlugin(); if(!p || typeof p.cancel !== 'function') return;
+    await p.cancel({ notifications: _rcNotifIdsDaVaga(vagaId).map(function(id){ return { id: id }; }) });
+  }catch(e){ /* nada agendado — ignora */ }
+}
+
+// ── v1.9.6.2 — REARME AO ABRIR O APP ───────────────────────────────────────
+// Rede de segurança contra a plataforma. A causa real do "não tocou com o app
+// fechado" era a MIUI: deslizar dos recentes equivale a force-stop, e o Android
+// CANCELA todos os alarmes de um app em force-stop até ele ser reaberto. Isso foi
+// resolvido no aparelho ativando "Início automático" — não é bug do app.
+//
+// Mesmo assim, até esta versão NADA percorria `RECARGAS` na inicialização: se a
+// plataforma matasse os agendamentos, eles simplesmente não voltavam. Agora voltam.
+//
+// CRITÉRIO DE "VENCIDO HÁ MUITO TEMPO" = a própria janela de repetição (1 hora).
+// Justificativa: o rearme não pode INVENTAR aviso — ele só recoloca de pé o que já
+// existiria se o app tivesse ficado aberto. Passada a janela de 1 hora, o último
+// lembrete daquela recarga já teria tocado de qualquer forma, então não há nada a
+// restaurar; disparar ali seria alarme retroativo de coisa antiga. Dentro da janela,
+// só as repetições ainda no futuro são reagendadas (as vencidas são filtradas por
+// `_rcMontarBlocoAlarme`).
+async function _rcRearmarAlarmes(){
+  const res = { verificadas: 0, rearmadas: 0, ignoradas: 0, jaPendentes: 0 };
+  try{
+    const p = _rcNotifPlugin(); if(!p || typeof p.schedule !== 'function') return res;
+    const cfg = (typeof RECARGA_CONFIG !== 'undefined') ? RECARGA_CONFIG : {};
+    if(cfg.alertas === false) return res;    // toggle desligado → não rearma nada
+    if(_rcNotifPermitido === null){
+      try{
+        const st = await p.checkPermissions();
+        _rcNotifPermitido = !!(st && st.display === 'granted');
+      }catch(e){ _rcNotifPermitido = false; }
+    }
+    if(!_rcNotifPermitido) return res;
+    // IDEMPOTÊNCIA: o que o Android ainda tem agendado não é remarcado. Sem isto o
+    // rearme dispensaria a notificação `ongoing` que já está na bandeja (o plugin
+    // chama `dismissVisibleNotification` a cada `schedule`) — apagaria o aviso que
+    // está justamente esperando ação.
+    let pendentes = null;
+    try{
+      if(typeof p.getPending === 'function'){
+        const pl = await p.getPending();
+        pendentes = {};
+        ((pl && pl.notifications) || []).forEach(function(n){ if(n && n.id != null) pendentes[String(n.id)] = true; });
+      }
+    }catch(e){ pendentes = null; }
+    const agora = Date.now();
+    let canalOk = false;
+    for(const vagaId of Object.keys(RECARGAS || {})){
+      const r = RECARGAS[vagaId];
+      if(!r || !r.ativo || !r.fim_ts) continue;      // encerrada → nada a fazer
+      res.verificadas++;
+      if(agora - r.fim_ts > RC_REPET_JANELA_MS){ res.ignoradas++; continue; }
+      if(pendentes && _rcNotifIdsDaVaga(vagaId).some(function(id){ return pendentes[String(id)]; })){
+        res.jaPendentes++; continue;                 // o Android ainda tem o bloco
+      }
+      const notifs = _rcMontarBlocoAlarme(vagaId, r);
+      if(!notifs.length){ res.ignoradas++; continue; }
+      if(!canalOk){ await _rcGarantirCanal(); canalOk = true; }
+      await p.schedule({ notifications: notifs });
+      res.rearmadas++;
+    }
+    if(res.rearmadas){
+      try{ addLogSistema('Alertas de recarga rearmados ao abrir: ' + res.rearmadas + ' recarga(s)'); }catch(e){}
+    }
+  }catch(e){ console.warn('[RECARGA] rearme falhou (ignorado):', e && e.message); }
+  return res;
+}
+
+// ── v1.9.6.2 — TOQUE NA NOTIFICAÇÃO ABRE A TELA DE RECARGA ─────────────────
+// Ação em UM toque: a notificação diz "o veículo pode ser liberado" e o toque leva
+// exatamente ao card onde se encerra ou prolonga. E cancela o bloco: `ongoing` não
+// sai sozinha, e deixá-la ali depois de o operador atender seria lixo permanente na
+// bandeja.
+let _rcListenerNotifPronto = false;
+function _rcInitListenerNotificacao(){
+  try{
+    if(_rcListenerNotifPronto) return;
+    const p = _rcNotifPlugin();
+    if(!p || typeof p.addListener !== 'function') return;
+    _rcListenerNotifPronto = true;
+    p.addListener('localNotificationActionPerformed', function(ev){
+      try{
+        const extra = (ev && ev.notification && ev.notification.extra) || {};
+        _rcAbrirNaRecarga(String(extra.vagaId || ''));
+      }catch(e){ console.warn('[RECARGA] toque na notificação:', e && e.message); }
+    });
+  }catch(e){ console.warn('[RECARGA] listener de notificação:', e && e.message); }
+}
+
+function _rcAbrirNaRecarga(vagaId){
+  // O toque pode chegar durante a abertura do app (foi ele quem abriu). Espera o
+  // app ficar pronto em vez de navegar para uma tela que ainda não existe.
+  if(typeof gsPronto === 'function' && !gsPronto()){
+    setTimeout(function(){ _rcAbrirNaRecarga(vagaId); }, 400);
+    return;
+  }
+  if(vagaId){ try{ _rcCancelarNotificacao(vagaId); }catch(e){} }
+  try{ if(typeof navTo === 'function') navTo('recarga'); }catch(e){}
+  try{ if(typeof renderTelaRecarga === 'function') renderTelaRecarga(); }catch(e){}
+  if(!vagaId) return;
+  // destaca o card do ponto em questão, para não obrigar a procurar
+  setTimeout(function(){
+    try{
+      const el = document.getElementById('rcp-card-' + vagaId);
+      if(!el) return;
+      el.classList.add('rcp-destacado');
+      if(typeof el.scrollIntoView === 'function') el.scrollIntoView({block:'center'});
+      setTimeout(function(){ try{ el.classList.remove('rcp-destacado'); }catch(e){} }, 4000);
+    }catch(e){}
+  }, 120);
+}
+
+// Dispara a notificação da bandeja. Fail-safe: qualquer erro aqui é engolido — o
+// alerta na tela é a garantia, a notificação é o reforço.
+async function _rcNotificar(vagaId, apt){
+  try{
+    const p = _rcNotifPlugin(); if(!p) return false;
+    if(_rcNotifPermitido === null) await _rcPedirPermissaoNotif();
+    if(!_rcNotifPermitido) return false;
+    await p.schedule({ notifications: [{
+      id: (_rcNotifId++ % 10000) + 1,
+      title: '⚡ Recarga concluída',
+      body: 'Vaga ' + vagaId + (apt ? ' · Apt ' + apt : '') + ' — o veículo pode ser liberado.',
+      channelId: RC_CANAL_ID,
+      smallIcon: 'ic_stat_icon_config_sample',
+      schedule: { at: new Date(Date.now() + 200) },
+    }]});
+    return true;
+  }catch(e){ console.warn('[RECARGA] notificação falhou:', e && e.message); return false; }
 }
 
 // ── Parte 7 v1.9.4.8: ALERTA DE CONCLUSÃO DA RECARGA (camada WEB, app aberto) ──────
@@ -9998,6 +12358,11 @@ function _rcDispararAlertaConclusao(vagaId){
   if(!alertasOn) return;                     // respeita o toggle: alerta desligado → nada
   _rcPararAlarme();                          // evita empilhar alarmes
   const apt=r.apt||'—';
+  // v1.9.6.1: a notificação da bandeja NÃO é mais disparada aqui. Ela é AGENDADA no
+  // início da recarga (`_rcAgendarNotificacaoFim`) e o próprio Android a entrega no
+  // horário — inclusive com o app fechado. Disparar aqui também duplicaria o aviso
+  // quando o app estivesse aberto. O que sobra aqui é o alarme de PRIMEIRO PLANO
+  // (modal + bipe), que continua sendo o reforço para quem está com o app na mão.
   const el=document.createElement('div');
   el.id='rc-alarme-overlay';
   el.style.cssText='position:fixed;inset:0;z-index:99998;background:rgba(20,20,30,.55);display:flex;align-items:center;justify-content:center;padding:20px';
@@ -10040,6 +12405,74 @@ function iniciarRecarga(vagaId, apt, hospedagem, finHHMM, usuario){
   if(document.getElementById('recarga-wrap')?.style?.display!=='none') renderTelaRecarga();
   showToast('⚡ Recarga iniciada — Vaga '+vagaId);
   _gsBackupAuto('recarga iniciada '+vagaId); // v1.9.4.11
+}
+
+// ── v1.9.6.1 — PROLONGAR RECARGA ───────────────────────────────────────────
+// Fluxo real: a recarga bate o prazo, o hóspede pede mais tempo, e o manobrista não
+// deveria ter de encerrar e reabrir. Disponível TAMBÉM com a recarga já concluída —
+// é justamente aí que se decide continuar.
+//
+// **A cobrança não precisa de nada especial:** `calcValorRecarga(inicio_ts, fimReal)`
+// já cobra do início até o encerramento REAL. Basta **não tocar em `inicio_ts`** e o
+// tempo total é cobrado sozinho. Reiniciar a contagem seria o erro.
+//
+// Sem PIN: é ação operacional do manobrista, como encerrar.
+function showProlongarRecarga(vagaId){
+  const r = RECARGAS[vagaId];
+  if(!r || !r.ativo){ showToast('Recarga não está ativa.', 2500); return; }
+  // sugere +30 min a partir de agora (ou do término, se ainda no futuro)
+  const base = Math.max(Date.now(), r.fim_ts || Date.now());
+  const sug = new Date(base + 30*60000);
+  const hh = String(sug.getHours()).padStart(2,'0')+':'+String(sug.getMinutes()).padStart(2,'0');
+  showM(`<div class="mt">⏱ Prolongar recarga — Vaga ${_vtEsc(vagaId)}</div>
+    <div class="ms">Apt. ${_vtEsc(r.apt||'—')} · início ${_fmtHM(r.inicio_ts)} · término atual ${_fmtHM(r.fim_ts)}</div>
+    <label class="fl">Novo horário de término <span class="req">*</span></label>
+    <input class="fi" id="rc-prol-fim" type="time" value="${hh}" style="font-size:15px">
+    <div style="background:#EEF9F2;border:1px solid #0F6E56;border-radius:7px;padding:7px 10px;font-size:11px;color:#0F6E56;margin-top:6px;line-height:1.5">
+      A cobrança considera o tempo <strong>total</strong>, desde o início da recarga — a contagem não é reiniciada.
+    </div>
+    <div class="ag" style="margin-top:10px">
+      <button class="bcx" onclick="closeOv()">Cancelar</button>
+      <button class="bsv" id="rc-prol-ok">Prolongar</button>
+    </div>`);
+  setTimeout(function(){
+    const ok = document.getElementById('rc-prol-ok');
+    if(ok) ok.onclick = function(){ _prolongarRecargaAplicar(vagaId); };
+  }, 0);
+}
+
+function _prolongarRecargaAplicar(vagaId){
+  const r = RECARGAS[vagaId];
+  if(!r || !r.ativo){ showToast('Recarga não está ativa.', 2500); return; }
+  const val = (document.getElementById('rc-prol-fim')||{}).value || '';
+  if(!/^\d{2}:\d{2}$/.test(val)){ showToast('Informe o novo horário.', 2500); return; }
+  const [h,m] = val.split(':').map(Number);
+  const hoje = new Date();
+  let novo = new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate(), h, m, 0, 0).getTime();
+  if(novo <= Date.now()) novo += 86400000;              // horário já passou → amanhã
+  const anterior = r.fim_ts;
+  // O novo prazo SUBSTITUI o anterior. `inicio_ts` fica intacto — é ele que garante
+  // a cobrança pelo tempo total.
+  r.fim_ts = novo;
+  r.ativo = true;
+  r.confirmada = false;                                  // volta a "carregando"
+  r.prorrogacoes = (r.prorrogacoes || 0) + 1;
+  saveRecargas();
+  // o alarme na tela some, se estava aberto para esta vaga
+  try{ if(_rcAlarme && _rcAlarme.vagaId === vagaId) _rcPararAlarme(); }catch(e){}
+  // reagenda os dois: o nativo (que avisa de verdade) e o timer de primeiro plano
+  agendarAlertaRecarga(vagaId);
+  const hrNovo = _fmtHM(novo), hrAnt = _fmtHM(anterior);
+  if(r.apt && typeof addHistorico === 'function'){
+    addHistorico(r.apt, 'recarga_prolongada', vagaId,
+      'Recarga prolongada · de ' + hrAnt + ' para ' + hrNovo, r.usuario || '', r.hospedagem);
+  }
+  try{ addLogSistema('Recarga prolongada (vaga ' + vagaId + '): ' + hrAnt + ' → ' + hrNovo); }catch(e){}
+  if(typeof ref === 'function') ref(vagaId);
+  closeOv();
+  if(document.getElementById('recarga-wrap')?.style?.display !== 'none') renderTelaRecarga();
+  showToast('⏱ Recarga prolongada até ' + hrNovo, 3500);
+  _gsBackupAuto('recarga prolongada ' + vagaId);
 }
 
 function showRecargaModal(vagaId){
@@ -10377,6 +12810,10 @@ async function _rcEncerrarConfirmar(vagaId, r, usuario, usuarioStr){
   RECARGAS[vagaId].confirmada = true;
   RECARGAS[vagaId].fim_ts = fimReal;
   saveRecargas();
+  // v1.9.6.1: cancela o agendamento nativo — a recarga acabou, e uma notificação
+  // chegando depois disso seria pior do que não avisar.
+  try{ _rcCancelarNotificacao(vagaId); }catch(e){}
+  try{ if(_recTimers[vagaId]){ clearTimeout(_recTimers[vagaId]); delete _recTimers[vagaId]; } }catch(e){}
   _gsBackupAuto('recarga encerrada '+vagaId); // v1.9.4.11
   if(typeof ref === 'function') ref(vagaId);
   if(document.getElementById('recarga-wrap')?.style?.display!=='none') renderTelaRecarga();
@@ -10385,10 +12822,20 @@ async function _rcEncerrarConfirmar(vagaId, r, usuario, usuarioStr){
   const nome = 'Recarga_'+r.apt+'_'+fmtNomeData(r.inicio_ts)+'_GarageSpot';
   closeOv();
   _rcEncerrarEstado = null;
-  if(docPdf){ await gerarECompartilharPDF('Registro de Recarga', docPdf, nome); }
-  else { showToast('Recarga encerrada — R$ '+valor.toFixed(2).replace('.',','),3500); }
-  // Ofertar próximo da fila
-  _verificarFilaRecarga(vagaId);
+  // v1.9.6.1: mesmo padrão do fechamento de hospedagem — SEMPRE salva no dispositivo,
+  // e compartilhar é ação adicional. Antes só oferecia compartilhar, e quem quisesse
+  // apenas guardar o comprovante não tinha como.
+  if(docPdf){
+    // A entrega resolve assim que o arquivo está salvo; a oferta da fila espera o
+    // modal sair da tela, para os dois não disputarem o overlay.
+    await _pdfEntregar('Registro de Recarga', docPdf, nome,
+      'Vaga '+vagaId+' · Apt '+(r.apt||'—')+' · R$ '+valor.toFixed(2).replace('.',','),
+      function(){ try{ _verificarFilaRecarga(vagaId); }catch(e){} });
+  }
+  else {
+    showToast('Recarga encerrada — R$ '+valor.toFixed(2).replace('.',','),3500);
+    _verificarFilaRecarga(vagaId);
+  }
 }
 
 function _verificarFilaRecarga(vagaId){
@@ -10470,12 +12917,18 @@ function renderTelaRecarga(){
       const linhaDest  = concluido
         ? '<div class="rcp-info-row destaque"><span>Concluído</span><strong class="restante">'+_fmtHM(r.fim_ts)+'</strong></div>'
         : '<div class="rcp-info-row destaque"><span>Restante</span><strong class="restante">'+_fmtDurRecarga(rem)+'</strong></div>';
-      const botaoCard = concluido
+      // v1.9.6.1: "Prolongar" ao lado do botão principal, nos DOIS estados. É ao
+      // CONCLUIR que se decide continuar (o hóspede pede mais tempo), e o manobrista
+      // não deveria precisar encerrar e reabrir para isso.
+      const btnProlongar = '<button class="rcp-btn ver" id="rcp-prolongar-'+vagaAtiva+'" onclick="showProlongarRecarga(\''+vagaAtiva+'\')">⏱ Prolongar</button>';
+      const botaoCard = (concluido
         ? '<button class="rcp-btn encerrar" onclick="showRecargaFinalizar(\''+vagaAtiva+'\')">✓ Encerrar e liberar</button>'
-        : '<button class="rcp-btn ver" onclick="showRecargaDetalhe(\''+vagaAtiva+'\')">Ver detalhes</button>';
+        : '<button class="rcp-btn ver" onclick="showRecargaDetalhe(\''+vagaAtiva+'\')">Ver detalhes</button>') + btnProlongar;
       const checkSuffix = concluido ? '<div class="rcp-bateria-big-check">✓</div>' : '';
       return ''+
-        '<div class="'+cardCls+'">' +
+        // v1.9.6.2: id no card ativo — é o alvo do destaque quando o operador chega
+        // aqui tocando na notificação de recarga concluída.
+        '<div class="'+cardCls+'" id="rcp-card-'+_vtEsc(vagaAtiva)+'">' +
           '<div class="rcp-card-hdr">' +
             '<div>' +
               '<div class="rcp-label">'+_vtEsc(rotuloPonto)+'</div>' +
@@ -11205,11 +13658,16 @@ function _rcCfgRender(){
     '<div class="gestao-menu-sep">Alertas</div>' +
     '<label style="display:flex;align-items:center;gap:8px;padding:4px 0;font-size:13px"><input type="checkbox" id="rc-cfg-alertas" '+(cfg.alertas?'checked':'')+' style="width:18px;height:18px"> Alerta quando a recarga concluir</label>' +
     '<label style="display:flex;align-items:center;gap:8px;padding:4px 0;font-size:13px"><input type="checkbox" id="rc-cfg-vibracao" '+(cfg.vibracao?'checked':'')+' style="width:18px;height:18px"> Vibração no alerta</label>' +
-    '<div style="font-size:10px;color:#888;padding:2px 0 4px">Toque/som do dispositivo: futuro (requer APK).</div>' +
+    // v1.9.6.0: o aviso "requer APK" saiu — som, vibração e notificação passaram a
+    // funcionar. No lugar entra o estado REAL da permissão: se o usuário negou, a
+    // interface diz isso AQUI, em vez de deixar o toggle fingir que está ligado.
+    '<div id="rc-cfg-notif-estado" style="font-size:10px;padding:2px 0 4px"></div>' +
     '<div class="ag">' +
       '<button class="bcx" onclick="closeOv()">Cancelar</button>' +
       '<button class="bsv" id="rc-cfg-ok">Salvar</button>' +
     '</div>');
+  // v1.9.6.0: mostra o estado REAL da notificação junto dos toggles.
+  setTimeout(function(){ _rcRenderEstadoNotif(); }, 0);
   setTimeout(function(){
     document.getElementById('rc-cfg-ok')?.addEventListener('click', function(){
       RECARGA_CONFIG.valorHora       = parseFloat(document.getElementById('rc-cfg-valor').value);
@@ -11220,6 +13678,7 @@ function _rcCfgRender(){
       saveRecargaCfg();
       _aplicarConfigPontos(_rcCfgEstado.pontos);
       saveConfigPontos(_rcCfgEstado.pontos);
+      _gsBackupAuto('configurações de recarga');   // v1.9.6.3
       closeOv();
       showToast('Configurações salvas');
       if(typeof applyModulos==='function') applyModulos();
@@ -11417,7 +13876,7 @@ function showConfiguracoesSistema(){
         <div style="font-size:13px;font-weight:600">⚡ Recarga de veículos</div>
         <div style="font-size:11px;color:#999;margin-top:2px">Controle de carregamento elétrico</div>
       </div>
-      ${_togSwitch('tog-recarga', MODULOS.recarga, "MODULOS.recarga=this.checked;saveModulos();applyModulos();const sp=this.nextElementSibling;sp.style.background=this.checked?'#0F6E56':'#ccc';sp.children[0].style.left=this.checked?'23px':'3px';showToast('Recarga '+(this.checked?'ativada':'desativada'))")}
+      ${_togSwitch('tog-recarga', MODULOS.recarga, "MODULOS.recarga=this.checked;saveModulos();_gsBackupAuto('módulos');applyModulos();const sp=this.nextElementSibling;sp.style.background=this.checked?'#0F6E56':'#ccc';sp.children[0].style.left=this.checked?'23px':'3px';showToast('Recarga '+(this.checked?'ativada':'desativada'))")}
     </div>
     <div class="gestao-menu-item" onclick="_gestaoAbrir('showRecargaCfg')" style="margin-top:8px">⚡ <span>Configurações de Recarga</span></div>
     <div style="font-size:11px;color:#aaa;margin-top:10px;padding:0 2px;line-height:1.5">Módulo desativado oculta o botão da barra. Os dados são preservados.</div>
@@ -11440,6 +13899,267 @@ function _renderBackupStatus(){
   </div>`;
 }
 
+// ── v1.9.5.1 — INDICADOR DE NUVEM NO RODAPÉ DO PAINEL ──────────────────────
+// O rodapé mostrava SÓ o backup local, em verde, enquanto a nuvem estava em
+// "Nunca" — falsa sensação de segurança. Agora os dois aparecem, e o estado ruim
+// da nuvem fica visualmente distinto para o operador perceber e forçar o envio.
+//
+// A linha só existe onde a nuvem existe (APK com o plugin). No navegador e no
+// tablet do hotel — que ainda não tem nuvem — nada muda.
+const GD_ATRASO_MS = 24 * 60 * 60 * 1000;
+// v1.9.5.3 — LIMIARES DO ALARME (justificados no RELATORIO):
+//  • 3 falhas seguidas: a retentativa espera 5→10→20 min, então 3 falhas significam
+//    ~35 min insistindo sem sucesso. Uma ou duas falhas cabem numa oscilação de
+//    wi-fi e num app que foi minimizado no meio do upload — alarmar aí é mentir.
+//  • 6h sem envio bem-sucedido: a cadência completa é horária, então 6h são seis
+//    janelas perdidas. Bem antes das 24h de "atrasada", que é outro estado.
+// Alarme que dispara à toa é alarme que o operador aprende a ignorar.
+const GD_FALHAS_P_ALARME = 3;
+const GD_SEM_SUCESSO_MS  = 6 * 60 * 60 * 1000;
+
+// ── v1.9.6.3 — O RODAPÉ PASSA A REFLETIR O ESTADO REAL DA NUVEM ────────────
+// O rodapé lia SÓ `nuvem_ultimo_backup`, gravado exclusivamente no caminho do
+// backup COMPLETO. O arquivo ROLANTE grava em `nuvem_rolante_ts`, e o rodapé
+// nunca o lia — daí o relato de campo: rodapé "Nuvem: 13:40" (último completo)
+// com o arquivo no Drive marcando 13:44 (último rolante). Tecnicamente correto,
+// operacionalmente enganoso: o operador confere o rodapé para saber se os dados
+// estão salvos, e o rodapé mostrava um número mais velho que a verdade.
+//
+// A partir daqui, "quando a nuvem recebeu alguma coisa" = o MAIS RECENTE entre os
+// dois. É esse instante que o rodapé mostra e é sobre ele que "atrasada" é medida.
+// O card de Conexões continua distinguindo os dois (lá a diferença importa: um é
+// histórico com fotos, o outro é o estado atual sem fotos).
+function _gdUltimoContatoNuvem(){
+  try{
+    const c = DRIVE_STATUS.nuvem_ultimo_backup || 0;
+    const r = DRIVE_STATUS.nuvem_rolante_ts   || 0;
+    const m = Math.max(c, r);
+    return m > 0 ? m : null;
+  }catch(e){ return null; }
+}
+
+function _gdRodapeEstado(){
+  try{
+    if(!_gdDisponivel()) return null;
+    if(!_gdConectado())  return { classe:'alerta', txt:'Nuvem: não conectada' };
+    // v1.9.5.4: vínculo existe, permissão não — estado próprio, não "desconectada".
+    if(DRIVE_STATUS.nuvem_reconectar) return { classe:'ruim', txt:'Nuvem: reconectar' };
+    // v1.9.6.3: Drive cheio tem rótulo próprio. "falhando" mandaria o gestor
+    // procurar defeito de rede quando o problema é espaço — e nada volta a subir
+    // até alguém liberar a conta.
+    if(DRIVE_STATUS.nuvem_cheio) return { classe:'ruim', txt:'Nuvem: sem espaço' };
+    const ult = _gdUltimoContatoNuvem();
+    const semSucessoHa = ult ? (Date.now() - ult) : Infinity;
+
+    // Falha DEFINITIVA do Google (403, 401…) alarma na hora: não adianta esperar,
+    // ela não se resolve sozinha — exige ação do gestor.
+    if(DRIVE_STATUS.nuvem_falha) return { classe:'ruim', txt:'Nuvem: falhando' };
+
+    // Falha transitória (rede): só vira alarme se PERSISTIR.
+    if(DRIVE_STATUS.nuvem_falha_transitoria){
+      // `ult` ausente = nunca houve envio bem-sucedido; aí não dá para medir "tempo
+      // sem sucesso" (seria Infinity e alarmaria já na 1ª tentativa, numa instalação
+      // recém-conectada). Nesse caso vale só a contagem de falhas.
+      const persistente = (_gdFalhasSeguidas >= GD_FALHAS_P_ALARME) ||
+                          (!!ult && semSucessoHa > GD_SEM_SUCESSO_MS);
+      if(persistente) return { classe:'ruim', txt:'Nuvem: falhando' };
+      // enquanto a retentativa está agendada, o rodapé mostra o último sucesso —
+      // estado neutro, sem alarme
+      if(ult) return { classe:'ok', txt:'Nuvem: ' + fmtHrCurta(ult) };
+      return { classe:'alerta', txt:'Nuvem: tentando…' };
+    }
+
+    if(!ult) return { classe:'ruim', txt:'Nuvem: nunca enviada' };
+    if(semSucessoHa > GD_ATRASO_MS){
+      const h = Math.floor(semSucessoHa / (60*60*1000));
+      return { classe:'alerta', txt:'Nuvem: atrasada (há ' + h + 'h)' };
+    }
+    return { classe:'ok', txt:'Nuvem: ' + fmtHrCurta(ult) };
+  }catch(e){ return null; }
+}
+function fmtHrCurta(ts){
+  try{ return new Date(ts).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}); }
+  catch(e){ return '—'; }
+}
+function _gdRodapeHTML(){
+  const st = _gdRodapeEstado();
+  if(!st) return '';
+  const cor = st.classe === 'ok' ? '#0F6E56' : (st.classe === 'ruim' ? '#A32D2D' : '#B26A00');
+  const peso = st.classe === 'ok' ? '600' : '700';
+  return `<div id="rodape-nuvem" data-estado="${st.classe}" style="font-size:10px;color:${cor};font-weight:${peso};margin-top:2px">${_vtEsc(st.txt)}</div>`;
+}
+
+// v1.9.5.4 — a dica "toque para enviar" só aparece quando há algo a resolver.
+// Antes ficava permanente, inclusive logo depois de um envio bem-sucedido, e virava
+// ruído: um aviso que está sempre aceso não avisa nada. Usa a MESMA noção de atraso
+// do indicador (`_gdRodapeEstado`), para os dois nunca discordarem.
+function _gdDicaTocarHTML(){
+  try{
+    const st = _gdRodapeEstado();
+    if(!st || st.classe === 'ok') return '';
+    return '<div id="rodape-backup-dica" style="font-size:9px;color:#9a9284;margin-top:3px;font-weight:600">toque para enviar ↑</div>';
+  }catch(e){ return ''; }
+}
+
+// v1.9.5.3 — ATALHO DO RODAPÉ: força o envio para a nuvem.
+//
+// Chama `fazerBackupNuvemAgora`, a MESMA função do botão de Backup e Conexões —
+// nada de caminho paralelo que possa divergir com o tempo.
+//
+// **SEM PIN e SEM registrar autor**, de propósito: forçar um backup é ação
+// preventiva, não configuração. Quem opera o mapa precisa poder fazer isso na
+// hora. Conectar/desconectar a CONTA continua atrás de `_gsPinValido` em Gestão —
+// aquilo sim muda a configuração do aparelho.
+function _gdForcarPeloRodape(){
+  try{
+    if(!_gdDisponivel()){
+      showToast('☁️ A nuvem só funciona no aplicativo instalado (APK). O backup local continua normal.', 5000);
+      return;
+    }
+    if(!_gdConectado()){
+      // NÃO abre login: conectar é ação de gestor, com PIN, em Gestão.
+      showToast('☁️ Google Drive não conectado. Peça ao gestor: Gestão → Backup e Conexões.', 5500);
+      return;
+    }
+    if(_gdEnviando){ showToast('☁️ Já estou enviando — aguarde.', 3000); return; }
+    const dica = document.getElementById('rodape-backup-dica');
+    if(dica) dica.textContent = 'enviando…';
+    Promise.resolve(fazerBackupNuvemAgora()).catch(function(e){
+      console.warn('[DRIVE] atalho do rodapé falhou:', e && e.message);
+    }).then(function(){
+      // re-renderiza o Painel para o rodapé refletir o novo estado, se ele estiver na tela
+      try{ if(document.getElementById('rodape-backup-atalho') && typeof renderPainelDia === 'function') renderPainelDia(); }catch(_){}
+      const d2 = document.getElementById('rodape-backup-dica');
+      if(d2) d2.textContent = 'toque para enviar ↑';
+    });
+  }catch(e){ console.warn('[DRIVE] atalho do rodapé:', e && e.message); }
+}
+
+// v1.9.5.2 — pendências de PDF de fechamento no card. Contagem simples, sem modal:
+// o operador só precisa saber que existe algo esperando, não ser interrompido.
+function _gdPdfsPendentesHTML(){
+  const n = _gdPdfsPendentes().length;
+  if(!n) return '';
+  return `<div id="nuvem-pdfs-pend" data-n="${n}" style="color:#B26A00;font-size:11px;margin-top:4px">
+    📄 ${n} documento${n>1?'s':''} de fechamento aguardando envio${n>1?'':''} — vai sozinho quando a nuvem voltar.
+  </div>`;
+}
+
+// v1.9.5.1 — DETALHE DO ÚLTIMO ERRO DE NUVEM, em texto copiável.
+// Fica DENTRO do card (sem modal, sem roubar foco). Um <details> fechado por
+// padrão: quem só quer operar não vê nada; quem está diagnosticando abre e copia.
+function _gdTextoDiagnostico(d){
+  if(!d) return '';
+  const linhas = [
+    'GarageSpot ' + GS_VERSION + ' (vc' + GS_VERSION_CODE + ') — erro de nuvem',
+    'quando: ' + (d.ts ? fmtDt(d.ts) : '—'),
+    'etapa: ' + (d.etapa || '—'),
+    'status HTTP: ' + (d.status || '—'),
+    'reason: ' + (d.reason || '—'),
+    'message: ' + (d.message || '—'),
+    'token via: ' + (d.via || '—'),
+    'escopos do token: ' + (d.escopos || '(não consultado)'),
+    'url: ' + (d.url || '—'),
+  ];
+  return linhas.join('\n');
+}
+function _gdCopiarDiagnostico(){
+  try{
+    const t = _gdTextoDiagnostico(DRIVE_STATUS.nuvem_erro_detalhe);
+    if(!t){ showToast('Sem detalhe para copiar.', 2500); return; }
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(t).then(function(){ showToast('📋 Detalhe copiado.', 2500); },
+        function(){ showToast('Não consegui copiar — selecione o texto na tela.', 3500); });
+    } else {
+      showToast('Selecione o texto na tela para copiar.', 3500);
+    }
+  }catch(e){ showToast('Não consegui copiar.', 2500); }
+}
+function _gdDetalheErroHTML(){
+  const d = DRIVE_STATUS.nuvem_erro_detalhe;
+  if(!d) return '';
+  return `<details style="margin:0 0 8px 0">
+    <summary style="cursor:pointer;color:#A32D2D;font-size:11px">Ver detalhes do erro</summary>
+    <pre id="nuvem-erro-det" style="white-space:pre-wrap;word-break:break-word;user-select:text;-webkit-user-select:text;background:#fff;border:1px solid #e6e2d8;border-radius:6px;padding:8px;margin:6px 0 0;font-size:10px;line-height:1.5;color:#444;max-height:180px;overflow:auto">${_vtEsc(_gdTextoDiagnostico(d))}</pre>
+    <button class="bcx" onclick="_gdCopiarDiagnostico()" style="width:100%;margin-top:6px;font-size:11px">📋 Copiar detalhes</button>
+  </details>`;
+}
+
+// v1.9.5.0 — bloco da NUVEM. Separado de `_renderBackupStatus` de propósito: são
+// duas redes independentes, e misturar os dois estados foi o que a decisão de
+// campos separados no DRIVE_STATUS veio impedir.
+function _renderNuvemStatus(){
+  const disp = _gdDisponivel();
+  const conectado = _gdConectado();
+  const email = DRIVE_STATUS.nuvem_email || '';
+  const ult = DRIVE_STATUS.nuvem_ultimo_backup;
+  const ultStr = ult ? fmtDt(ult) : 'Nunca';
+  const falha = DRIVE_STATUS.nuvem_falha;
+  const erro = DRIVE_STATUS.nuvem_ultimo_erro || '';
+  if(!disp){
+    return `<div id="nuvem-box" style="background:#f8f7f3;border-radius:8px;padding:12px;font-size:12px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+        <span style="color:#aaa;font-size:18px">○</span>
+        <div><div style="font-weight:600;color:#555">Google Drive</div>
+        <div style="color:#999">Indisponível fora do aplicativo</div></div>
+      </div>
+      <div style="color:#bbb;font-size:11px;line-height:1.5">O login do Google é nativo — funciona no <strong>APK instalado</strong>. O backup local segue normal aqui.</div>
+    </div>`;
+  }
+  if(!conectado){
+    return `<div id="nuvem-box" style="background:#f8f7f3;border-radius:8px;padding:12px;font-size:12px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+        <span style="color:#aaa;font-size:18px">○</span>
+        <div><div style="font-weight:600;color:#555">Não conectado</div>
+        <div style="color:#999">Backup de recuperação no Drive do hotel</div></div>
+      </div>
+      ${falha?`<div style="color:#A32D2D;font-size:11px;margin-bottom:6px">⚠️ ${_vtEsc(erro)}</div>`:''}
+      <button class="bsv" id="btn-drive-conectar" onclick="conectarGoogleDrive()" style="width:100%">🔗 Conectar Google Drive</button>
+      <div style="color:#aaa;font-size:11px;line-height:1.5;margin-top:8px">Pede o <strong>PIN do gestor</strong>. O app só enxerga os arquivos que ele mesmo criar (escopo <code>drive.file</code>).</div>
+    </div>`;
+  }
+  return `<div id="nuvem-box" style="background:#f8f7f3;border-radius:8px;padding:12px;font-size:12px">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+      <span style="color:#0F6E56;font-size:18px">●</span>
+      <div style="min-width:0"><div style="font-weight:600;color:#0F6E56">Conectado</div>
+      <div style="color:#666;overflow:hidden;text-overflow:ellipsis">${_vtEsc(email||'conta Google')}</div></div>
+    </div>
+    ${DRIVE_STATUS.nuvem_reconectar?`<div id="nuvem-reconectar" style="background:#FFF8E6;border:1px solid #BA7517;border-radius:6px;padding:8px 10px;margin-bottom:6px;color:#633806;font-size:11px;line-height:1.5">🔑 <strong>Precisa reconectar.</strong> A conta continua vinculada — o que venceu foi a permissão de acesso ao Drive. Toque em <strong>Desconectar</strong> e depois em <strong>Conectar</strong>.</div>`:''}
+    ${falha?`<div style="color:#A32D2D;font-weight:600;margin-bottom:6px">⚠️ Último envio falhou — ${_vtEsc(erro)}</div>`:''}
+    ${(falha||DRIVE_STATUS.nuvem_reconectar)?_gdDetalheErroHTML():''}
+    <div style="color:#666">Último backup na nuvem: <strong id="nuvem-ultimo">${_vtEsc(ultStr)}</strong></div>
+    <div style="color:#666;margin-top:2px">Estado atual (sem fotos): <strong id="nuvem-rolante">${_vtEsc(DRIVE_STATUS.nuvem_rolante_ts?fmtDt(DRIVE_STATUS.nuvem_rolante_ts):'Nunca')}</strong></div>
+    <div style="color:#aaa;font-size:11px;margin-top:4px">Pasta <strong>${_vtEsc(GD_PASTA_NOME)}</strong> · ${DRIVE_STATUS.nuvem_enviados||0} envio(s) nesta instalação</div>
+    ${_gdEspacoAvisoHTML()}
+    ${_gdPdfsPendentesHTML()}
+    <button class="bsv" id="btn-nuvem-agora" onclick="fazerBackupNuvemAgora()" style="width:100%;margin-top:8px">☁️ Fazer backup na nuvem agora</button>
+    <button class="bcx" id="btn-nuvem-restaurar" onclick="abrirRestaurarNuvem()" style="width:100%;margin-top:6px">📥 Restaurar da nuvem</button>
+    <button class="bcx" id="btn-drive-desconectar" onclick="desconectarGoogleDrive()" style="width:100%;margin-top:6px">Desconectar</button>
+    <div style="color:#aaa;font-size:11px;line-height:1.5;margin-top:8px">O backup <strong>local continua igual</strong> — a nuvem é adicional. Os <strong>PDFs de fechamento nunca são apagados</strong> pelo app, nem no aparelho nem na nuvem.</div>
+  </div>`;
+}
+
+// ── v1.9.6.3 — AVISO PREVENTIVO DE ESPAÇO NO DRIVE ─────────────────────────
+// Discreto e sem modal, por decisão: é informação de fundo, não uma emergência —
+// quem opera o mapa não pode ser interrompido por um aviso de cota. A leitura
+// vem de `about.get?fields=storageQuota` (o escopo `drive.file` basta), feita
+// no máximo 1×/6h e guardada em `DRIVE_STATUS.nuvem_cota_*`. Se a consulta
+// falhar, o aviso simplesmente não aparece — nunca vira erro na cara do usuário.
+const GD_ESPACO_ALERTA_PCT = 85;
+
+function _gdEspacoAvisoHTML(){
+  try{
+    const lim = DRIVE_STATUS.nuvem_cota_limite || 0;
+    const uso = DRIVE_STATUS.nuvem_cota_uso || 0;
+    if(!lim || !uso) return '';
+    const pct = Math.round((uso / lim) * 100);
+    if(pct < GD_ESPACO_ALERTA_PCT) return '';
+    const gb = function(b){ return (b / (1024*1024*1024)).toFixed(1).replace('.', ','); };
+    return `<div id="nuvem-espaco" style="background:#FFF8E6;border:1px solid #BA7517;border-radius:6px;padding:7px 9px;margin-top:6px;color:#633806;font-size:11px;line-height:1.5">
+      💾 <strong>Drive em ${pct}%</strong> — ${gb(uso)} GB de ${gb(lim)} GB usados. Vale liberar espaço antes que os backups parem de subir.</div>`;
+  }catch(e){ return ''; }
+}
+
 function showConexoes(){
   const mc=document.getElementById('mc');
   const ult=DRIVE_STATUS.ultimo_backup;
@@ -11452,17 +14172,10 @@ function showConexoes(){
     <div style="background:#EEF9F2;border:1px solid #0F6E56;border-radius:8px;padding:8px 11px;font-size:11px;color:#0F6E56;margin-top:8px;line-height:1.5">
       O backup completo inclui <strong>fotos, vistorias, funcionários</strong> e todo o resto. A importação <strong>soma</strong> — nunca apaga o que está no aparelho.
     </div>
-    <div class="gestao-menu-sep" style="margin-top:14px">Google Drive</div>
-    <div style="background:#f8f7f3;border-radius:8px;padding:12px;font-size:12px">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
-        <span style="color:#aaa;font-size:18px">○</span>
-        <div>
-          <div style="font-weight:600;color:#555">Google Drive</div>
-          <div style="color:#999">Em breve — integração em desenvolvimento</div>
-        </div>
-      </div>
-      <div style="color:#bbb;font-size:11px;line-height:1.5">A sincronização automática com Google Drive será disponibilizada em versão futura.</div>
-    </div>
+    <div class="gestao-menu-sep" style="margin-top:14px">Google Drive (nuvem)</div>
+    ${_renderNuvemStatus()}
+    <div class="gestao-menu-sep" style="margin-top:14px">Limpeza de backups antigos</div>
+    ${_renderPodaStatus()}
     <button class="bcx" onclick="closeOv()" style="width:100%;margin-top:12px">Fechar</button>`;
   document.getElementById('ov').classList.add('on');
 }
@@ -11638,7 +14351,7 @@ function loadTema(){
   const cor=localStorage.getItem('garagespot_tema')||'#185FA5';
   applyTema(cor);
 }
-function saveTema(cor){ try{localStorage.setItem('garagespot_tema',cor);}catch(e){} }
+function saveTema(cor){ try{localStorage.setItem('garagespot_tema',cor);}catch(e){} try{ _gsBackupAuto('tema'); }catch(e){} }
 
 function showTema(){
   const corAtual=localStorage.getItem('garagespot_tema')||'#185FA5';
@@ -12448,12 +15161,122 @@ async function gerarECompartilharPDF(titulo, conteudo, nomeArquivo){
 
 // Parte 1 v1.9.4.9: nome de arquivo do PDF de check-out — identificável e datado.
 // Ex.: checkout-GS016-Apt390-2026-05-28
-function fmtNomeCheckout(apt, hospNum, ts){
-  const d=new Date(ts||Date.now());
-  const p=n=>String(n).padStart(2,'0');
-  const data=d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate());
-  const aptTxt=String(apt||'').trim().replace(/[^\w-]+/g,'') || 'semApt';
-  return 'checkout-'+(hospNum||'semGS')+'-Apt'+aptTxt+'-'+data;
+// v1.9.5.2 — NOME DO DOCUMENTO DE FECHAMENTO.
+// Passou de `checkout-GS058-Apt05-2026-08-04` para
+// `GS058_apt05_in02-08-26_out04-08-26` — traz as DUAS pontas da hospedagem, que é
+// como o Douglas procura um fechamento. O MESMO nome vale no dispositivo e na
+// nuvem, para os dois baterem.
+//
+// ⚠️ Datas em dia LOCAL (`_localISO`), nunca `toISOString()` — das 21h à meia-noite
+// o UTC já está no dia seguinte e o arquivo sairia com a data errada (root-cause da
+// v1.9.4.14; não regredir).
+function _apt2Txt(apt){
+  return String(apt == null ? '' : apt).trim().replace(/[^\w-]+/g, '') || 'semApt';
+}
+function _dataCurtaLocal(ts){
+  if(!ts) return '';
+  const iso = _localISO(new Date(ts));            // AAAA-MM-DD local
+  if(!iso) return '';
+  const p = iso.split('-');
+  return p[2] + '-' + p[1] + '-' + p[0].slice(-2); // DD-MM-AA
+}
+function fmtNomeCheckout(apt, hospNum, ts, checkinTs){
+  const aptTxt = _apt2Txt(apt);
+  const ent = _dataCurtaLocal(checkinTs);
+  const sai = _dataCurtaLocal(ts || Date.now());
+  return (hospNum || 'semGS') + '_apt' + aptTxt +
+         (ent ? '_in' + ent : '') + '_out' + sai;
+}
+
+// Pastas da árvore de consulta, pela data de CHECK-IN (é a referência de busca).
+// Devolve ['2026', '08-2026', 'Apt05'].
+// v1.9.5.3: mês em ABREVIAÇÃO PT-BR de 3 letras (`Ago-2026`), no lugar do numérico
+// (`08-2026`). Legível para quem procura um fechamento no Drive pelo celular.
+const GD_MESES_ABREV = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+function _gdMesAbrev(mm, aaaa){
+  const i = parseInt(mm, 10) - 1;
+  const nome = GD_MESES_ABREV[i] || String(mm);
+  return nome + '-' + aaaa;
+}
+function _gdPastasHospedagem(apt, checkinTs){
+  const base = checkinTs || Date.now();
+  const iso = _localISO(new Date(base)) || _hojeLocalISO();
+  const p = iso.split('-');
+  return [p[0], _gdMesAbrev(p[1], p[0]), 'Apt' + _apt2Txt(apt)];
+}
+
+// ── v1.9.6.1 — ENTREGA DE PDF: "Salvar" × "Salvar e compartilhar" ──────────
+// O padrão bom nasceu na v1.9.4.12, no fechamento de hospedagem: o app SEMPRE salva
+// no dispositivo, e compartilhar é ação ADICIONAL que reaproveita o arquivo já salvo
+// (em vez de remontar o PDF). O relatório de recarga só oferecia compartilhar.
+//
+// Este helper extrai esse padrão para ser reusado. **O modal do check-out NÃO foi
+// refatorado de propósito:** ele carrega barra de progresso e compressão de fotos, e
+// é o fluxo mais sensível do app — trocar risco por elegância ali não se paga. O que
+// é genuinamente comum (`salvarPDFNoDispositivo` + share do arquivo salvo) está aqui.
+// ⚠️ Resolve assim que o arquivo está SALVO — não espera o usuário escolher. Quem
+// chama precisa seguir a vida (o encerramento de recarga, por exemplo, ainda tem a
+// fila para verificar); prender o fluxo num clique deixaria o chamador pendurado.
+// O que depende da escolha vai em `aoFechar`, disparado quando o modal sai da tela.
+function _pdfEntregar(titulo, conteudo, nomeBase, subtitulo, aoFechar){
+  return new Promise(function(resolve){
+    let _salvo = null, _fechou = false;
+    function fechar(){
+      if(_fechou) return; _fechou = true;
+      try{ closeOv(); }catch(e){}
+      if(typeof aoFechar === 'function'){ try{ aoFechar(); }catch(e){} }
+    }
+    showM('<div class="mt">' + _vtEsc(titulo) + '</div>' +
+      (subtitulo ? '<div class="ms">' + _vtEsc(subtitulo) + '</div>' : '') +
+      '<div id="pdfe-status" style="background:#FFF8E6;border:1px solid #BA7517;border-radius:8px;padding:10px 12px;margin:10px 0;font-size:12px;color:#633806">💾 Salvando no dispositivo…</div>' +
+      '<div class="ag" id="pdfe-acoes" style="display:none">' +
+        '<button class="bsv" id="pdfe-salvar">💾 Salvar</button>' +
+        '<button class="bsv" id="pdfe-share" style="margin-top:4px">📤 Salvar e compartilhar</button>' +
+        '<button class="bcx" id="pdfe-fechar" style="margin-top:4px">Fechar</button>' +
+      '</div>');
+    (async function(){
+      try{ _salvo = await salvarPDFNoDispositivo(titulo, conteudo, nomeBase); }
+      catch(e){ console.warn('[PDF] salvar falhou:', e && e.message); }
+      const st = document.getElementById('pdfe-status');
+      if(st){
+        if(_salvo && _salvo.sucesso){
+          st.style.cssText = 'background:#EEF9F2;border:1px solid #A6D8B6;border-radius:8px;padding:10px 12px;margin:10px 0;font-size:12px;color:#0F6E56';
+          st.textContent = (_salvo.nativo ? '✅ PDF salvo no dispositivo · GarageSpot/' + _salvo.nome
+                                          : '✅ PDF baixado · ' + _salvo.nome);
+        } else {
+          st.style.cssText = 'background:#FFE5E5;border:1px solid #C53030;border-radius:8px;padding:10px 12px;margin:10px 0;font-size:12px;color:#C53030';
+          st.textContent = '⚠️ Não foi possível salvar automaticamente — use "Salvar e compartilhar".';
+        }
+      }
+      const acoes = document.getElementById('pdfe-acoes'); if(acoes) acoes.style.display = '';
+      const bf = document.getElementById('pdfe-fechar'); if(bf) bf.onclick = fechar;
+      // ENTREGA CONCLUIDA: o arquivo esta salvo. Quem chamou segue a vida.
+      resolve({salvo: !!(_salvo && _salvo.sucesso), nome: _salvo && _salvo.nome});
+      const bs = document.getElementById('pdfe-salvar');
+      if(bs) bs.onclick = async function(){
+        if(_salvo && _salvo.sucesso){ showToast('✅ Já salvo · ' + _salvo.nome, 3000); fechar(); return; }
+        const r2 = await salvarPDFNoDispositivo(titulo, conteudo, nomeBase);
+        showToast(r2 && r2.sucesso ? ('✅ PDF salvo · ' + r2.nome) : '⚠️ Não foi possível salvar', 3500);
+        if(r2 && r2.sucesso) fechar();
+      };
+      const bc = document.getElementById('pdfe-share');
+      if(bc) bc.onclick = async function(){
+        // compartilha o arquivo JÁ SALVO — não remonta o PDF
+        if(_salvo && _salvo.sucesso && _salvo.uri && window.Capacitor?.Plugins?.Share){
+          try{
+            await window.Capacitor.Plugins.Share.share({ title:'GarageSpot — ' + titulo, url:_salvo.uri, dialogTitle:'Compartilhar' });
+            fechar(); return;
+          }catch(e){
+            const msg = (e && (e.message || e.errorMessage) || '').toLowerCase();
+            if(msg.includes('cancel') || msg.includes('dismiss') || msg.includes('abort') || msg.includes('close')) return;
+            console.warn('[PDF] share do arquivo salvo falhou, refazendo:', e && e.message);
+          }
+        }
+        fechar();
+        await gerarECompartilharPDF(titulo, conteudo, nomeBase);
+      };
+    })();
+  });
 }
 
 // Parte 1 v1.9.4.9: SALVA o PDF no dispositivo SEM compartilhar (compartilhar é ação à
@@ -13504,6 +16327,10 @@ window.delAtt = function(id, fp, idx, containerId){
         // v1.9.4.15: exclusão de anexo também na trilha de auditoria
         try{ addLogSistema('Anexo excluído: '+nomeReal+(apt?(' (Apt '+apt+')'):''),
           {aud:true, acao:'anexo_excluido', alvo:nomeReal+(apt?(' · Apt '+apt):'')}); }catch(e){}
+        // v1.9.6.3: exclusão de anexo altera o IndexedDB e não disparava cadência.
+        // COMPLETA de propósito: o que mudou foi o conjunto de FOTOS, e só a
+        // cadência completa carrega fotos — um rolante aqui não registraria nada.
+        try{ _gsBackupAuto('exclusão de anexo', {completo:true}); }catch(e){}
         showToast('✓ Anexo excluído',2500);
         _reabrir();
       });
@@ -14230,7 +17057,14 @@ document.addEventListener('visibilitychange',()=>{
   // v1.9.4.10 (Bug A, camada 1): antes do init terminar o backup sairia VAZIO e
   // ainda substituiria a cópia boa em Documentos/GarageSpot/Dados.
   if(!gsPronto()){ console.warn('[BUG A] backup automático ignorado: app ainda inicializando'); return; }
-  if(document.visibilityState==='hidden') fazerBackupLocal('App minimizado');
+  if(document.visibilityState!=='hidden') return;
+  // v1.9.5.4 — FREIO. Sem isto, alternar entre apps gerava um backup COMPLETO de
+  // ~10MB por vez: o log do aparelho mostrou 10 completos em 6 minutos, todos com
+  // origem "App minimizado". Foi essa a origem dos 119 arquivos locais — não uso
+  // normal. O tablet do hotel (SM-T585) não tem espaço para isso.
+  const d = _gsDecidirBackupMinimizar();
+  if(!d.fazer){ console.log('[BACKUP] minimizar ignorado:', d.motivo); return; }
+  fazerBackupLocal('App minimizado', {comFotos: d.completo});
 });
 
 // Bug W v1.9.4.1.6: Save IMEDIATO ao perder foco (antes do Android matar o webview)
@@ -14434,7 +17268,60 @@ checkLicense().then(async (ativo)=>{
       }, 1200);
       // v1.9.4.11 (Parte 4): backup periódico (leve; completo no máximo 1×/hora)
       try { setInterval(function(){ _gsBackupAuto('periódico'); }, 10 * 60 * 1000); } catch(e){}
+      // v1.9.5.1: retentativa da NUVEM no mesmo tique. Só age se houver falha
+      // pendente e o intervalo de espera já tiver passado — ver `_gdTentarPendente`.
+      try { setInterval(function(){ _gdTentarPendente(); }, 10 * 60 * 1000); } catch(e){}
+      // v1.9.6.2: o estado atual que não subiu (rede fora, app minimizado no meio)
+      // é retomado no mesmo tique. Sem alarme: é só reenviar o que já está pendente.
+      try { setInterval(function(){ _gdFlushRolante(); }, 10 * 60 * 1000); } catch(e){}
+      // v1.9.5.2: PDFs de fechamento que não subiram (sem Drive ou com falha) são
+      // reenviados relendo o arquivo do dispositivo — um por tique.
+      try { setInterval(function(){ _gdTentarPDFsPendentes(); }, 10 * 60 * 1000); } catch(e){}
+      // v1.9.5.3: quando o app VOLTA (ou a rede volta), tenta o que ficou adiado —
+      // com uma folga para a conectividade estabilizar. Sem isso, o que foi adiado
+      // no 'hidden' esperaria até 10 min pelo tique.
+      try {
+        document.addEventListener('visibilitychange', function(){
+          if(document.visibilityState === 'visible'){
+            setTimeout(function(){ _gdTentarPendente(); _gdTentarPDFsPendentes(); _gdFlushRolante(); }, 4000);
+          }
+        });
+        window.addEventListener('online', function(){
+          setTimeout(function(){ _gdTentarPendente(); _gdTentarPDFsPendentes(); _gdFlushRolante(); }, 3000);
+        });
+      } catch(e){}
+      // v1.9.5.3: migração das pastas do Drive para a estrutura definitiva.
+      // Roda UMA vez, já com o app pronto e a tela livre.
+      try { setTimeout(function(){ _gdMigrarEstrutura(); }, 12000); } catch(e){}
+      // v1.9.6.0: CONFERÊNCIA NA ABERTURA. O tique periódico é um timer do WebView —
+      // com o app fechado ele não existe, então um aparelho que passou a noite
+      // desligado só faria backup 10 min depois de aberto. Aqui, ao abrir, o app
+      // confere se o último completo já venceu o intervalo e roda um.
+      //
+      // Não é conflito com o freio da v1.9.5.4: `_gsBackupAuto` continua passando
+      // pelas guardas, e sem mudança nos dados nada é gerado. Se o app ficou fechado,
+      // ninguém fez check-in nem check-out — então normalmente não há o que salvar, e
+      // é exatamente esse o comportamento desejado.
+      // v1.9.6.0: SEMEIA a assinatura logo na inicialização. Sem isto, o PRIMEIRO
+      // minimizar de cada sessão não tinha com o que comparar e gerava um backup —
+      // mesmo sem ninguém ter mexido em nada. Semeando aqui, "abrir e fechar sem
+      // mudança" não gera arquivo nenhum, que é a regra da v1.9.5.4.
+      try { _gsUltimaAssinatura = _gsAssinaturaDados(); } catch(e){}
+      try { setTimeout(function(){ _gsConferirBackupNaAbertura(); }, 8000); } catch(e){}
+      // v1.9.6.3: cota do Drive (aviso preventivo de espaço) — 1×/6h, engolindo
+      // qualquer falha. E a poda, se e somente se o gestor a tiver LIGADO.
+      try { setTimeout(function(){ _gdLerCota(); }, 15000); } catch(e){}
+      try { setTimeout(function(){ if(_gsPodaLigada()) _gsPodaRodarSeLigada(); }, 20000); } catch(e){}
+      // permissão de notificação: pedida uma vez, sem travar nada
+      try { setTimeout(function(){ if(typeof _rcPedirPermissaoNotif==='function') _rcPedirPermissaoNotif(); }, 6000); } catch(e){}
       try { if(typeof _rcInitAudioUnlock==='function') _rcInitAudioUnlock(); } catch(e){}
+      // v1.9.6.2: o toque na notificação leva direto à tela de Recarga. Registrado
+      // cedo de propósito — foi ele quem abriu o app, o evento chega no arranque.
+      try { if(typeof _rcInitListenerNotificacao==='function') _rcInitListenerNotificacao(); } catch(e){}
+      // v1.9.6.2: REARME. Se a plataforma matou os agendamentos (force-stop da MIUI,
+      // reinício sem BOOT_COMPLETED, atualização do app), eles voltam aqui. Roda
+      // depois da permissão para não competir com o diálogo do Android.
+      try { setTimeout(function(){ if(typeof _rcRearmarAlarmes==='function') _rcRearmarAlarmes(); }, 7000); } catch(e){}
       upd(); tick(); setInterval(tick,15000);
       requestAnimationFrame(()=>setTimeout(positionPilares, 150));
     });
